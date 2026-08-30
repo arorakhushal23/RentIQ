@@ -1,22 +1,47 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Landing from './pages/Landing'
+import Navbar from './components/Navbar'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import Vehicles from './pages/Vehicles'
+import VehicleDetails from './pages/VehicleDetails'
 
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import './App.css'
 
 function App() {
   return (
     <BrowserRouter>
+
+      <Navbar />
+
       <Routes>
 
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Landing />} />
 
-        <Route path="/login" element={<Login />} />
+        <Route
+          path="/vehicles"
+          element={<Vehicles />}
+        />
 
-        <Route path="/register" element={<Register />} />
+        <Route
+          path="/vehicles/:id"
+          element={<VehicleDetails />}
+        />
+
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
+        <Route
+          path="/register"
+          element={<Register />}
+        />
 
       </Routes>
+
     </BrowserRouter>
-  );
+  )
 }
 
-export default App;
+export default App

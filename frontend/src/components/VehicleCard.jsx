@@ -1,33 +1,70 @@
-function VehicleCard({ name, category, price, seats, transmission }) {
+import { Link } from 'react-router-dom'
+import './VehicleCard.css'
+function VehicleCard({
+    vehicleId,
+    name,
+    brand,
+    category,
+    price,
+    seats,
+    transmission,
+}) {
     return (
         <article className="vehicle-card">
 
+            {/* Vehicle image area */}
             <div className="vehicle-image">
-                🚗
+                <span>🚗</span>
             </div>
 
+
+            {/* Vehicle information */}
             <div className="vehicle-info">
+
                 <p className="vehicle-category">
                     {category}
                 </p>
 
-                <h2>{name}</h2>
+                <h2 className="vehicle-name">
+                    {name}
+                </h2>
 
+                <p className="vehicle-brand">
+                    {brand}
+                </p>
+
+
+                {/* Vehicle specifications */}
                 <div className="vehicle-details">
-                    <span>{seats} Seats</span>
-                    <span>{transmission}</span>
+
+                    <span>
+                        {seats} Seats
+                    </span>
+
+                    <span>
+                        {transmission}
+                    </span>
+
                 </div>
 
+
+                {/* Price */}
                 <div className="vehicle-bottom">
-                    <p>
+
+                    <p className="vehicle-price">
                         ₹{price}
                         <span>/day</span>
                     </p>
 
-                    <button type="button">
+                    <Link
+                        to={`/vehicles/${vehicleId}`}
+                        className="vehicle-details-button"
+                    >
                         View Details
-                    </button>
+                    </Link>
+
                 </div>
+
             </div>
 
         </article>

@@ -252,6 +252,7 @@ function Vehicles() {
                                 >
 
                                     <VehicleCard
+                                        vehicleId={vehicle.vehicle_id}
                                         name={vehicle.name}
                                         brand={vehicle.brand}
                                         category={vehicle.category}

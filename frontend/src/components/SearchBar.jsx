@@ -1,26 +1,16 @@
-import { useState } from 'react'
-
-function SearchBar() {
-    const [searchText, setSearchText] = useState('')
-
-    const handleSearch = (event) => {
-        setSearchText(event.target.value)
-    }
-
+function SearchBar({ searchText, onSearchChange }) {
     return (
         <div className="search-bar">
-
             <input
                 type="text"
                 placeholder="Search vehicles..."
                 value={searchText}
-                onChange={handleSearch}
+                onChange={(event) => onSearchChange(event.target.value)}
             />
 
             <button type="button">
                 Search
             </button>
-
         </div>
     )
 }

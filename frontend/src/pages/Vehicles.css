@@ -1,0 +1,380 @@
+/* =========================================
+   Vehicle Dashboard
+   ========================================= */
+
+.vehicles-page {
+    width: 100%;
+    min-height: calc(100vh - 76px);
+    background: var(--bg-primary);
+}
+
+
+/* =========================================
+   Page Header
+   ========================================= */
+
+.vehicles-header {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 70px 32px 40px;
+}
+
+.vehicles-header h1 {
+    margin-bottom: 14px;
+
+    color: var(--text-primary);
+
+    font-size: clamp(38px, 5vw, 58px);
+    line-height: 1.1;
+    letter-spacing: -1.5px;
+}
+
+.vehicles-header p {
+    color: var(--text-secondary);
+    font-size: 18px;
+}
+
+
+/* =========================================
+   Search Area
+   ========================================= */
+
+.vehicle-search-area {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px 40px;
+}
+
+.vehicle-search-box {
+    display: flex;
+    max-width: 720px;
+
+    background: var(--bg-card);
+
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+
+    overflow: hidden;
+
+    box-shadow: var(--shadow-sm);
+}
+
+.vehicle-search-box input {
+    flex: 1;
+
+    min-width: 0;
+
+    padding: 15px 18px;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    color: var(--text-primary);
+
+    font-size: 15px;
+}
+
+.vehicle-search-box input::placeholder {
+    color: var(--text-muted);
+}
+
+.vehicle-search-box button {
+    padding: 0 24px;
+
+    border: none;
+
+    background: var(--blue-primary);
+    color: var(--text-primary);
+
+    font-weight: 600;
+
+    transition: background-color 0.2s ease;
+}
+
+.vehicle-search-box button:hover {
+    background: var(--blue-bright);
+}
+
+
+/* =========================================
+   Dashboard Layout
+   ========================================= */
+
+.vehicle-dashboard {
+    max-width: 1200px;
+
+    margin: 0 auto;
+
+    padding: 0 32px 80px;
+
+    display: grid;
+
+    grid-template-columns: 240px 1fr;
+
+    gap: 32px;
+
+    align-items: start;
+}
+
+
+/* =========================================
+   Filter Sidebar
+   ========================================= */
+
+.vehicle-filters {
+    position: sticky;
+    top: 96px;
+
+    padding: 24px;
+
+    background: var(--bg-card);
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+
+    box-shadow: var(--shadow-sm);
+}
+
+.vehicle-filters h2 {
+    margin-bottom: 24px;
+
+    color: var(--text-primary);
+
+    font-size: 20px;
+}
+
+.filter-group {
+    margin-bottom: 20px;
+}
+
+.filter-group label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: var(--text-secondary);
+
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.filter-group select,
+.filter-group input {
+    width: 100%;
+
+    padding: 10px 12px;
+
+    border: 1px solid var(--border-light);
+    border-radius: 7px;
+
+    outline: none;
+
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+
+    font-size: 14px;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+    border-color: var(--blue-light);
+}
+
+.reset-filters {
+    width: 100%;
+
+    padding: 10px;
+
+    border: 1px solid var(--border-light);
+    border-radius: 7px;
+
+    background: transparent;
+    color: var(--text-secondary);
+
+    font-weight: 500;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.reset-filters:hover {
+    background: rgba(36, 116, 198, 0.1);
+    border-color: var(--blue-light);
+    color: var(--text-primary);
+}
+
+
+/* =========================================
+   Results
+   ========================================= */
+
+.vehicle-results {
+    min-width: 0;
+}
+
+.vehicle-results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 24px;
+}
+
+.vehicle-results-header h2 {
+    color: var(--text-primary);
+    font-size: 26px;
+}
+
+.vehicle-count {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+
+/* =========================================
+   Vehicle Grid
+   ========================================= */
+
+.vehicle-grid {
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 20px;
+}
+
+
+/* =========================================
+   Vehicle Actions
+   ========================================= */
+
+.vehicle-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.wishlist-button,
+.compare-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    min-height: 38px;
+
+    padding: 0 13px;
+
+    border-radius: 7px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.wishlist-button {
+    border: 1px solid var(--border-light);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+}
+
+.wishlist-button:hover {
+    border-color: #d96b8a;
+    background: rgba(217, 107, 138, 0.08);
+    color: #f09ab0;
+}
+
+.wishlist-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.compare-button {
+    border: 1px solid var(--blue-primary);
+    background: rgba(40, 120, 199, 0.08);
+    color: var(--blue-light);
+}
+
+.compare-button:hover {
+    background: rgba(40, 120, 199, 0.18);
+    border-color: var(--blue-bright);
+    color: var(--text-primary);
+}
+
+.compare-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+
+/* =========================================
+   Empty / Error / Loading
+   ========================================= */
+
+.vehicle-message {
+    padding: 40px;
+
+    border: 1px dashed var(--border-light);
+    border-radius: 10px;
+
+    text-align: center;
+
+    color: var(--text-secondary);
+}
+
+
+/* =========================================
+   Responsive
+   ========================================= */
+
+@media (max-width: 850px) {
+
+    .vehicle-dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .vehicle-filters {
+        position: static;
+    }
+
+    .vehicle-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .vehicles-header {
+        padding: 50px 20px 30px;
+    }
+
+    .vehicle-search-area {
+        padding: 0 20px 30px;
+    }
+
+    .vehicle-dashboard {
+        padding: 0 20px 60px;
+    }
+
+    .vehicle-search-box {
+        flex-direction: column;
+    }
+
+    .vehicle-search-box button {
+        min-height: 45px;
+    }
+
+}

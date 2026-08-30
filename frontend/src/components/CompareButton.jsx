@@ -1,22 +1,19 @@
-import { useState } from 'react'
-
 function CompareButton() {
-    const [isCompared, setIsCompared] = useState(false)
-
-    const handleCompareClick = () => {
-        setIsCompared((currentValue) => !currentValue)
-    }
-
     return (
         <button
             type="button"
-            className={`compare-button ${isCompared ? 'active' : ''}`}
-            onClick={handleCompareClick}
+            className="compare-button"
+            aria-label="Add vehicle to comparison"
         >
-            {isCompared ? '✓ Added' : 'Add to Compare'}
+            <span className="compare-icon">
+                ⇄
+            </span>
 
+            <span>
+                Compare
+            </span>
         </button>
     )
 }
 
-export default CompareButton
+export default CompareButton

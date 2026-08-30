@@ -1,26 +1,19 @@
-import { useState } from 'react'
-
 function WishlistButton() {
-    const [isWishlisted, setIsWishlisted] = useState(false)
-
-    const handleWishlistClick = () => {
-        setIsWishlisted((currentValue) => !currentValue)
-    }
-
     return (
         <button
             type="button"
-            className={`wishlist-button ${isWishlisted ? 'active' : ''}`}
-            onClick={handleWishlistClick}
-            aria-label={
-                isWishlisted
-                    ? 'Remove from wishlist'
-                    : 'Add to wishlist'
-            }
+            className="wishlist-button"
+            aria-label="Add vehicle to wishlist"
         >
-            {isWishlisted ? '♥' : '♡'}
+            <span className="wishlist-icon">
+                ♡
+            </span>
+
+            <span>
+                Wishlist
+            </span>
         </button>
     )
 }
 
-export default WishlistButton
+export default WishlistButton

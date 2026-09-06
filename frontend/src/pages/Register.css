@@ -11,7 +11,7 @@
     width: 100%;
     max-width: 600px;
     padding: 48px 48px;
-    background: var(--bg-card);
+    background: #ffffff;
     border: 1px solid var(--border);
     border-radius: 18px;
     box-shadow: var(--shadow-md);
@@ -69,9 +69,10 @@
 }
 
 .auth-tab.active {
-    color: var(--text-primary);
-    background: var(--navy);
+    color: var(--blue-primary);
+    background: #ffffff;
     font-weight: 600;
+    box-shadow: var(--shadow-sm);
 }
 
 .register-form {
@@ -87,9 +88,9 @@
 }
 
 .form-group label {
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-size: 15px;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .form-group input {
@@ -99,10 +100,12 @@
     border: 1px solid var(--border-light);
     border-radius: 10px;
     outline: none;
-    background: var(--bg-secondary);
+    background: #ffffff;
     color: var(--text-primary);
     font-size: 16px;
-    transition: border-color 0.2s ease;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .form-group input::placeholder {
@@ -111,6 +114,7 @@
 
 .form-group input:focus {
     border-color: var(--blue-primary);
+    box-shadow: 0 0 0 3px rgba(29, 104, 189, 0.15);
 }
 
 .auth-button {
@@ -120,15 +124,20 @@
     border: none;
     border-radius: 10px;
     background: var(--blue-primary);
-    color: var(--text-primary);
+    color: #ffffff;
     font-size: 17px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .auth-button:hover {
     background: var(--blue-bright);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(29, 104, 189, 0.25);
 }
 
 .auth-footer {
@@ -139,14 +148,14 @@
 }
 
 .auth-footer a {
-    color: var(--blue-light);
+    color: var(--blue-primary);
     text-decoration: none;
-    font-weight: 500;
+    font-weight: 600;
     transition: color 0.2s ease;
 }
 
 .auth-footer a:hover {
-    color: var(--text-primary);
+    color: var(--blue-bright);
     text-decoration: underline;
 }
 

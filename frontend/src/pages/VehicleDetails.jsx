@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
+import BookingForm from '../components/BookingForm'
 
 function VehicleDetails() {
     const { id } = useParams()
@@ -94,13 +95,11 @@ function VehicleDetails() {
                         </strong>
                     </div>
 
-                    <button
-                        type="button"
-                        className="book-now-button"
-                    >
-                        Book Now
-                    </button>
-
+                    <BookingForm
+                        vehicleId={vehicle.vehicle_id}
+                        pricePerDay={vehicle.price_per_day}
+                        isAvailable={vehicle.is_available}
+                    />
                 </div>
 
             </section>

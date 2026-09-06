@@ -1,0 +1,181 @@
+.booking-form {
+    margin-top: 32px;
+    padding: 28px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    max-width: 520px;
+    box-sizing: border-box;
+    box-shadow: var(--shadow-sm);
+}
+
+.booking-form h2 {
+    margin: 0 0 24px;
+    color: var(--text-primary);
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.booking-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.booking-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.booking-form label {
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.booking-form input[type="date"] {
+    width: 100%;
+    min-height: 52px;
+    padding: 0 14px;
+    box-sizing: border-box;
+
+    background: #ffffff;
+    color: var(--text-primary);
+
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+
+    font: inherit;
+    font-size: 16px;
+
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.booking-form input[type="date"]:hover {
+    border-color: var(--blue-primary);
+}
+
+.booking-form input[type="date"]:focus {
+    outline: none;
+    border-color: var(--blue-primary);
+    box-shadow: 0 0 0 3px rgba(29, 104, 189, 0.15);
+    background: #ffffff;
+}
+
+/* Calendar icon */
+.booking-form input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.7;
+    width: 20px;
+    height: 20px;
+    transition: opacity 0.2s ease;
+}
+
+.booking-form input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+/* Validation message */
+.booking-error {
+    margin: 0;
+    padding: 12px 14px;
+
+    color: #b91c1c;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 9px;
+
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Booking summary */
+.booking-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+
+    padding: 18px;
+
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.booking-summary p {
+    margin: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.booking-summary strong {
+    color: var(--text-primary);
+    font-size: 20px;
+}
+
+.booking-summary p:last-child strong {
+    color: var(--blue-primary);
+}
+
+/* Confirm button */
+.booking-form button {
+    width: 100%;
+    min-height: 52px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: var(--blue-primary);
+    color: #ffffff;
+
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.booking-form button:hover:not(:disabled) {
+    background: var(--blue-bright);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(29, 104, 189, 0.25);
+}
+
+.booking-form button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.booking-form button:disabled {
+    background: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .booking-form {
+        padding: 20px;
+        border-radius: 12px;
+    }
+
+    .booking-summary {
+        grid-template-columns: 1fr;
+    }
+}

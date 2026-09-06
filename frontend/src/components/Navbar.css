@@ -1,6 +1,6 @@
 .navbar {
     width: 100%;
-    background: var(--navy);
+    background: #ffffff;
     border-bottom: 1px solid var(--border);
     box-shadow: var(--shadow-sm);
     position: sticky;
@@ -29,7 +29,7 @@
 }
 
 .navbar-logo:hover {
-    color: var(--blue-light);
+    color: var(--blue-primary);
 }
 
 .navbar-links {
@@ -49,23 +49,26 @@
 }
 
 .navbar-links a:hover {
-    color: var(--text-primary);
+    color: var(--blue-primary);
 }
 
 .navbar-register {
     background: var(--blue-primary);
-    color: var(--text-primary) !important;
+    color: #ffffff !important;
     font-weight: 600;
 
     padding: 9px 18px;
     border-radius: 7px;
     transition:
         background-color 0.2s ease,
-        transform 0.2s ease;
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .navbar-register:hover {
     background: var(--blue-bright);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(29, 104, 189, 0.25);
 }
 
 

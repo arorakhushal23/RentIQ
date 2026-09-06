@@ -1,1 +1,156 @@
-/* RentIQ application-level styles will go here. */
+/* =========================================
+   Vehicle Details Page - Light Theme
+   ========================================= */
+
+.vehicle-details-page {
+    width: 100%;
+    min-height: calc(100vh - 76px);
+    background: var(--bg-primary);
+    padding: 60px 32px 100px;
+    box-sizing: border-box;
+}
+
+.vehicle-details-card {
+    max-width: 1160px;
+    margin: 0 auto;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow-sm);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    padding: 48px;
+    box-sizing: border-box;
+    align-items: start;
+}
+
+.vehicle-details-image {
+    min-height: 380px;
+    background: linear-gradient(135deg, #f8fafc, #edf2f7);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 110px;
+}
+
+.vehicle-details-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.vehicle-details-info .vehicle-category {
+    margin-bottom: 8px;
+    color: var(--blue-primary);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.vehicle-details-info h1 {
+    margin: 0 0 8px;
+    color: var(--text-primary);
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+}
+
+.vehicle-details-info .vehicle-brand {
+    margin: 0 0 24px;
+    color: var(--text-secondary);
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.vehicle-specifications {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+    padding: 18px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.vehicle-specifications div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.vehicle-specifications span {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.vehicle-specifications strong {
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.vehicle-details-price {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.vehicle-details-price span {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.vehicle-details-price strong {
+    color: var(--text-primary);
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.vehicle-details-price small {
+    color: var(--text-muted);
+    font-size: 16px;
+    font-weight: 400;
+    margin-left: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+    .vehicle-details-card {
+        grid-template-columns: 1fr;
+        padding: 32px 24px;
+        gap: 32px;
+    }
+
+    .vehicle-details-image {
+        min-height: 260px;
+        font-size: 80px;
+    }
+}
+
+@media (max-width: 600px) {
+    .vehicle-details-page {
+        padding: 30px 16px 60px;
+    }
+
+    .vehicle-details-card {
+        padding: 24px 16px;
+        border-radius: 14px;
+    }
+
+    .vehicle-specifications {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}

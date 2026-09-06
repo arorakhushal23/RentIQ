@@ -19,12 +19,12 @@
     align-items: center;
 
     background:
-        radial-gradient(circle at 75% 40%,
-            rgba(36, 116, 198, 0.16),
-            transparent 35%),
-        linear-gradient(135deg,
-            var(--bg-primary),
-            var(--navy));
+        radial-gradient(circle at 80% 30%,
+            rgba(29, 104, 189, 0.08),
+            transparent 45%),
+        linear-gradient(180deg,
+            #ffffff 0%,
+            var(--bg-primary) 100%);
 
     border-bottom: 1px solid var(--border);
 }
@@ -41,7 +41,7 @@
 .section-label {
     margin-bottom: 16px;
 
-    color: var(--blue-light);
+    color: var(--blue-primary);
 
     font-size: 13px;
     font-weight: 700;
@@ -101,30 +101,37 @@
     transition:
         background-color 0.2s ease,
         border-color 0.2s ease,
-        transform 0.2s ease;
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .primary-button {
     background: var(--blue-primary);
-    color: var(--text-primary);
+    color: #ffffff;
+    border: 1px solid var(--blue-primary);
+    box-shadow: 0 2px 4px rgba(29, 104, 189, 0.15);
 }
 
 .primary-button:hover {
     background: var(--blue-bright);
-    color: var(--text-primary);
+    border-color: var(--blue-bright);
+    color: #ffffff;
     transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(29, 104, 189, 0.25);
 }
 
 .secondary-button {
     border: 1px solid var(--border-light);
-    background: rgba(255, 255, 255, 0.03);
+    background: #ffffff;
     color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
 }
 
 .secondary-button:hover {
-    border-color: var(--blue-light);
-    background: rgba(36, 116, 198, 0.1);
-    color: var(--text-primary);
+    border-color: var(--blue-primary);
+    background: var(--bg-card-hover);
+    color: var(--blue-primary);
+    transform: translateY(-2px);
 }
 
 
@@ -185,19 +192,22 @@
 
     border: 1px solid var(--border);
     border-radius: 12px;
+    box-shadow: var(--shadow-sm);
 
     transition:
         transform 0.2s ease,
         border-color 0.2s ease,
-        background-color 0.2s ease;
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .feature-card:hover {
     transform: translateY(-4px);
 
-    background: var(--bg-card-hover);
+    background: var(--bg-card);
 
-    border-color: var(--border-light);
+    border-color: var(--blue-primary);
+    box-shadow: var(--shadow-md);
 }
 
 .feature-icon {
@@ -231,9 +241,9 @@
     text-align: center;
 
     background:
-        linear-gradient(135deg,
-            var(--navy),
-            var(--bg-secondary));
+        linear-gradient(180deg,
+            var(--bg-secondary) 0%,
+            #ffffff 100%);
 
     border-top: 1px solid var(--border);
 }

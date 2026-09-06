@@ -1,0 +1,37 @@
+.booking-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+
+    padding: 18px;
+
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.summary-item span {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.summary-item strong {
+    color: var(--text-primary);
+    font-size: 17px;
+}
+
+.summary-total strong {
+    color: var(--blue-primary);
+}
+
+@media (max-width: 600px) {
+    .booking-summary {
+        grid-template-columns: 1fr;
+    }
+}

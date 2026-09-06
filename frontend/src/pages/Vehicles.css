@@ -45,21 +45,33 @@
     padding: 0 32px 40px;
 }
 
-.vehicle-search-box {
+.vehicle-search-box,
+.search-bar {
     display: flex;
     max-width: 720px;
+    width: 100%;
 
-    background: var(--bg-card);
+    background: #ffffff;
 
-    border: 1px solid var(--border-light);
+    border: 1px solid var(--border);
     border-radius: 10px;
 
     overflow: hidden;
 
     box-shadow: var(--shadow-sm);
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-.vehicle-search-box input {
+.vehicle-search-box:focus-within,
+.search-bar:focus-within {
+    border-color: var(--blue-primary);
+    box-shadow: 0 0 0 3px rgba(29, 104, 189, 0.12);
+}
+
+.vehicle-search-box input,
+.search-bar input {
     flex: 1;
 
     min-width: 0;
@@ -76,24 +88,29 @@
     font-size: 15px;
 }
 
-.vehicle-search-box input::placeholder {
+.vehicle-search-box input::placeholder,
+.search-bar input::placeholder {
     color: var(--text-muted);
 }
 
-.vehicle-search-box button {
+.vehicle-search-box button,
+.search-bar button {
     padding: 0 24px;
 
     border: none;
 
     background: var(--blue-primary);
-    color: var(--text-primary);
+    color: #ffffff;
 
+    font-size: 14px;
     font-weight: 600;
+    cursor: pointer;
 
     transition: background-color 0.2s ease;
 }
 
-.vehicle-search-box button:hover {
+.vehicle-search-box button:hover,
+.search-bar button:hover {
     background: var(--blue-bright);
 }
 
@@ -129,7 +146,7 @@
 
     padding: 24px;
 
-    background: var(--bg-card);
+    background: #ffffff;
 
     border: 1px solid var(--border);
 
@@ -155,10 +172,10 @@
 
     margin-bottom: 8px;
 
-    color: var(--text-secondary);
+    color: var(--text-primary);
 
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .filter-group select,
@@ -167,34 +184,42 @@
 
     padding: 10px 12px;
 
-    border: 1px solid var(--border-light);
+    border: 1px solid var(--border);
     border-radius: 7px;
 
     outline: none;
 
-    background: var(--bg-secondary);
+    background: #ffffff;
     color: var(--text-primary);
 
     font-size: 14px;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .filter-group select:focus,
 .filter-group input:focus {
-    border-color: var(--blue-light);
+    border-color: var(--blue-primary);
+    box-shadow: 0 0 0 3px rgba(29, 104, 189, 0.12);
 }
 
-.reset-filters {
+.reset-filters,
+.reset-button {
     width: 100%;
 
     padding: 10px;
 
-    border: 1px solid var(--border-light);
+    border: 1px solid var(--border);
     border-radius: 7px;
 
-    background: transparent;
+    background: #ffffff;
     color: var(--text-secondary);
 
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
 
     transition:
         background-color 0.2s ease,
@@ -202,10 +227,11 @@
         border-color 0.2s ease;
 }
 
-.reset-filters:hover {
-    background: rgba(36, 116, 198, 0.1);
-    border-color: var(--blue-light);
-    color: var(--text-primary);
+.reset-filters:hover,
+.reset-button:hover {
+    background: var(--blue-soft);
+    border-color: var(--blue-border);
+    color: var(--blue-primary);
 }
 
 
@@ -281,19 +307,21 @@
     transition:
         background-color 0.2s ease,
         border-color 0.2s ease,
-        color 0.2s ease;
+        color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .wishlist-button {
-    border: 1px solid var(--border-light);
-    background: var(--bg-card);
+    border: 1px solid var(--border);
+    background: #ffffff;
     color: var(--text-secondary);
+    box-shadow: var(--shadow-sm);
 }
 
 .wishlist-button:hover {
-    border-color: #d96b8a;
-    background: rgba(217, 107, 138, 0.08);
-    color: #f09ab0;
+    border-color: var(--blue-primary);
+    background: var(--blue-soft);
+    color: var(--blue-primary);
 }
 
 .wishlist-icon {
@@ -302,15 +330,15 @@
 }
 
 .compare-button {
-    border: 1px solid var(--blue-primary);
-    background: rgba(40, 120, 199, 0.08);
-    color: var(--blue-light);
+    border: 1px solid var(--blue-border);
+    background: var(--blue-soft);
+    color: var(--blue-primary);
 }
 
 .compare-button:hover {
-    background: rgba(40, 120, 199, 0.18);
-    border-color: var(--blue-bright);
-    color: var(--text-primary);
+    background: var(--blue-primary);
+    border-color: var(--blue-primary);
+    color: #ffffff;
 }
 
 .compare-icon {
@@ -326,11 +354,12 @@
 .vehicle-message {
     padding: 40px;
 
-    border: 1px dashed var(--border-light);
+    border: 1px dashed var(--border);
     border-radius: 10px;
 
     text-align: center;
 
+    background: #ffffff;
     color: var(--text-secondary);
 }
 
@@ -369,36 +398,21 @@
         padding: 0 20px 60px;
     }
 
-    .vehicle-search-box {
+    .vehicle-search-box,
+    .search-bar {
         flex-direction: column;
     }
 
-    .vehicle-search-box button {
+    .vehicle-search-box button,
+    .search-bar button {
         min-height: 45px;
     }
 
 }
 
 /* =========================================
-   Search Bar
+   Legacy Search Wrapper Support
    ========================================= */
-
-.search-bar {
-    width: 100%;
-    max-width: 760px;
-    margin-bottom: 34px;
-}
-
-.search-bar label {
-    display: block;
-
-    margin-bottom: 10px;
-
-    color: var(--text-secondary);
-
-    font-size: 14px;
-    font-weight: 600;
-}
 
 .search-input-wrapper {
     display: flex;
@@ -407,71 +421,34 @@
 
 .search-input-wrapper input {
     flex: 1;
-
     min-width: 0;
-
     padding: 13px 16px;
-
     border: 1px solid var(--border);
     border-right: none;
     border-radius: 8px 0 0 8px;
-
-    background: var(--bg-card);
-
+    background: #ffffff;
     color: var(--text-primary);
-
     font-size: 15px;
-
     outline: none;
-
-    transition:
-        border-color 0.2s ease,
-        background-color 0.2s ease;
-}
-
-.search-input-wrapper input::placeholder {
-    color: var(--text-muted);
 }
 
 .search-input-wrapper input:focus {
     border-color: var(--blue-primary);
-
-    background: var(--bg-card-hover);
 }
 
 .search-input-wrapper button {
     padding: 0 22px;
-
     border: 1px solid var(--blue-primary);
     border-radius: 0 8px 8px 0;
-
     background: var(--blue-primary);
-
-    color: var(--text-primary);
-
+    color: #ffffff;
     font-size: 14px;
     font-weight: 600;
-
     cursor: pointer;
-
-    transition:
-        background-color 0.2s ease,
-        border-color 0.2s ease;
+    transition: background-color 0.2s ease;
 }
 
 .search-input-wrapper button:hover {
     background: var(--blue-bright);
     border-color: var(--blue-bright);
-}
-
-@media (max-width: 600px) {
-
-    .search-bar {
-        max-width: 100%;
-    }
-
-    .search-input-wrapper button {
-        padding: 0 16px;
-    }
-
 }

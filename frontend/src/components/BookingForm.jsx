@@ -74,7 +74,6 @@ function BookingForm({
 
         try {
             const response = await axiosInstance.post('/bookings', {
-                userId: 2,
                 vehicleId,
                 startDate,
                 endDate,

@@ -1,78 +1,140 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import './Login.css'
-
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axiosInstance from "../api/axiosInstance";
+import "./Login.css";
+import { useAuth } from "../context/AuthContext";
 function Login() {
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
 
-    const handleSubmit = (event) => {
-        event.preventDefault()
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-        console.log({
-            email,
-            password,
-        })
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+
+    setError("");
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const { email, password } = formData;
+
+    if (!email.trim()) {
+      setError("Please enter your email.");
+      return;
     }
 
-    return (
-        <main className="login-page">
-            <section className="login-card">
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-                <header className="login-header">
-                    <h1>RentIQ</h1>
-                    <p>Find your ride, book it, go.</p>
-                </header>
+    if (!emailPattern.test(email)) {
+      setError("Invalid email address.");
+      return;
+    }
 
-                <div className="auth-tabs">
-                    <Link to="/login" className="auth-tab active">
-                        Login
-                    </Link>
+    if (!password) {
+      setError("Please enter your password.");
+      return;
+    }
 
-                    <Link to="/register" className="auth-tab">
-                        Register
-                    </Link>
-                </div>
+    setError("");
+    setLoading(true);
 
-                <form className="login-form" onSubmit={handleSubmit}>
+    try {
+      const response = await axiosInstance.post("/auth/login", {
+        email: email.trim(),
+        password,
+      });
 
-                    <div className="form-group">
-                        <label htmlFor="login-email">Email</label>
+      console.log("Login successful:", response.data);
 
-                        <input
-                            id="login-email"
-                            type="email"
-                            placeholder="name@example.com"
-                            value={email}
-                            onChange={(event) => setEmail(event.target.value)}
-                        />
-                    </div>
+      login(response.data.user, response.data.token);
 
-                    <div className="form-group">
-                        <label htmlFor="login-password">Password</label>
+      navigate("/");
+    } catch (error) {
+      console.error("Login failed:", error);
 
-                        <input
-                            id="login-password"
-                            type="password"
-                            placeholder="Enter your password"
-                            value={password}
-                            onChange={(event) => setPassword(event.target.value)}
-                        />
-                    </div>
+      setError(
+        error.response?.data?.message || "Unable to login. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                    <button type="submit" className="auth-button">
-                        Login
-                    </button>
-                </form>
+  return (
+    <main className="login-page">
+      <div className="login-card">
+        <div className="login-header">
+          <div className="login-logo">
+            Rent<span>IQ</span>
+          </div>
 
-                <p className="auth-footer">
-                    No account?{' '}
-                    <Link to="/register">Register</Link>
-                </p>
+          <h1>Welcome Back</h1>
 
-            </section>
-        </main>
-    )
+          <p>Login to your RentIQ account.</p>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
+
+            <input
+              id="email"
+              name="email"
+              type="text"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+
+            <input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Enter your password"
+              value={formData.password}
+              onChange={handleChange}
+              autoComplete="new-password"
+            />
+          </div>
+
+          {error && <p className="login-error">{error}</p>}
+
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
+
+            {!loading && <span>→</span>}
+          </button>
+        </form>
+
+        <div className="login-divider">
+          <span></span>
+          <p>OR</p>
+          <span></span>
+        </div>
+
+        <p className="register-link">
+          Don't have an account? <Link to="/register">Register</Link>
+        </p>
+      </div>
+    </main>
+  );
 }
 
-export default Login
+export default Login;

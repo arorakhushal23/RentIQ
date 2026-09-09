@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import './Navbar.css'
 
 function Navbar() {
+    const { isLoggedIn } = useAuth()
+
     return (
         <nav className="navbar">
 
@@ -21,13 +24,21 @@ function Navbar() {
                         Vehicles
                     </Link>
 
-                    <Link to="/login">
-                        Login
-                    </Link>
+                    {!isLoggedIn ? (
+                        <>
+                            <Link to="/login">
+                                Login
+                            </Link>
 
-                    <Link to="/register" className="navbar-register">
-                        Register
-                    </Link>
+                            <Link to="/register" className="navbar-register">
+                                Register
+                            </Link>
+                        </>
+                    ) : (
+                        <Link to="/profile" className="navbar-profile">
+                            👤
+                        </Link>
+                    )}
 
                 </div>
 

@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import './VehicleCard.css'
+import vehicleImages from '../utils/vehicleImages'
+
 function VehicleCard({
     vehicleId,
     name,
@@ -12,12 +14,17 @@ function VehicleCard({
     return (
         <article className="vehicle-card">
 
-            {/* Vehicle image area */}
+            {/* Vehicle image */}
             <div className="vehicle-image">
-                <span>🚗</span>
+                {vehicleImages[name] ? (
+                    <img
+                        src={vehicleImages[name]}
+                        alt={name}
+                    />
+                ) : (
+                    <span>🚗</span>
+                )}
             </div>
-
-
             {/* Vehicle information */}
             <div className="vehicle-info">
 
@@ -33,7 +40,6 @@ function VehicleCard({
                     {brand}
                 </p>
 
-
                 {/* Vehicle specifications */}
                 <div className="vehicle-details">
 
@@ -46,7 +52,6 @@ function VehicleCard({
                     </span>
 
                 </div>
-
 
                 {/* Price */}
                 <div className="vehicle-bottom">

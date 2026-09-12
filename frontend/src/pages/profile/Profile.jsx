@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import axiosInstance from '../api/axiosInstance'
+import { useAuth } from '../../context/AuthContext'
+import axiosInstance from '../../api/axiosInstance'
 import './Profile.css'
-import vehicleImages from '../utils/vehicleImages'
+import vehicleImages from '../../utils/vehicleImages'
 
 function Profile() {
   const { user, logout } = useAuth()

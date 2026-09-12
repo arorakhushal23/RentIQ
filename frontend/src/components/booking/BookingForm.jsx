@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import axiosInstance from '../api/axiosInstance'
+import axiosInstance from '../../api/axiosInstance'
 import './BookingForm.css'
 import BookingSummary from './BookingSummary'
 

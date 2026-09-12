@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import axiosInstance from '../api/axiosInstance'
+import axiosInstance from '../../api/axiosInstance'
 
-import SearchBar from '../components/SearchBar'
-import FilterPanel from '../components/FilterPanel'
-import VehicleCard from '../components/VehicleCard'
-import WishlistButton from '../components/WishlistButton'
-import CompareButton from '../components/CompareButton'
+import SearchBar from '../../components/vehicle/SearchBar'
+import FilterPanel from '../../components/vehicle/FilterPanel'
+import VehicleCard from '../../components/vehicle/VehicleCard'
+import WishlistButton from '../../components/vehicle/WishlistButton'
+import CompareButton from '../../components/vehicle/CompareButton'
 
 import './Vehicles.css'
 

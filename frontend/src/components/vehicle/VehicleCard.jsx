@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import './VehicleCard.css'
-import vehicleImages from '../utils/vehicleImages'
+import vehicleImages from '../../utils/vehicleImages'
 
 function VehicleCard({
     vehicleId,

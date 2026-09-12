@@ -1,11 +1,11 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Landing from "./pages/Landing";
-import Navbar from "./components/Navbar";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Vehicles from "./pages/Vehicles";
-import VehicleDetails from "./pages/VehicleDetails";
-import Profile from "./pages/Profile";
+import Landing from "./pages/home/Landing";
+import Navbar from "./components/common/Navbar";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import Vehicles from "./pages/vehicles/Vehicles";
+import VehicleDetails from "./pages/vehicles/VehicleDetails";
+import Profile from "./pages/profile/Profile";
 import "./App.css";
 
 function App() {

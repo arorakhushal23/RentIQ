@@ -1,17 +1,8 @@
-/* =========================================
-   Vehicle Dashboard
-   ========================================= */
-
 .vehicles-page {
     width: 100%;
     min-height: calc(100vh - 76px);
     background: var(--bg-primary);
 }
-
-
-/* =========================================
-   Page Header
-   ========================================= */
 
 .vehicles-header {
     max-width: 1200px;
@@ -33,11 +24,6 @@
     color: var(--text-secondary);
     font-size: 18px;
 }
-
-
-/* =========================================
-   Search Area
-   ========================================= */
 
 .vehicle-search-area {
     max-width: 1200px;
@@ -114,11 +100,6 @@
     background: var(--blue-bright);
 }
 
-
-/* =========================================
-   Dashboard Layout
-   ========================================= */
-
 .vehicle-dashboard {
     max-width: 1200px;
 
@@ -134,11 +115,6 @@
 
     align-items: start;
 }
-
-
-/* =========================================
-   Filter Sidebar
-   ========================================= */
 
 .vehicle-filters {
     position: sticky;
@@ -234,11 +210,6 @@
     color: var(--blue-primary);
 }
 
-
-/* =========================================
-   Results
-   ========================================= */
-
 .vehicle-results {
     min-width: 0;
 }
@@ -261,11 +232,6 @@
     font-size: 14px;
 }
 
-
-/* =========================================
-   Vehicle Grid
-   ========================================= */
-
 .vehicle-grid {
     display: grid;
 
@@ -273,11 +239,6 @@
 
     gap: 20px;
 }
-
-
-/* =========================================
-   Vehicle Actions
-   ========================================= */
 
 .vehicle-actions {
     display: flex;
@@ -346,11 +307,6 @@
     line-height: 1;
 }
 
-
-/* =========================================
-   Empty / Error / Loading
-   ========================================= */
-
 .vehicle-message {
     padding: 40px;
 
@@ -362,11 +318,6 @@
     background: #ffffff;
     color: var(--text-secondary);
 }
-
-
-/* =========================================
-   Responsive
-   ========================================= */
 
 @media (max-width: 850px) {
 
@@ -409,10 +360,6 @@
     }
 
 }
-
-/* =========================================
-   Legacy Search Wrapper Support
-   ========================================= */
 
 .search-input-wrapper {
     display: flex;

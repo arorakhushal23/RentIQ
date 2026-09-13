@@ -14,7 +14,6 @@ function VehicleCard({
     return (
         <article className="vehicle-card">
 
-            {/* Vehicle image */}
             <div className="vehicle-image">
                 {vehicleImages[name] ? (
                     <img
@@ -25,7 +24,7 @@ function VehicleCard({
                     <span>🚗</span>
                 )}
             </div>
-            {/* Vehicle information */}
+
             <div className="vehicle-info">
 
                 <p className="vehicle-category">
@@ -40,7 +39,6 @@ function VehicleCard({
                     {brand}
                 </p>
 
-                {/* Vehicle specifications */}
                 <div className="vehicle-details">
 
                     <span>
@@ -53,7 +51,6 @@ function VehicleCard({
 
                 </div>
 
-                {/* Price */}
                 <div className="vehicle-bottom">
 
                     <p className="vehicle-price">

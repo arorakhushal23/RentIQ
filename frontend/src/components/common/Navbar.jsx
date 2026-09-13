@@ -10,7 +10,6 @@ function Navbar() {
         <nav className="navbar">
             <div className="navbar-container">
 
-                {/* Logo */}
                 <Link to="/" className="navbar-logo">
                     <img
                         src={rentiqLogo}
@@ -18,7 +17,6 @@ function Navbar() {
                     />
                 </Link>
 
-                {/* Navigation */}
                 <div className="navbar-links">
 
                     <Link to="/">

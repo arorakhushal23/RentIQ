@@ -23,9 +23,6 @@
     box-shadow: var(--shadow-md);
 }
 
-
-/* Image */
-
 .vehicle-image {
     height: 190px;
 
@@ -46,9 +43,6 @@
 .vehicle-image span {
     filter: none;
 }
-
-
-/* Information */
 
 .vehicle-info {
     padding: 22px;
@@ -83,9 +77,6 @@
     font-size: 14px;
 }
 
-
-/* Specifications */
-
 .vehicle-details {
     display: flex;
     gap: 10px;
@@ -109,9 +100,6 @@
 
     text-transform: capitalize;
 }
-
-
-/* Bottom */
 
 .vehicle-bottom {
     display: flex;
@@ -167,9 +155,6 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(29, 104, 189, 0.25);
 }
-
-
-/* Mobile */
 
 @media (max-width: 500px) {
 

@@ -39,8 +39,6 @@ function Profile() {
   return (
     <div className="profile-page">
 
-      {/* Header */}
-
       <div className="profile-header">
         <div>
           <h1>
@@ -55,11 +53,7 @@ function Profile() {
       </div>
 
 
-      {/* Dashboard cards */}
-
       <div className="profile-dashboard">
-
-        {/* Personal Information */}
 
         <section className="profile-card personal-card">
 
@@ -102,9 +96,6 @@ function Profile() {
 
         </section>
 
-
-        {/* Booking Statistics */}
-
         <section className="profile-card stats-card">
 
           <div className="stat">
@@ -139,9 +130,6 @@ function Profile() {
         </section>
 
       </div>
-
-
-      {/* Rental History */}
 
       <section className="rental-section">
 
@@ -269,9 +257,6 @@ function Profile() {
           )}
 
       </section>
-
-
-      {/* Logout */}
 
       <button
         className="logout-button"

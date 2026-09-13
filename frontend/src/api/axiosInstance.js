@@ -7,7 +7,6 @@ const axiosInstance = axios.create({
     }
 });
 
-// Request interceptor: automatically attach Bearer token if present in localStorage
 axiosInstance.interceptors.request.use(
     (config) => {
         if (typeof window !== 'undefined' && window.localStorage) {

@@ -2,14 +2,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 
-// Standard email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 exports.register = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
-        // Validate presence and types
         if (!name || typeof name !== 'string' || !name.trim()) {
             return res.status(400).json({ message: 'Name is required' });
         }
@@ -30,7 +28,6 @@ exports.register = async (req, res) => {
 
         const trimmedName = name.trim();
 
-        // Check if email already exists using parameterized query
         const [existingUsers] = await db.query(
             'SELECT user_id FROM users WHERE email = ?',
             [normalizedEmail]
@@ -40,11 +37,9 @@ exports.register = async (req, res) => {
             return res.status(409).json({ message: 'Email is already registered' });
         }
 
-        // Hash password with 10 salt rounds
         const saltRounds = 10;
         const passwordHash = await bcrypt.hash(password, saltRounds);
 
-        // Insert new user - explicitly enforce role as 'customer' to prevent client tampering
         const [result] = await db.query(
             'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
             [trimmedName, normalizedEmail, passwordHash, 'customer']
@@ -52,7 +47,6 @@ exports.register = async (req, res) => {
 
         const userId = result.insertId;
 
-        // Generate JWT token valid for 7 days
         const token = jwt.sign(
             {
                 user_id: userId,
@@ -83,7 +77,6 @@ exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Validate presence and types
         if (!email || typeof email !== 'string' || !email.trim()) {
             return res.status(400).json({ message: 'Email is required' });
         }
@@ -98,13 +91,11 @@ exports.login = async (req, res) => {
             return res.status(400).json({ message: 'Invalid email format' });
         }
 
-        // Find user by normalized email using parameterized query
         const [users] = await db.query(
             'SELECT user_id, name, email, password_hash, role FROM users WHERE email = ?',
             [normalizedEmail]
         );
 
-        // Generic error response to prevent user enumeration
         const genericAuthError = { message: 'Invalid email or password' };
 
         if (users.length === 0) {
@@ -113,13 +104,11 @@ exports.login = async (req, res) => {
 
         const user = users[0];
 
-        // Verify password with bcrypt
         const isPasswordValid = await bcrypt.compare(password, user.password_hash);
         if (!isPasswordValid) {
             return res.status(401).json(genericAuthError);
         }
 
-        // Generate JWT token valid for 7 days
         const token = jwt.sign(
             {
                 user_id: user.user_id,

@@ -5,7 +5,6 @@ function Landing() {
     return (
         <main className="landing-page">
 
-            {/* Hero Section */}
             <section className="landing-hero">
 
                 <div className="hero-content">
@@ -39,7 +38,6 @@ function Landing() {
             </section>
 
 
-            {/* Why RentIQ Section */}
             <section className="why-section">
 
                 <div className="section-heading">
@@ -120,7 +118,6 @@ function Landing() {
             </section>
 
 
-            {/* Call To Action */}
             <section className="landing-cta">
 
                 <div>

@@ -10,21 +10,18 @@ const createBooking = async (req, res) => {
 
         const userId = req.user.user_id
 
-        // Basic validation
         if (!vehicleId || !startDate || !endDate) {
             return res.status(400).json({
                 message: 'All booking fields are required'
             })
         }
 
-        // Make sure the end date is after the start date
         if (endDate <= startDate) {
             return res.status(400).json({
                 message: 'End date must be after start date'
             })
         }
 
-        // Get vehicle and check availability
         const [vehicles] = await db.query(
             `
             SELECT
@@ -51,7 +48,6 @@ const createBooking = async (req, res) => {
             })
         }
 
-        // Calculate rental days
         const start = new Date(startDate)
         const end = new Date(endDate)
 
@@ -60,11 +56,9 @@ const createBooking = async (req, res) => {
         const rentalDays =
             difference / (1000 * 60 * 60 * 24)
 
-        // Calculate price on the server
         const totalPrice =
             rentalDays * Number(vehicle.price_per_day)
 
-        // Create booking
         const [result] = await db.query(
             `
             INSERT INTO bookings

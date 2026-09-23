@@ -6,7 +6,8 @@ import Register from "./pages/auth/Register";
 import Vehicles from "./pages/vehicles/Vehicles";
 import VehicleDetails from "./pages/vehicles/VehicleDetails";
 import Profile from "./pages/profile/Profile";
-import Contact from './pages/contact/Contact'
+import Contact from './pages/contact/Contact';
+import Footer from './components/common/Footer';
 import "./App.css";
 
 function App() {
@@ -27,6 +28,8 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/contact" element={<Contact />} />
       </Routes>
+
+      <Footer />
     </BrowserRouter>
   );
 }

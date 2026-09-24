@@ -27,6 +27,9 @@ function Navbar() {
                         Vehicles
                     </Link>
 
+                    <Link to="/contact">
+                        Contact
+                    </Link>
                     {!isLoggedIn ? (
                         <>
                             <Link to="/login">

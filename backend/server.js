@@ -7,13 +7,14 @@ const authRoutes = require('./routes/authRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const app = express();
-
+const contactRoutes = require('./routes/contactRoutes')
 app.use(cors());
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/contact', contactRoutes)
 
 app.get('/api/health', async (req, res) => {
     try {

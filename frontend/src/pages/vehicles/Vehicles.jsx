@@ -6,6 +6,7 @@ import FilterPanel from '../../components/vehicle/FilterPanel'
 import VehicleCard from '../../components/vehicle/VehicleCard'
 import WishlistButton from '../../components/vehicle/WishlistButton'
 import CompareButton from '../../components/vehicle/CompareButton'
+import Loader from '../../components/common/Loader'
 
 import './Vehicles.css'
 
@@ -80,13 +81,10 @@ function Vehicles() {
     if (loading) {
         return (
             <main className="vehicles-page">
-                <div className="vehicle-message">
-                    Loading vehicles...
-                </div>
+                <Loader message="Loading vehicles..." />
             </main>
         )
     }
-
     if (error) {
         return (
             <main className="vehicles-page">

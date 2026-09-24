@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import axiosInstance from '../../api/axiosInstance'
 import './Profile.css'
 import vehicleImages from '../../utils/vehicleImages'
-
+import Loader from '../../components/common/Loader'
 function Profile() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -147,7 +147,7 @@ function Profile() {
 
 
         {loading && (
-          <p>Loading bookings...</p>
+          <Loader message="Loading your rental history..." />
         )}
 
         {error && (

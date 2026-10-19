@@ -1,14 +1,27 @@
+
 import { createContext, useContext, useState } from 'react'
 
 const AuthContext = createContext()
 
 function AuthProvider({ children }) {
     const [user, setUser] = useState(() => {
-        const savedUser = localStorage.getItem('user')
+        try {
+            const savedUser = localStorage.getItem('user')
 
-        return savedUser
-            ? JSON.parse(savedUser)
-            : null
+            return savedUser
+                ? JSON.parse(savedUser)
+                : null
+        } catch (error) {
+            console.error(
+                'Failed to restore user session:',
+                error
+            )
+
+            localStorage.removeItem('user')
+            localStorage.removeItem('token')
+
+            return null
+        }
     })
 
     const login = (userData, token) => {
@@ -51,3 +64,4 @@ export function useAuth() {
 }
 
 export default AuthProvider
+

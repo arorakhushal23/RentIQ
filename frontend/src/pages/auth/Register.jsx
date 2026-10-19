@@ -1,10 +1,13 @@
+
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axiosInstance from '../../api/axiosInstance'
+import { useAuth } from '../../context/AuthContext'
 import './Register.css'
 
 function Register() {
     const navigate = useNavigate()
+    const { login } = useAuth()
 
     const [formData, setFormData] = useState({
         name: '',
@@ -87,20 +90,17 @@ function Register() {
                 }
             )
 
-            console.log(
-                'Registration successful:',
-                response.data
-            )
+            const { token, user } = response.data
 
-            localStorage.setItem(
-                'token',
-                response.data.token
-            )
+            if (!token || !user) {
+                throw new Error(
+                    'Registration succeeded, but authentication data was not returned.'
+                )
+            }
 
-            localStorage.setItem(
-                'user',
-                JSON.stringify(response.data.user)
-            )
+            // Update localStorage and shared React authentication state.
+            // This allows the Navbar to update immediately.
+            login(user, token)
 
             navigate('/')
         } catch (error) {
@@ -111,6 +111,7 @@ function Register() {
 
             setError(
                 error.response?.data?.message ||
+                error.message ||
                 'Unable to register. Please try again.'
             )
         } finally {
@@ -288,3 +289,4 @@ function Register() {
 }
 
 export default Register
+

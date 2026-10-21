@@ -4,7 +4,7 @@ import './Navbar.css'
 import rentiqLogo from '../../assets/logo/rentiq-logo.png'
 
 function Navbar() {
-    const { isLoggedIn } = useAuth()
+    const { user, isLoggedIn } = useAuth()
 
     return (
         <nav className="navbar">
@@ -30,6 +30,13 @@ function Navbar() {
                     <Link to="/contact">
                         Contact
                     </Link>
+
+                    {user?.role === 'admin' && (
+                        <Link to="/admin" className="navbar-admin">
+                            Admin
+                        </Link>
+                    )}
+
                     {!isLoggedIn ? (
                         <>
                             <Link to="/login">

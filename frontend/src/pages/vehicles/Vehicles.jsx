@@ -161,6 +161,7 @@ function Vehicles() {
                                         price={vehicle.price_per_day}
                                         seats={vehicle.seating_capacity}
                                         transmission={vehicle.transmission}
+                                        imageUrl={vehicle.image_url}
                                     />
 
                                     <div className="vehicle-actions">

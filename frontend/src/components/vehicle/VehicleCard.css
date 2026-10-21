@@ -1,8 +1,6 @@
 .vehicle-card {
     overflow: hidden;
-
     background: #ffffff;
-
     border: 1px solid var(--border);
     border-radius: 14px;
 
@@ -16,31 +14,35 @@
 
 .vehicle-card:hover {
     transform: translateY(-4px);
-
     background: #ffffff;
-
     border-color: var(--blue-primary);
     box-shadow: var(--shadow-md);
 }
 
 .vehicle-image {
-    height: 190px;
+    width: 100%;
+    height: 200px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    background:
-        linear-gradient(135deg,
-            #f8fafc,
-            #edf2f7);
+    overflow: hidden;
+
+    background: linear-gradient(135deg, #f8fafc, #edf2f7);
 
     border-bottom: 1px solid var(--border);
+}
 
-    font-size: 64px;
+.vehicle-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .vehicle-image span {
+    font-size: 64px;
     filter: none;
 }
 
@@ -50,84 +52,71 @@
 
 .vehicle-category {
     margin-bottom: 6px;
-
     color: var(--blue-primary);
-
     font-size: 13px;
     font-weight: 700;
-
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
 .vehicle-name {
     margin: 0 0 4px;
-
     color: var(--text-primary);
-
     font-size: 24px;
     font-weight: 700;
 }
 
 .vehicle-brand {
     margin-bottom: 20px;
-
     color: var(--text-muted);
-
     font-size: 14px;
 }
 
 .vehicle-details {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
-
     margin-bottom: 22px;
 }
 
 .vehicle-details span {
     padding: 6px 10px;
-
     border: 1px solid var(--border);
-
     border-radius: 6px;
-
     background: var(--bg-secondary);
-
     color: var(--text-secondary);
-
     font-size: 13px;
     font-weight: 500;
-
     text-transform: capitalize;
 }
 
+/* Price and details button */
 .vehicle-bottom {
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     gap: 16px;
 }
 
 .vehicle-price {
     margin: 0;
-
     color: var(--text-primary);
-
     font-size: 21px;
     font-weight: 700;
 }
 
 .vehicle-price span {
     margin-left: 3px;
-
     color: var(--text-muted);
-
     font-size: 13px;
     font-weight: 400;
 }
 
 .vehicle-details-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
     padding: 10px 16px;
 
     border: 1px solid var(--blue-primary);
@@ -138,6 +127,7 @@
 
     font-size: 13px;
     font-weight: 600;
+    text-decoration: none;
 
     cursor: pointer;
 
@@ -156,8 +146,13 @@
     box-shadow: 0 4px 12px rgba(29, 104, 189, 0.25);
 }
 
-@media (max-width: 500px) {
+.vehicle-details-button:focus-visible {
+    outline: 3px solid rgba(29, 104, 189, 0.35);
+    outline-offset: 3px;
+}
 
+
+@media (max-width: 500px) {
     .vehicle-bottom {
         align-items: stretch;
         flex-direction: column;
@@ -165,21 +160,7 @@
 
     .vehicle-details-button {
         width: 100%;
+        box-sizing: border-box;
         text-align: center;
     }
-
-}
-
-.vehicle-image {
-    width: 100%;
-    height: 200px;
-    overflow: hidden;
-    border-radius: 12px 12px 0 0;
-}
-
-.vehicle-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
 }

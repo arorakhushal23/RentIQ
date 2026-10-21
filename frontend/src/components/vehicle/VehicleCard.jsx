@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom'
-import './VehicleCard.css'
-import vehicleImages from '../../utils/vehicleImages'
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import './VehicleCard.css';
+import vehicleImages from '../../utils/vehicleImages';
 
 function VehicleCard({
     vehicleId,
@@ -10,23 +11,30 @@ function VehicleCard({
     price,
     seats,
     transmission,
+    imageUrl,
 }) {
+    const [imageFailed, setImageFailed] = useState(false);
+
+    const imageSource = imageUrl || vehicleImages[name];
+
     return (
         <article className="vehicle-card">
-
             <div className="vehicle-image">
-                {vehicleImages[name] ? (
+                {imageSource && !imageFailed ? (
                     <img
-                        src={vehicleImages[name]}
-                        alt={name}
+                        src={imageSource}
+                        alt={`${brand || ''} ${name}`}
+                        loading="lazy"
+                        onError={() => setImageFailed(true)}
                     />
                 ) : (
-                    <span>🚗</span>
+                    <span role="img" aria-label="Vehicle">
+                        🚗
+                    </span>
                 )}
             </div>
 
             <div className="vehicle-info">
-
                 <p className="vehicle-category">
                     {category}
                 </p>
@@ -40,19 +48,11 @@ function VehicleCard({
                 </p>
 
                 <div className="vehicle-details">
-
-                    <span>
-                        {seats} Seats
-                    </span>
-
-                    <span>
-                        {transmission}
-                    </span>
-
+                    <span>{seats} Seats</span>
+                    <span>{transmission}</span>
                 </div>
 
                 <div className="vehicle-bottom">
-
                     <p className="vehicle-price">
                         ₹{price}
                         <span>/day</span>
@@ -64,13 +64,10 @@ function VehicleCard({
                     >
                         View Details
                     </Link>
-
                 </div>
-
             </div>
-
         </article>
-    )
+    );
 }
 
-export default VehicleCard
+export default VehicleCard;

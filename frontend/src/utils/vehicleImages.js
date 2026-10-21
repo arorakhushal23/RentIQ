@@ -1,14 +1,14 @@
 const vehicleImages = {
-    Swift: '/vehicles/swift.jpg',
-    i20: '/vehicles/i20.jpg',
-    City: '/vehicles/city.jpg',
-    Verna: '/vehicles/verna.jpg',
-    Creta: '/vehicles/creta.jpg',
-    Scorpio: '/vehicles/scorpio.webp',
-    'Classic 350': '/vehicles/classic-350.webp',
-    'Pulsar 150': '/vehicles/pulsar-150.webp',
-    Activa: '/vehicles/activa.jpg',
-    'Nexon EV': '/vehicles/nexon-ev.jpg',
-}
+    Swift: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8',
+    i20: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70',
+    City: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d',
+    Verna: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2',
+    Creta: 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b',
+    Scorpio: 'https://images.unsplash.com/photo-151 SUV',
+    'Classic 350': 'https://images.unsplash.com/photo-1558981806-ec527fa84c39',
+    'Pulsar 150': 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc',
+    Activa: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39',
+    'Nexon EV': 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7',
+};
 
-export default vehicleImages
+export default vehicleImages;

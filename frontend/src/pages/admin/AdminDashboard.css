@@ -1,0 +1,334 @@
+.admin-dashboard-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 30px 80px;
+    box-sizing: border-box;
+    min-height: calc(100vh - 76px);
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 36px;
+    gap: 20px;
+}
+
+.admin-header-title {
+    max-width: 800px;
+}
+
+.admin-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: #eff6ff;
+    color: #1d68bd;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.admin-header h1 {
+    font-size: 34px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 8px;
+    letter-spacing: -0.5px;
+}
+
+.admin-header p {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.admin-refresh-btn {
+    padding: 10px 18px;
+    background: #ffffff;
+    color: var(--text-primary);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+}
+
+.admin-refresh-btn:hover:not(:disabled) {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: var(--blue-primary);
+}
+
+.admin-refresh-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.admin-loading-state {
+    padding: 80px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.admin-error-card {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin: 30px 0;
+}
+
+.admin-error-icon {
+    font-size: 28px;
+    line-height: 1;
+}
+
+.admin-error-content h3 {
+    margin: 0 0 6px;
+    color: #991b1b;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.admin-error-content p {
+    margin: 0 0 16px;
+    color: #7f1d1d;
+    font-size: 14px;
+}
+
+.admin-retry-btn {
+    padding: 8px 16px;
+    background: #dc2626;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.admin-retry-btn:hover {
+    background: #b91c1c;
+}
+
+.admin-section {
+    margin-bottom: 36px;
+}
+
+.admin-section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 18px;
+    letter-spacing: -0.2px;
+}
+
+/* KPI Cards Grid */
+.admin-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.admin-kpi-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.kpi-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+}
+
+.kpi-icon {
+    font-size: 20px;
+}
+
+.kpi-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+}
+
+.kpi-subtext {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.admin-kpi-card.highlight-success {
+    border-left: 4px solid var(--success);
+}
+
+.admin-kpi-card.highlight-revenue {
+    border-left: 4px solid var(--blue-primary);
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.admin-kpi-card.highlight-revenue .kpi-value {
+    color: var(--blue-primary);
+}
+
+/* Booking Status Grid */
+.admin-booking-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+}
+
+.admin-status-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow-sm);
+    transition: background 0.2s ease;
+}
+
+.admin-status-card:hover {
+    background: #f8fafc;
+}
+
+.status-indicator {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.status-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.status-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: capitalize;
+}
+
+.status-count {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.pending-card {
+    border-top: 3px solid #f59e0b;
+}
+
+.confirmed-card {
+    border-top: 3px solid #3b82f6;
+}
+
+.completed-card {
+    border-top: 3px solid #10b981;
+}
+
+.cancelled-card {
+    border-top: 3px solid #ef4444;
+}
+
+.total-card {
+    border-top: 3px solid #6366f1;
+}
+
+/* Notice Box */
+.admin-notice-box {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.admin-notice-box strong {
+    color: var(--text-primary);
+}
+
+/* Responsive Media Queries */
+@media (max-width: 1080px) {
+    .admin-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .admin-booking-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 700px) {
+    .admin-dashboard-page {
+        padding: 24px 16px 60px;
+    }
+
+    .admin-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-header-actions {
+        width: 100%;
+    }
+
+    .admin-refresh-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .admin-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-booking-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-booking-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -8,8 +8,11 @@ import VehicleDetails from "./pages/vehicles/VehicleDetails";
 import Profile from "./pages/profile/Profile";
 import Contact from './pages/contact/Contact';
 import Footer from './components/common/Footer';
+import AdminRoute from './components/common/AdminRoute';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminVehicles from './pages/admin/AdminVehicles';
 import "./App.css";
-
+import AdminBookings from './pages/admin/AdminBookings';
 function App() {
   return (
     <BrowserRouter>
@@ -27,6 +30,31 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/contact" element={<Contact />} />
+
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/vehicles"
+          element={
+            <AdminRoute>
+              <AdminVehicles />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/bookings"
+          element={
+            <AdminRoute>
+              <AdminBookings />
+            </AdminRoute>
+          }
+        />
       </Routes>
 
       <Footer />

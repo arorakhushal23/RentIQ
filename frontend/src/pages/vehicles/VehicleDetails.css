@@ -1,0 +1,86 @@
+.vehicle-details-page {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.vehicle-details-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.vehicle-details-image {
+    width: 100%;
+    height: 350px;
+    overflow: hidden;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+}
+
+.vehicle-details-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.vehicle-details-image span {
+    font-size: 64px;
+}
+
+.vehicle-details-info {
+    min-width: 0;
+}
+
+.vehicle-specifications {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.vehicle-specifications div {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.vehicle-details-price {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 24px 0;
+}
+
+.vehicle-details-price strong {
+    font-size: 28px;
+}
+
+.vehicle-details-price small {
+    font-size: 14px;
+    font-weight: normal;
+}
+
+@media (max-width: 768px) {
+    .vehicle-details-page {
+        padding: 16px;
+    }
+
+    .vehicle-details-card {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .vehicle-details-image {
+        height: 280px;
+    }
+}

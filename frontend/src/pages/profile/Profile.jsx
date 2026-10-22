@@ -14,13 +14,17 @@ function Profile() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selectedBooking, setSelectedBooking] = useState(null)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState('')
+  const [cancelSuccess, setCancelSuccess] = useState('')
 
   useEffect(() => {
     const fetchBookings = async () => {
       try {
         const response = await axiosInstance.get('/bookings/my-bookings')
         setBookings(response.data.bookings)
-      } catch (error) {
+      } catch {
         setError('Failed to load rental history')
       } finally {
         setLoading(false)
@@ -40,6 +44,58 @@ function Profile() {
 
     return new Date(date).toLocaleDateString('en-IN')
   }
+
+  const handleOpenDetails = (booking) => {
+    setSelectedBooking(booking)
+    setShowCancelConfirm(false)
+    setCancelError('')
+    setCancelSuccess('')
+  }
+
+  const handleCloseModal = () => {
+    if (cancelling) return
+    setSelectedBooking(null)
+    setShowCancelConfirm(false)
+    setCancelError('')
+    setCancelSuccess('')
+  }
+
+  const handleCancelBooking = async () => {
+    if (!selectedBooking || cancelling) return
+
+    setCancelling(true)
+    setCancelError('')
+    setCancelSuccess('')
+
+    try {
+      const response = await axiosInstance.patch(
+        `/bookings/${selectedBooking.booking_id}/cancel`
+      )
+
+      const updatedBooking = response.data.booking
+
+      setSelectedBooking(updatedBooking)
+
+      setBookings((prevBookings) =>
+        prevBookings.map((b) =>
+          b.booking_id === updatedBooking.booking_id ? updatedBooking : b
+        )
+      )
+
+      setShowCancelConfirm(false)
+      setCancelSuccess(response.data.message || 'Booking cancelled successfully')
+    } catch (err) {
+      const message =
+        err.response?.data?.message || 'Failed to cancel booking. Please try again.'
+      setCancelError(message)
+    } finally {
+      setCancelling(false)
+    }
+  }
+
+  const isEligibleForCancellation =
+    selectedBooking &&
+    ['pending', 'confirmed'].includes(selectedBooking.status?.toLowerCase())
 
   const upcomingTrips = bookings.filter((booking) => {
     const status = booking.status?.toLowerCase()
@@ -198,10 +254,7 @@ function Profile() {
                 <button
                   type="button"
                   className="details-button"
-                  onClick={() => {
-                    console.log('Selected booking:', booking)
-                    setSelectedBooking(booking)
-                  }}
+                  onClick={() => handleOpenDetails(booking)}
                 >
                   View Details
                 </button>
@@ -216,7 +269,7 @@ function Profile() {
       {selectedBooking && (
         <div
           className="booking-modal-overlay"
-          onClick={() => setSelectedBooking(null)}
+          onClick={handleCloseModal}
         >
           <div
             className="booking-modal"
@@ -244,7 +297,8 @@ function Profile() {
               <button
                 type="button"
                 className="booking-modal-close"
-                onClick={() => setSelectedBooking(null)}
+                onClick={handleCloseModal}
+                disabled={cancelling}
                 aria-label="Close booking details"
               >
                 &times;
@@ -351,14 +405,75 @@ function Profile() {
               </strong>
             </div>
 
-            {/* Footer */}
-            <button
-              type="button"
-              className="booking-modal-done"
-              onClick={() => setSelectedBooking(null)}
-            >
-              Close Details
-            </button>
+            {/* Cancellation Feedback Alerts */}
+            {cancelSuccess && (
+              <div className="booking-modal-alert success" role="status">
+                {cancelSuccess}
+              </div>
+            )}
+
+            {cancelError && (
+              <div className="booking-modal-alert error" role="alert">
+                {cancelError}
+              </div>
+            )}
+
+            {/* Modal Actions */}
+            <div className="booking-modal-actions">
+              {isEligibleForCancellation && !showCancelConfirm && (
+                <button
+                  type="button"
+                  className="booking-modal-cancel-btn"
+                  onClick={() => {
+                    setShowCancelConfirm(true)
+                    setCancelError('')
+                  }}
+                  disabled={cancelling}
+                >
+                  Cancel Booking
+                </button>
+              )}
+
+              {showCancelConfirm && (
+                <div className="booking-cancel-confirm">
+                  <p>
+                    Are you sure you want to cancel this booking? This action cannot be undone.
+                  </p>
+                  <div className="booking-cancel-confirm-btns">
+                    <button
+                      type="button"
+                      className="booking-cancel-confirm-btn"
+                      onClick={handleCancelBooking}
+                      disabled={cancelling}
+                    >
+                      {cancelling ? 'Cancelling...' : 'Yes, Cancel Booking'}
+                    </button>
+                    <button
+                      type="button"
+                      className="booking-cancel-abort-btn"
+                      onClick={() => {
+                        if (!cancelling) {
+                          setShowCancelConfirm(false)
+                          setCancelError('')
+                        }
+                      }}
+                      disabled={cancelling}
+                    >
+                      Keep Booking
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="button"
+                className="booking-modal-done"
+                onClick={handleCloseModal}
+                disabled={cancelling}
+              >
+                Close Details
+              </button>
+            </div>
           </div>
         </div>
       )}

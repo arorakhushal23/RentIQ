@@ -632,6 +632,137 @@
     white-space: nowrap;
 }
 
+/* Modal actions & cancellation */
+
+.booking-modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.booking-modal-actions .booking-modal-done {
+    margin-top: 0;
+}
+
+.booking-modal-cancel-btn {
+    width: 100%;
+    padding: 12px 18px;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: #fef2f2;
+    color: #dc2626;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.booking-modal-cancel-btn:hover:not(:disabled) {
+    background: #fee2e2;
+    border-color: #f87171;
+    color: #b91c1c;
+}
+
+.booking-modal-cancel-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Inline cancellation confirmation prompt */
+
+.booking-cancel-confirm {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid #fecdd3;
+    border-radius: 12px;
+    background: #fff1f2;
+    animation: bookingModalEnter 0.15s ease-out;
+}
+
+.booking-cancel-confirm p {
+    margin: 0;
+    color: #9f1239;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.booking-cancel-confirm-btns {
+    display: flex;
+    gap: 10px;
+}
+
+.booking-cancel-confirm-btn {
+    flex: 1;
+    padding: 11px 14px;
+    border: none;
+    border-radius: 8px;
+    background: #e11d48;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.booking-cancel-confirm-btn:hover:not(:disabled) {
+    background: #be123c;
+}
+
+.booking-cancel-confirm-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.booking-cancel-abort-btn {
+    flex: 1;
+    padding: 11px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.booking-cancel-abort-btn:hover:not(:disabled) {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.booking-cancel-abort-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Modal feedback alert banners */
+
+.booking-modal-alert {
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-top: 14px;
+}
+
+.booking-modal-alert.success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+
+.booking-modal-alert.error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+}
+
 /* Footer button */
 
 .booking-modal-done {
@@ -703,6 +834,10 @@
 
     .booking-modal-total > strong {
         font-size: 21px;
+    }
+
+    .booking-cancel-confirm {
+        padding: 13px;
     }
 }
 

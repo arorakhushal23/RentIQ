@@ -14,14 +14,8 @@ function Landing() {
                     </p>
 
                     <h1>
-                        Find Your Perfect Ride.
+                        Find Your Perfect Ride
                     </h1>
-
-                    <p className="hero-description">
-                        Choose from a wide range of cars, bikes, scooters,
-                        and EVs. Find the right vehicle for your journey
-                        and get moving.
-                    </p>
 
                     <div className="hero-actions">
                         <Link to="/vehicles" className="primary-button">

@@ -150,3 +150,32 @@ exports.getMe = async (req, res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
+
+exports.updateMe = async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name || typeof name !== 'string' || !name.trim()) {
+            return res.status(400).json({ message: 'Name is required' });
+        }
+
+        const trimmedName = name.trim();
+        await db.query(
+            'UPDATE users SET name = ? WHERE user_id = ?',
+            [trimmedName, req.user.user_id]
+        );
+
+        return res.status(200).json({
+            message: 'Profile updated successfully',
+            user: {
+                user_id: req.user.user_id,
+                name: trimmedName,
+                email: req.user.email,
+                role: req.user.role
+            }
+        });
+    } catch (error) {
+        console.error('updateMe error:', error);
+        return res.status(500).json({ message: 'Internal server error during profile update' });
+    }
+};
+

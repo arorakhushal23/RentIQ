@@ -70,11 +70,16 @@ const createBooking = async (req, res) => {
         const [vehicles] = await connection.query(
             `
             SELECT
-                vehicle_id,
-                price_per_day,
-                is_available
-            FROM vehicles
-            WHERE vehicle_id = ?
+                v.vehicle_id,
+                v.name AS vehicle_name,
+                v.brand AS vehicle_brand,
+                v.image_url,
+                c.name AS category_name,
+                v.price_per_day,
+                v.is_available
+            FROM vehicles v
+            LEFT JOIN categories c ON v.category_id = c.category_id
+            WHERE v.vehicle_id = ?
             FOR UPDATE
             `,
             [vehicleId]
@@ -176,6 +181,14 @@ const createBooking = async (req, res) => {
                 user_id: userId,
                 vehicleId,
                 vehicle_id: vehicleId,
+                vehicleName: vehicle.vehicle_name,
+                vehicle_name: vehicle.vehicle_name,
+                vehicleBrand: vehicle.vehicle_brand,
+                vehicle_brand: vehicle.vehicle_brand,
+                imageUrl: vehicle.image_url,
+                image_url: vehicle.image_url,
+                categoryName: vehicle.category_name,
+                category_name: vehicle.category_name,
                 pickupDatetime: pickupParsed.formatted,
                 pickup_datetime: pickupParsed.formatted,
                 returnDatetime: returnParsed.formatted,
@@ -224,6 +237,9 @@ const getMyBookings = async (req, res) => {
                 b.booking_id,
                 b.vehicle_id,
                 v.name AS vehicle_name,
+                v.brand AS vehicle_brand,
+                v.image_url,
+                c.name AS category_name,
                 b.pickup_datetime,
                 b.return_datetime,
                 b.pickup_datetime AS start_date,
@@ -234,6 +250,8 @@ const getMyBookings = async (req, res) => {
             FROM bookings b
             JOIN vehicles v
                 ON b.vehicle_id = v.vehicle_id
+            LEFT JOIN categories c
+                ON v.category_id = c.category_id
             WHERE b.user_id = ?
             ORDER BY b.booking_id DESC
             `,
@@ -370,6 +388,9 @@ const cancelBooking = async (req, res) => {
                 b.booking_id,
                 b.vehicle_id,
                 v.name AS vehicle_name,
+                v.brand AS vehicle_brand,
+                v.image_url,
+                c.name AS category_name,
                 b.pickup_datetime,
                 b.return_datetime,
                 b.pickup_datetime AS start_date,
@@ -380,6 +401,8 @@ const cancelBooking = async (req, res) => {
             FROM bookings b
             JOIN vehicles v
                 ON b.vehicle_id = v.vehicle_id
+            LEFT JOIN categories c
+                ON v.category_id = c.category_id
             WHERE b.booking_id = ? AND b.user_id = ?
             `,
             [bookingId, userId]

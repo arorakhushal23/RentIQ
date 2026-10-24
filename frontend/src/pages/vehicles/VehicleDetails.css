@@ -42,6 +42,20 @@
     min-width: 0;
 }
 
+.vehicle-details-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.vehicle-details-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
 .vehicle-specifications {
     display: flex;
     flex-wrap: wrap;

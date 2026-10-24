@@ -1,49 +1,171 @@
+import './FilterPanel.css';
+
+const DEFAULT_CATEGORIES = [
+    'All Categories',
+    'Sedan',
+    'SUV',
+    'Hatchback',
+    'Bike',
+    'Scooter',
+    'EV',
+];
+
 function FilterPanel({
-    category,
-    transmission,
-    seats,
-    maxPrice,
+    category = 'all',
+    transmission = 'all',
+    seats = 'all',
+    minPrice = '',
+    maxPrice = '',
+    availability = 'all',
+    availableCategories = DEFAULT_CATEGORIES,
     onCategoryChange,
     onTransmissionChange,
     onSeatsChange,
+    onMinPriceChange,
     onMaxPriceChange,
+    onAvailabilityChange,
     onReset,
 }) {
+    // Count active filters
+    const activeFiltersCount = [
+        category !== 'all',
+        transmission !== 'all',
+        seats !== 'all',
+        minPrice !== '' && Number(minPrice) > 0,
+        maxPrice !== '' && Number(maxPrice) < 5000,
+        availability !== 'all',
+    ].filter(Boolean).length;
+
     return (
-        <section className="filter-panel">
+        <section className="filter-panel" aria-label="Vehicle Filters">
+            <div className="filter-panel-header">
+                <div className="filter-title-wrap">
+                    <h2>Filters</h2>
+                    {activeFiltersCount > 0 && (
+                        <span className="filter-badge" aria-label={`${activeFiltersCount} active filters`}>
+                            {activeFiltersCount}
+                        </span>
+                    )}
+                </div>
 
-            <h2>Filters</h2>
+                {activeFiltersCount > 0 && (
+                    <button
+                        type="button"
+                        className="clear-all-text-btn"
+                        onClick={onReset}
+                        aria-label="Clear all applied filters"
+                    >
+                        Clear All
+                    </button>
+                )}
+            </div>
 
+            {/* Category Filter */}
             <div className="filter-group">
-                <label htmlFor="category">
+                <label htmlFor="filter-category" className="filter-group-label">
                     Category
                 </label>
-
                 <select
-                    id="category"
+                    id="filter-category"
                     value={category}
-                    onChange={(event) =>
-                        onCategoryChange(event.target.value)
-                    }
+                    onChange={(event) => onCategoryChange(event.target.value)}
+                    className="filter-select"
                 >
-                    <option value="all">All Categories</option>
-                    <option value="sedan">Sedan</option>
-                    <option value="suv">SUV</option>
-                    <option value="hatchback">Hatchback</option>
+                    {availableCategories.map((cat) => {
+                        const val = cat.toLowerCase() === 'all categories' ? 'all' : cat.toLowerCase();
+                        return (
+                            <option key={cat} value={val}>
+                                {cat}
+                            </option>
+                        );
+                    })}
                 </select>
             </div>
 
+            {/* Daily Price Range Filter */}
             <div className="filter-group">
-                <label htmlFor="transmission">
+                <div className="filter-label-row">
+                    <label htmlFor="filter-max-price-slider" className="filter-group-label">
+                        Daily Price (₹/day)
+                    </label>
+                    <span className="price-range-indicator">
+                        ₹{minPrice || 0} – ₹{maxPrice || '3,500+'}
+                    </span>
+                </div>
+
+                <input
+                    id="filter-max-price-slider"
+                    type="range"
+                    min="500"
+                    max="4000"
+                    step="100"
+                    value={maxPrice || 4000}
+                    onChange={(e) => onMaxPriceChange(e.target.value)}
+                    className="filter-slider"
+                    aria-label="Maximum daily rental price slider"
+                />
+
+                <div className="price-inputs-row">
+                    <div className="price-input-col">
+                        <span className="input-prefix">Min</span>
+                        <input
+                            id="filter-min-price"
+                            type="number"
+                            min="0"
+                            max="5000"
+                            placeholder="₹ Min"
+                            value={minPrice}
+                            onChange={(e) => onMinPriceChange(e.target.value)}
+                            className="filter-input-small"
+                            aria-label="Minimum daily rental price"
+                        />
+                    </div>
+                    <span className="price-separator">–</span>
+                    <div className="price-input-col">
+                        <span className="input-prefix">Max</span>
+                        <input
+                            id="filter-max-price"
+                            type="number"
+                            min="0"
+                            max="5000"
+                            placeholder="₹ Max"
+                            value={maxPrice}
+                            onChange={(e) => onMaxPriceChange(e.target.value)}
+                            className="filter-input-small"
+                            aria-label="Maximum daily rental price"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Seating Capacity Filter */}
+            <div className="filter-group">
+                <label htmlFor="filter-seats" className="filter-group-label">
+                    Seating Capacity
+                </label>
+                <select
+                    id="filter-seats"
+                    value={seats}
+                    onChange={(event) => onSeatsChange(event.target.value)}
+                    className="filter-select"
+                >
+                    <option value="all">Any Seats</option>
+                    <option value="2">2 Seats (Bikes & Scooters)</option>
+                    <option value="5">5 Seats (Sedans & Compacts)</option>
+                    <option value="7">7 Seats (SUVs)</option>
+                </select>
+            </div>
+
+            {/* Transmission Filter */}
+            <div className="filter-group">
+                <label htmlFor="filter-transmission" className="filter-group-label">
                     Transmission
                 </label>
-
                 <select
-                    id="transmission"
+                    id="filter-transmission"
                     value={transmission}
-                    onChange={(event) =>
-                        onTransmissionChange(event.target.value)
-                    }
+                    onChange={(event) => onTransmissionChange(event.target.value)}
+                    className="filter-select"
                 >
                     <option value="all">All Transmissions</option>
                     <option value="automatic">Automatic</option>
@@ -51,52 +173,32 @@ function FilterPanel({
                 </select>
             </div>
 
+            {/* Availability Filter */}
             <div className="filter-group">
-                <label htmlFor="seats">
-                    Seats
+                <label htmlFor="filter-availability" className="filter-group-label">
+                    Availability
                 </label>
-
                 <select
-                    id="seats"
-                    value={seats}
-                    onChange={(event) =>
-                        onSeatsChange(event.target.value)
-                    }
+                    id="filter-availability"
+                    value={availability}
+                    onChange={(event) => onAvailabilityChange(event.target.value)}
+                    className="filter-select"
                 >
-                    <option value="all">Any Seats</option>
-                    <option value="4">4 Seats</option>
-                    <option value="5">5 Seats</option>
-                    <option value="7">7 Seats</option>
+                    <option value="all">All Vehicles</option>
+                    <option value="available">Available Only</option>
                 </select>
             </div>
 
-            <div className="filter-group">
-                <label htmlFor="max-price">
-                    Maximum Price
-                </label>
-
-                <input
-                    id="max-price"
-                    type="number"
-                    min="0"
-                    placeholder="₹ per day"
-                    value={maxPrice}
-                    onChange={(event) =>
-                        onMaxPriceChange(event.target.value)
-                    }
-                />
-            </div>
-
+            {/* Reset Button */}
             <button
                 type="button"
                 className="reset-button"
                 onClick={onReset}
             >
-                Reset Filters
+                Reset All Filters
             </button>
-
         </section>
-    )
+    );
 }
 
-export default FilterPanel
+export default FilterPanel;

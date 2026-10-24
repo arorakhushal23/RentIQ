@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import BookingForm from '../../components/booking/BookingForm';
-import vehicleImages from '../../utils/vehicleImages';
+import WishlistButton from '../../components/vehicle/WishlistButton';
+import CompareButton from '../../components/vehicle/CompareButton';
+import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/vehicleImages';
 import './VehicleDetails.css';
 function VehicleDetails() {
     const { id } = useParams();
@@ -10,13 +12,11 @@ function VehicleDetails() {
     const [vehicle, setVehicle] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [imageFailed, setImageFailed] = useState(false);
 
     useEffect(() => {
         const fetchVehicle = async () => {
             setLoading(true);
             setError('');
-            setImageFailed(false);
 
             try {
                 const response = await axiosInstance.get(`/vehicles/${id}`);
@@ -44,37 +44,38 @@ function VehicleDetails() {
         return <p>Vehicle not found.</p>;
     }
 
-    const imageUrl =
-        vehicle.image_url ||
-        vehicleImages[vehicle.name];
+    const imageUrl = getVehicleImageUrl(vehicle);
 
     return (
         <main className="vehicle-details-page">
             <section className="vehicle-details-card">
                 <div className="vehicle-details-image">
-                    {imageUrl && !imageFailed ? (
-                        <img
-                            src={imageUrl}
-                            alt={`${vehicle.brand || ''} ${vehicle.name}`}
-                            onError={() => setImageFailed(true)}
-                        />
-                    ) : (
-                        <span role="img" aria-label="Vehicle">
-                            🚗
-                        </span>
-                    )}
+                    <img
+                        src={imageUrl}
+                        alt={`${vehicle.brand || ''} ${vehicle.name}`}
+                        onError={handleVehicleImageError}
+                    />
                 </div>
 
                 <div className="vehicle-details-info">
-                    <p className="vehicle-category">
-                        {vehicle.category}
-                    </p>
+                    <div className="vehicle-details-header-row">
+                        <div>
+                            <p className="vehicle-category">
+                                {vehicle.category}
+                            </p>
 
-                    <h1>{vehicle.name}</h1>
+                            <h1>{vehicle.name}</h1>
 
-                    <p className="vehicle-brand">
-                        {vehicle.brand}
-                    </p>
+                            <p className="vehicle-brand">
+                                {vehicle.brand}
+                            </p>
+                        </div>
+
+                        <div className="vehicle-details-actions">
+                            <WishlistButton vehicle={vehicle} />
+                            <CompareButton vehicle={vehicle} />
+                        </div>
+                    </div>
 
                     <div className="vehicle-specifications">
                         <div>

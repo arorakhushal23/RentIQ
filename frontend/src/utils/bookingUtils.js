@@ -4,7 +4,7 @@
  */
 
 /**
- * Format a Date object into local 'YYYY-MM-DDTHH:mm' string suitable for datetime-local input.
+ * Format a Date object into local 'YYYY-MM-DDTHH:mm' string.
  */
 export function formatLocalDateTime(date = new Date()) {
     const pad = (n) => String(n).padStart(2, '0')
@@ -14,6 +14,27 @@ export function formatLocalDateTime(date = new Date()) {
     const h = pad(date.getHours())
     const min = pad(date.getMinutes())
     return `${y}-${m}-${d}T${h}:${min}`
+}
+
+/**
+ * Format a Date object into local 'YYYY-MM-DD' date string for <input type="date">.
+ */
+export function formatLocalDate(date = new Date()) {
+    const pad = (n) => String(n).padStart(2, '0')
+    const y = date.getFullYear()
+    const m = pad(date.getMonth() + 1)
+    const d = pad(date.getDate())
+    return `${y}-${m}-${d}`
+}
+
+/**
+ * Format a Date object into local 'HH:mm' time string for <input type="time">.
+ */
+export function formatLocalTime(date = new Date()) {
+    const pad = (n) => String(n).padStart(2, '0')
+    const h = pad(date.getHours())
+    const min = pad(date.getMinutes())
+    return `${h}:${min}`
 }
 
 /**

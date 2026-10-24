@@ -38,6 +38,16 @@ function AuthProvider({ children }) {
         setUser(userData)
     }
 
+    const updateUser = (userData) => {
+        try {
+            const updated = { ...user, ...userData }
+            localStorage.setItem('user', JSON.stringify(updated))
+            setUser(updated)
+        } catch (err) {
+            console.error('Failed to update local user state:', err)
+        }
+    }
+
     const logout = () => {
         localStorage.removeItem('user')
         localStorage.removeItem('token')
@@ -51,6 +61,7 @@ function AuthProvider({ children }) {
                 user,
                 login,
                 logout,
+                updateUser,
                 isLoggedIn: !!user,
             }}
         >

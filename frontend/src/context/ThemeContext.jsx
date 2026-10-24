@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 
 const ThemeContext = createContext();
 
@@ -22,23 +22,26 @@ function getInitialTheme() {
 
 export function ThemeProvider({ children }) {
     const [theme, setThemeState] = useState(getInitialTheme);
+    const transitionTimerRef = useRef(null);
 
-    const applyThemeToDocument = (newTheme, withTransition = false) => {
+    const applyThemeToDocument = useCallback((newTheme, withTransition = false) => {
         const root = document.documentElement;
 
         if (withTransition) {
             root.classList.add('theme-transitioning');
-            window.clearTimeout(applyThemeToDocument._timeout);
-            applyThemeToDocument._timeout = window.setTimeout(() => {
+            if (transitionTimerRef.current) {
+                window.clearTimeout(transitionTimerRef.current);
+            }
+            transitionTimerRef.current = window.setTimeout(() => {
                 root.classList.remove('theme-transitioning');
             }, 300);
         }
 
         root.setAttribute('data-theme', newTheme);
         root.style.colorScheme = newTheme;
-    };
+    }, []);
 
-    const setTheme = (newTheme) => {
+    const setTheme = useCallback((newTheme) => {
         if (newTheme !== 'light' && newTheme !== 'dark') return;
 
         setThemeState(newTheme);
@@ -49,12 +52,12 @@ export function ThemeProvider({ children }) {
         } catch (error) {
             console.warn('Unable to save theme preference to localStorage:', error);
         }
-    };
+    }, [applyThemeToDocument]);
 
-    const toggleTheme = () => {
+    const toggleTheme = useCallback(() => {
         const nextTheme = theme === 'dark' ? 'light' : 'dark';
         setTheme(nextTheme);
-    };
+    }, [theme, setTheme]);
 
     useEffect(() => {
         // Initial application without transition to prevent initial flash
@@ -77,7 +80,7 @@ export function ThemeProvider({ children }) {
         } catch {
             // MatchMedia listener not supported or failed
         }
-    }, [theme]);
+    }, [theme, applyThemeToDocument]);
 
     return (
         <ThemeContext.Provider
@@ -93,6 +96,7 @@ export function ThemeProvider({ children }) {
     );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTheme() {
     const context = useContext(ThemeContext);
     if (!context) {

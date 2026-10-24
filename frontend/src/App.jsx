@@ -6,16 +6,22 @@ import Register from "./pages/auth/Register";
 import Vehicles from "./pages/vehicles/Vehicles";
 import VehicleDetails from "./pages/vehicles/VehicleDetails";
 import Profile from "./pages/profile/Profile";
+import Wishlist from "./pages/wishlist/Wishlist";
+import Compare from "./pages/compare/Compare";
 import Contact from './pages/contact/Contact';
 import Footer from './components/common/Footer';
+import FloatingCompareBar from './components/vehicle/FloatingCompareBar';
 import AdminRoute from './components/common/AdminRoute';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminVehicles from './pages/admin/AdminVehicles';
 import "./App.css";
 import AdminBookings from './pages/admin/AdminBookings';
+import ScrollToTop from './components/common/ScrollToTop';
+
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Navbar />
 
       <Routes>
@@ -24,6 +30,10 @@ function App() {
         <Route path="/vehicles" element={<Vehicles />} />
 
         <Route path="/vehicles/:id" element={<VehicleDetails />} />
+
+        <Route path="/wishlist" element={<Wishlist />} />
+
+        <Route path="/compare" element={<Compare />} />
 
         <Route path="/login" element={<Login />} />
 
@@ -57,6 +67,7 @@ function App() {
         />
       </Routes>
 
+      <FloatingCompareBar />
       <Footer />
     </BrowserRouter>
   );

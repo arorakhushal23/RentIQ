@@ -4,7 +4,7 @@
 }
 
 .landing-hero {
-    min-height: 620px;
+    min-height: 520px;
 
     display: flex;
     align-items: center;
@@ -19,7 +19,7 @@
     max-width: 1200px;
 
     margin: 0 auto;
-    padding: 80px 32px;
+    padding: 72px 32px;
 }
 
 .hero-label,
@@ -37,7 +37,7 @@
 .hero-content h1 {
     max-width: 760px;
 
-    margin-bottom: 24px;
+    margin-bottom: 36px;
 
     color: var(--text-primary);
 

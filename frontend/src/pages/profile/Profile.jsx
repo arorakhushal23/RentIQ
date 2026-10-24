@@ -5,6 +5,11 @@ import axiosInstance from '../../api/axiosInstance'
 import './Profile.css'
 import vehicleImages from '../../utils/vehicleImages'
 import Loader from '../../components/common/Loader'
+import {
+  formatDisplayDateTime,
+  calculateRentalDuration,
+  parseDateTime
+} from '../../utils/bookingUtils'
 
 function Profile() {
   const { user, logout } = useAuth()
@@ -41,8 +46,7 @@ function Profile() {
 
   const formatDate = (date) => {
     if (!date) return 'Not available'
-
-    return new Date(date).toLocaleDateString('en-IN')
+    return formatDisplayDateTime(date)
   }
 
   const handleOpenDetails = (booking) => {
@@ -99,16 +103,14 @@ function Profile() {
 
   const upcomingTrips = bookings.filter((booking) => {
     const status = booking.status?.toLowerCase()
-
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    const endDate = new Date(booking.end_date)
-    endDate.setHours(0, 0, 0, 0)
+    const now = new Date()
+    const retVal = booking.return_datetime || booking.end_date
+    const parsed = parseDateTime(retVal)
+    const returnTime = parsed ? parsed.date.getTime() : new Date(retVal).getTime()
 
     return (
       (status === 'pending' || status === 'confirmed') &&
-      endDate >= today
+      returnTime >= now.getTime()
     )
   }).length
 
@@ -233,10 +235,15 @@ function Profile() {
                   </div>
 
                   <p>
-                    📅 {formatDate(booking.start_date)}
+                    📅 {formatDisplayDateTime(booking.pickup_datetime || booking.start_date)}
                     {' → '}
-                    {formatDate(booking.end_date)}
+                    {formatDisplayDateTime(booking.return_datetime || booking.end_date)}
                   </p>
+                  {booking.duration && (
+                    <span style={{ display: 'inline-block', fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                      ⏱️ {booking.duration}
+                    </span>
+                  )}
                 </div>
 
                 <div className="booking-price">
@@ -344,10 +351,10 @@ function Profile() {
                   </span>
 
                   <div>
-                    <span>Pickup Date</span>
+                    <span>Pickup Time</span>
 
                     <strong>
-                      {formatDate(selectedBooking.start_date)}
+                      {formatDisplayDateTime(selectedBooking.pickup_datetime || selectedBooking.start_date)}
                     </strong>
                   </div>
                 </div>
@@ -358,10 +365,10 @@ function Profile() {
                   </span>
 
                   <div>
-                    <span>Return Date</span>
+                    <span>Return Time</span>
 
                     <strong>
-                      {formatDate(selectedBooking.end_date)}
+                      {formatDisplayDateTime(selectedBooking.return_datetime || selectedBooking.end_date)}
                     </strong>
                   </div>
                 </div>
@@ -378,6 +385,17 @@ function Profile() {
                 <div>
                   <span>Booking ID</span>
                   <strong>#{selectedBooking.booking_id}</strong>
+                </div>
+
+                <div>
+                  <span>Rental Duration</span>
+                  <strong>
+                    {selectedBooking.duration ||
+                      calculateRentalDuration(
+                        selectedBooking.pickup_datetime || selectedBooking.start_date,
+                        selectedBooking.return_datetime || selectedBooking.end_date
+                      ).display || '—'}
+                  </strong>
                 </div>
 
                 <div>

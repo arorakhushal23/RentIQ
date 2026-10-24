@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import './AdminBookings.css';
+import {
+    formatDisplayDateTime,
+    calculateRentalDuration
+} from '../../utils/bookingUtils';
 
 const STATUSES = [
     'all',
@@ -12,23 +16,7 @@ const STATUSES = [
 
 function formatDate(date) {
     if (!date) return '—';
-
-    const parsedDate = new Date(date);
-
-    if (Number.isNaN(parsedDate.getTime())) {
-        return '—';
-    }
-
-    // Preserve the calendar date when the API returns a date-only value.
-    const datePart =
-        typeof date === 'string' ? date.slice(0, 10) : null;
-
-    if (datePart && /^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
-        const [year, month, day] = datePart.split('-');
-        return `${day}/${month}/${year}`;
-    }
-
-    return parsedDate.toLocaleDateString('en-IN');
+    return formatDisplayDateTime(date);
 }
 
 function formatCurrency(amount) {
@@ -360,17 +348,23 @@ function AdminBookings() {
                                         <td>
                                             <div className="admin-bookings-dates">
                                                 <span>
-                                                    {formatDate(
-                                                        booking.start_date
+                                                    {formatDisplayDateTime(
+                                                        booking.pickup_datetime || booking.start_date
                                                     )}
                                                 </span>
 
                                                 <span>
                                                     to{' '}
-                                                    {formatDate(
-                                                        booking.end_date
+                                                    {formatDisplayDateTime(
+                                                        booking.return_datetime || booking.end_date
                                                     )}
                                                 </span>
+
+                                                {booking.duration && (
+                                                    <small style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '2px' }}>
+                                                        ({booking.duration})
+                                                    </small>
+                                                )}
                                             </div>
                                         </td>
 
@@ -542,12 +536,20 @@ function AdminBookings() {
 
                                 <h3>Rental</h3>
                                 <p>
-                                    <strong>Start:</strong>{' '}
-                                    {formatDate(selectedBooking.start_date)}
+                                    <strong>Pickup:</strong>{' '}
+                                    {formatDisplayDateTime(selectedBooking.pickup_datetime || selectedBooking.start_date)}
                                 </p>
                                 <p>
-                                    <strong>End:</strong>{' '}
-                                    {formatDate(selectedBooking.end_date)}
+                                    <strong>Return:</strong>{' '}
+                                    {formatDisplayDateTime(selectedBooking.return_datetime || selectedBooking.end_date)}
+                                </p>
+                                <p>
+                                    <strong>Duration:</strong>{' '}
+                                    {selectedBooking.duration ||
+                                        calculateRentalDuration(
+                                            selectedBooking.pickup_datetime || selectedBooking.start_date,
+                                            selectedBooking.return_datetime || selectedBooking.end_date
+                                        ).display || '—'}
                                 </p>
                                 <p>
                                     <strong>Total:</strong>{' '}
@@ -557,7 +559,7 @@ function AdminBookings() {
                                 </p>
                                 <p>
                                     <strong>Created:</strong>{' '}
-                                    {formatDate(selectedBooking.created_at)}
+                                    {formatDisplayDateTime(selectedBooking.created_at)}
                                 </p>
 
                                 <h3>Payment</h3>

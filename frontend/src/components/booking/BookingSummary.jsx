@@ -1,37 +1,37 @@
 import './BookingSummary.css'
 
 function BookingSummary({
-    rentalDays,
+    durationDisplay,
     pricePerDay,
     totalPrice,
+    rentalDays
 }) {
+    const displayDuration =
+        durationDisplay ||
+        (rentalDays ? `${rentalDays} ${rentalDays === 1 ? 'Day' : 'Days'}` : '0 hours')
+
+    const hourlyRate = (Number(pricePerDay) / 24).toFixed(2).replace(/\.00$/, '')
+
     return (
         <div className="booking-summary">
-
             <div className="summary-item">
-                <span>Rental Days</span>
-
-                <strong>
-                    {rentalDays} {rentalDays === 1 ? 'Day' : 'Days'}
-                </strong>
+                <span>Rental Duration</span>
+                <strong>{displayDuration}</strong>
             </div>
 
             <div className="summary-item">
-                <span>Daily Rate</span>
-
+                <span>Rate</span>
                 <strong>
-                    ₹{pricePerDay}/day
+                    ₹{pricePerDay}/day <small style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 'normal' }}>(₹{hourlyRate}/hr)</small>
                 </strong>
             </div>
 
             <div className="summary-item summary-total">
                 <span>Total Price</span>
-
                 <strong>
-                    ₹{totalPrice}
+                    ₹{Number(totalPrice).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                 </strong>
             </div>
-
         </div>
     )
 }

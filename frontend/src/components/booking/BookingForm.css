@@ -4,17 +4,23 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 16px;
-    max-width: 520px;
+    max-width: 540px;
     box-sizing: border-box;
     box-shadow: var(--shadow-sm);
     transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .booking-form h2 {
-    margin: 0 0 24px;
+    margin: 0 0 8px;
     color: var(--text-primary);
     font-size: 26px;
     font-weight: 700;
+}
+
+.booking-form-subtitle {
+    margin: 0 0 20px;
+    color: var(--text-muted);
+    font-size: 14px;
 }
 
 .booking-form form {
@@ -35,7 +41,8 @@
     font-weight: 600;
 }
 
-.booking-form input[type="date"] {
+.booking-form input[type="date"],
+.booking-form input[type="datetime-local"] {
     width: 100%;
     min-height: 52px;
     padding: 0 14px;
@@ -48,7 +55,7 @@
     border-radius: 10px;
 
     font: inherit;
-    font-size: 16px;
+    font-size: 15px;
 
     cursor: pointer;
     transition:
@@ -58,18 +65,21 @@
         color 0.2s ease;
 }
 
-.booking-form input[type="date"]:hover {
+.booking-form input[type="date"]:hover,
+.booking-form input[type="datetime-local"]:hover {
     border-color: var(--blue-primary);
 }
 
-.booking-form input[type="date"]:focus {
+.booking-form input[type="date"]:focus,
+.booking-form input[type="datetime-local"]:focus {
     outline: none;
     border-color: var(--blue-primary);
     box-shadow: 0 0 0 3px rgba(29, 104, 189, 0.15);
     background: var(--input-bg);
 }
 
-.booking-form input[type="date"]::-webkit-calendar-picker-indicator {
+.booking-form input[type="date"]::-webkit-calendar-picker-indicator,
+.booking-form input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
     opacity: 0.7;
     width: 20px;
@@ -77,8 +87,61 @@
     transition: opacity 0.2s ease;
 }
 
-.booking-form input[type="date"]::-webkit-calendar-picker-indicator:hover {
+.booking-form input[type="date"]::-webkit-calendar-picker-indicator:hover,
+.booking-form input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
     opacity: 1;
+}
+
+.booking-form input[type="date"]:disabled,
+.booking-form input[type="datetime-local"]:disabled {
+    background: #f1f5f9;
+    color: var(--text-muted);
+    border-color: var(--border);
+    cursor: not-allowed;
+    opacity: 0.75;
+}
+
+.booking-form .form-field-hint {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: -2px;
+}
+
+/* Quick duration presets */
+.booking-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.booking-preset-btn {
+    padding: 6px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.booking-preset-btn:hover:not(:disabled) {
+    background: var(--blue-soft);
+    color: var(--blue-primary);
+    border-color: var(--blue-border);
+}
+
+.booking-preset-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.booking-preset-btn.active {
+    background: var(--blue-primary);
+    color: #ffffff;
+    border-color: var(--blue-primary);
 }
 
 .booking-error {
@@ -94,39 +157,7 @@
     line-height: 1.5;
 }
 
-.booking-summary {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-
-    padding: 18px;
-
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-}
-
-.booking-summary p {
-    margin: 0;
-
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-
-    color: var(--text-secondary);
-    font-size: 14px;
-}
-
-.booking-summary strong {
-    color: var(--text-primary);
-    font-size: 20px;
-}
-
-.booking-summary p:last-child strong {
-    color: var(--blue-primary);
-}
-
-.booking-form button {
+.booking-form button[type="submit"] {
     width: 100%;
     min-height: 52px;
 
@@ -148,16 +179,17 @@
         box-shadow 0.2s ease;
 }
 
-.booking-form button:hover:not(:disabled) {
+.booking-form button[type="submit"]:hover:not(:disabled) {
     background: var(--blue-bright);
     transform: translateY(-1px);
     box-shadow: 0 6px 18px rgba(29, 104, 189, 0.25);
 }
 
-.booking-form button:active:not(:disabled) {
+.booking-form button[type="submit"]:active:not(:disabled) {
     transform: translateY(0);
 }
 
+.booking-form button[type="submit"]:disabled,
 .booking-form button:disabled {
     background: var(--border);
     color: var(--text-muted);
@@ -170,9 +202,5 @@
     .booking-form {
         padding: 20px;
         border-radius: 12px;
-    }
-
-    .booking-summary {
-        grid-template-columns: 1fr;
     }
 }

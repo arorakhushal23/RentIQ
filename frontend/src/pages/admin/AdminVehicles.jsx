@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import Loader from '../../components/common/Loader';
 import './AdminVehicles.css';
@@ -42,6 +42,7 @@ function AdminVehicles() {
     const [formError, setFormError] = useState('');
     const [saving, setSaving] = useState(false);
     const [changingStatusId, setChangingStatusId] = useState(null);
+    const isSubmittingRef = useRef(false);
 
     const fetchVehicles = useCallback(async () => {
         setLoading(true);
@@ -87,8 +88,12 @@ function AdminVehicles() {
     }, []);
 
     useEffect(() => {
-        fetchVehicles();
-        fetchCategories();
+        const timer = setTimeout(() => {
+            fetchVehicles();
+            fetchCategories();
+        }, 0);
+
+        return () => clearTimeout(timer);
     }, [fetchVehicles, fetchCategories]);
 
     const filteredVehicles = useMemo(() => {
@@ -141,7 +146,7 @@ function AdminVehicles() {
     };
 
     const closeForm = () => {
-        if (saving) return;
+        if (saving || isSubmittingRef.current) return;
 
         setShowForm(false);
         setEditingVehicle(null);
@@ -162,6 +167,12 @@ function AdminVehicles() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+
+        // Synchronous submission guard preventing rapid clicks or multiple dispatches
+        if (isSubmittingRef.current) {
+            return;
+        }
+
         setFormError('');
 
         if (
@@ -198,6 +209,7 @@ function AdminVehicles() {
             is_available: form.is_available,
         };
 
+        isSubmittingRef.current = true;
         setSaving(true);
 
         try {
@@ -222,6 +234,7 @@ function AdminVehicles() {
                 'Unable to save the vehicle. Please verify the details and try again.'
             );
         } finally {
+            isSubmittingRef.current = false;
             setSaving(false);
         }
 
@@ -613,7 +626,9 @@ function AdminVehicles() {
                                     disabled={saving || categories.length === 0}
                                 >
                                     {saving
-                                        ? 'Saving...'
+                                        ? editingVehicle
+                                            ? 'Saving Changes...'
+                                            : 'Creating Vehicle...'
                                         : editingVehicle
                                             ? 'Save Changes'
                                             : 'Create Vehicle'}

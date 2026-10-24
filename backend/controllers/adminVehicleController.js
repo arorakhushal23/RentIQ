@@ -226,7 +226,34 @@ const createVehicle = async (req, res) => {
             }
         }
 
-        // 9. Insert vehicle
+        // 9. Accidental duplicate submission protection (short time-window safeguard)
+        const [recentDuplicates] = await db.query(
+            `SELECT vehicle_id FROM vehicles
+            WHERE category_id = ?
+              AND name = ?
+              AND brand <=> ?
+              AND seating_capacity = ?
+              AND transmission = ?
+              AND price_per_day = ?
+              AND created_at >= NOW() - INTERVAL 5 SECOND
+            LIMIT 1`,
+            [
+                categoryId,
+                trimmedName,
+                validatedBrand,
+                seats,
+                transmission,
+                price
+            ]
+        );
+
+        if (recentDuplicates.length > 0) {
+            return res.status(409).json({
+                message: 'A vehicle with identical specifications was recently created. Please wait a moment before adding another unit.'
+            });
+        }
+
+        // 10. Insert vehicle
         const [result] = await db.query(
             `INSERT INTO vehicles (
                 category_id, name, brand, seating_capacity, transmission, price_per_day, is_available, image_url
@@ -245,7 +272,7 @@ const createVehicle = async (req, res) => {
 
         const newVehicleId = result.insertId;
 
-        // 10. Fetch inserted record with joined category
+        // 11. Fetch inserted record with joined category
         const [newRows] = await db.query(
             `SELECT
                 v.vehicle_id,

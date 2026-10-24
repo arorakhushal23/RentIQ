@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { calculateRentalDuration } = require('../utils/bookingUtils');
 
 /**
  * Admin Booking Controller
@@ -35,12 +36,18 @@ function parsePositiveInt(val) {
 function formatBookingRow(row) {
     if (!row) return null;
 
+    const dur = calculateRentalDuration(row.pickup_datetime, row.return_datetime);
+
     return {
         booking_id: row.booking_id,
         user_id: row.user_id,
         vehicle_id: row.vehicle_id,
-        start_date: row.start_date,
-        end_date: row.end_date,
+        pickup_datetime: row.pickup_datetime,
+        return_datetime: row.return_datetime,
+        start_date: row.start_date || row.pickup_datetime,
+        end_date: row.end_date || row.return_datetime,
+        duration: dur.display,
+        durationHours: dur.durationHours,
         total_price: Number(row.total_price),
         status: row.status,
         created_at: row.created_at,
@@ -86,8 +93,10 @@ const BASE_BOOKING_SELECT = `
         b.booking_id,
         b.user_id,
         b.vehicle_id,
-        b.start_date,
-        b.end_date,
+        b.pickup_datetime,
+        b.return_datetime,
+        b.pickup_datetime AS start_date,
+        b.return_datetime AS end_date,
         b.total_price,
         b.status,
         b.created_at,

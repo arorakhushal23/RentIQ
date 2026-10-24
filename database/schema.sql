@@ -32,20 +32,22 @@ CREATE TABLE vehicles (
 );
 
 CREATE TABLE bookings (
-    booking_id    INT AUTO_INCREMENT PRIMARY KEY,
-    user_id       INT                 NOT NULL,
-    vehicle_id    INT                 NOT NULL,
-    start_date    DATE                NOT NULL,
-    end_date      DATE                NOT NULL,
-    total_price   DECIMAL(10,2)       NOT NULL,
-    status        ENUM('pending','confirmed','cancelled','completed')
+    booking_id        INT AUTO_INCREMENT PRIMARY KEY,
+    user_id           INT                 NOT NULL,
+    vehicle_id        INT                 NOT NULL,
+    pickup_datetime   DATETIME            NOT NULL,
+    return_datetime   DATETIME            NOT NULL,
+    start_date        DATE                NULL,
+    end_date          DATE                NULL,
+    total_price       DECIMAL(10,2)       NOT NULL,
+    status            ENUM('pending','confirmed','cancelled','completed')
                                        NOT NULL DEFAULT 'pending',
-    created_at    TIMESTAMP           DEFAULT CURRENT_TIMESTAMP,
+    created_at        TIMESTAMP           DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (user_id)    REFERENCES users(user_id)       ON DELETE CASCADE,
     FOREIGN KEY (vehicle_id) REFERENCES vehicles(vehicle_id) ON DELETE RESTRICT,
 
-    CHECK (end_date > start_date)
+    CHECK (return_datetime > pickup_datetime)
 );
 
 CREATE TABLE payments (
@@ -87,5 +89,5 @@ CREATE TABLE wishlist (
 
 CREATE INDEX idx_vehicles_category   ON vehicles(category_id);
 CREATE INDEX idx_vehicles_available  ON vehicles(is_available);
-CREATE INDEX idx_bookings_vehicle    ON bookings(vehicle_id, start_date, end_date);
+CREATE INDEX idx_bookings_vehicle    ON bookings(vehicle_id, pickup_datetime, return_datetime);
 CREATE INDEX idx_bookings_user       ON bookings(user_id);

@@ -1,28 +1,73 @@
 const db = require('../config/db')
+const {
+    parseDateTime,
+    calculateRentalDuration,
+    calculateRentalPrice
+} = require('../utils/bookingUtils')
 
 const createBooking = async (req, res) => {
+    let connection
     try {
-        const {
-            vehicleId,
-            startDate,
-            endDate
-        } = req.body
-
-        const userId = req.user.user_id
-
-        if (!vehicleId || !startDate || !endDate) {
-            return res.status(400).json({
-                message: 'All booking fields are required'
+        const userId = req.user && req.user.user_id
+        if (!userId) {
+            return res.status(401).json({
+                message: 'Authentication required'
             })
         }
 
-        if (endDate <= startDate) {
+        const rawVehicleId = req.body.vehicleId !== undefined ? req.body.vehicleId : req.body.vehicle_id
+        const vehicleId = Number(rawVehicleId)
+
+        const rawPickup = req.body.pickupDatetime || req.body.pickup_datetime || req.body.startDate || req.body.start_date
+        const rawReturn = req.body.returnDatetime || req.body.return_datetime || req.body.endDate || req.body.end_date
+
+        if (!rawVehicleId || !rawPickup || !rawReturn) {
             return res.status(400).json({
-                message: 'End date must be after start date'
+                message: 'All booking fields (vehicleId, pickup datetime, return datetime) are required'
             })
         }
 
-        const [vehicles] = await db.query(
+        if (!Number.isInteger(vehicleId) || vehicleId <= 0) {
+            return res.status(400).json({
+                message: 'Invalid vehicle ID: Must be a positive integer'
+            })
+        }
+
+        const pickupParsed = parseDateTime(rawPickup)
+        if (!pickupParsed.valid) {
+            return res.status(400).json({
+                message: `Invalid pickup datetime: ${pickupParsed.error}`
+            })
+        }
+
+        const returnParsed = parseDateTime(rawReturn)
+        if (!returnParsed.valid) {
+            return res.status(400).json({
+                message: `Invalid return datetime: ${returnParsed.error}`
+            })
+        }
+
+        // Reject pickup times in the past (allow small 60s buffer for request latency)
+        const now = new Date()
+        if (pickupParsed.date.getTime() < now.getTime() - 60000) {
+            return res.status(400).json({
+                message: 'Pickup date and time cannot be in the past'
+            })
+        }
+
+        // Return datetime must be strictly after pickup datetime
+        if (returnParsed.date.getTime() <= pickupParsed.date.getTime()) {
+            return res.status(400).json({
+                message: 'Return date and time must be after pickup date and time'
+            })
+        }
+
+        // Acquire dedicated connection from the pool for the transaction
+        connection = await db.getConnection()
+        await connection.beginTransaction()
+
+        // 1. Lock the vehicle row with FOR UPDATE to serialize concurrent bookings for this vehicle
+        const [vehicles] = await connection.query(
             `
             SELECT
                 vehicle_id,
@@ -30,11 +75,13 @@ const createBooking = async (req, res) => {
                 is_available
             FROM vehicles
             WHERE vehicle_id = ?
+            FOR UPDATE
             `,
             [vehicleId]
         )
 
         if (vehicles.length === 0) {
+            await connection.rollback()
             return res.status(404).json({
                 message: 'Vehicle not found'
             })
@@ -43,58 +90,126 @@ const createBooking = async (req, res) => {
         const vehicle = vehicles[0]
 
         if (!vehicle.is_available) {
+            await connection.rollback()
             return res.status(400).json({
                 message: 'Vehicle is currently unavailable'
             })
         }
 
-        const start = new Date(startDate)
-        const end = new Date(endDate)
+        // 2. Prevent the same user from creating a duplicate active booking for the exact same vehicle and interval
+        const [userDuplicates] = await connection.query(
+            `
+            SELECT booking_id
+            FROM bookings
+            WHERE user_id = ?
+              AND vehicle_id = ?
+              AND pickup_datetime = ?
+              AND return_datetime = ?
+              AND status IN ('pending', 'confirmed')
+            LIMIT 1
+            `,
+            [userId, vehicleId, pickupParsed.formatted, returnParsed.formatted]
+        )
 
-        const difference = end - start
+        if (userDuplicates.length > 0) {
+            await connection.rollback()
+            return res.status(409).json({
+                message: 'You already have an active booking for this vehicle and selected dates/times'
+            })
+        }
 
-        const rentalDays =
-            difference / (1000 * 60 * 60 * 24)
+        // 3. Prevent overlapping active bookings for the same vehicle
+        // Half-open interval rule: existing.pickup_datetime < newReturn AND existing.return_datetime > newPickup
+        // Allows adjacent bookings (e.g. one ends at 12:00, another starts at 12:00).
+        // Cancelled and completed bookings do not block availability.
+        const [overlaps] = await connection.query(
+            `
+            SELECT booking_id
+            FROM bookings
+            WHERE vehicle_id = ?
+              AND status IN ('pending', 'confirmed')
+              AND pickup_datetime < ?
+              AND return_datetime > ?
+            LIMIT 1
+            `,
+            [vehicleId, returnParsed.formatted, pickupParsed.formatted]
+        )
 
-        const totalPrice =
-            rentalDays * Number(vehicle.price_per_day)
+        if (overlaps.length > 0) {
+            await connection.rollback()
+            return res.status(409).json({
+                message: 'Vehicle is already booked for the selected dates/times. Please choose different times or another vehicle.'
+            })
+        }
 
-        const [result] = await db.query(
+        // 4. Calculate authoritative price and duration
+        const durationInfo = calculateRentalDuration(pickupParsed.date, returnParsed.date)
+        const totalPrice = calculateRentalPrice(vehicle.price_per_day, durationInfo.durationHours)
+
+        // 5. Insert booking within the serialized transaction
+        const [result] = await connection.query(
             `
             INSERT INTO bookings
-                (user_id, vehicle_id, start_date, end_date, total_price, status)
+                (user_id, vehicle_id, pickup_datetime, return_datetime, start_date, end_date, total_price, status)
             VALUES
-                (?, ?, ?, ?, ?, 'pending')
+                (?, ?, ?, ?, ?, ?, ?, 'pending')
             `,
             [
                 userId,
                 vehicleId,
-                startDate,
-                endDate,
+                pickupParsed.formatted,
+                returnParsed.formatted,
+                pickupParsed.dateOnly,
+                returnParsed.dateOnly,
                 totalPrice
             ]
         )
 
-        res.status(201).json({
+        await connection.commit()
+
+        return res.status(201).json({
             message: 'Booking created successfully',
             booking: {
                 bookingId: result.insertId,
+                booking_id: result.insertId,
                 userId,
+                user_id: userId,
                 vehicleId,
-                startDate,
-                endDate,
-                rentalDays,
+                vehicle_id: vehicleId,
+                pickupDatetime: pickupParsed.formatted,
+                pickup_datetime: pickupParsed.formatted,
+                returnDatetime: returnParsed.formatted,
+                return_datetime: returnParsed.formatted,
+                startDate: pickupParsed.formatted,
+                start_date: pickupParsed.formatted,
+                endDate: returnParsed.formatted,
+                end_date: returnParsed.formatted,
+                duration: durationInfo.display,
+                durationHours: durationInfo.durationHours,
                 totalPrice,
+                total_price: totalPrice,
                 status: 'pending'
             }
         })
 
     } catch (error) {
+        if (connection) {
+            try {
+                await connection.rollback()
+            } catch (rollbackErr) {
+                console.error('Error rolling back booking transaction:', rollbackErr.message)
+            }
+        }
+
         console.error('Error creating booking:', error.message)
 
-        res.status(500).json({
+        return res.status(500).json({
             message: 'Failed to create booking'
         })
+    } finally {
+        if (connection) {
+            connection.release()
+        }
     }
 }
 
@@ -109,8 +224,10 @@ const getMyBookings = async (req, res) => {
                 b.booking_id,
                 b.vehicle_id,
                 v.name AS vehicle_name,
-                b.start_date,
-                b.end_date,
+                b.pickup_datetime,
+                b.return_datetime,
+                b.pickup_datetime AS start_date,
+                b.return_datetime AS end_date,
                 b.total_price,
                 b.status,
                 b.created_at
@@ -118,13 +235,22 @@ const getMyBookings = async (req, res) => {
             JOIN vehicles v
                 ON b.vehicle_id = v.vehicle_id
             WHERE b.user_id = ?
-            ORDER BY b.created_at DESC
+            ORDER BY b.booking_id DESC
             `,
             [userId]
         )
 
+        const formattedBookings = bookings.map(b => {
+            const dur = calculateRentalDuration(b.pickup_datetime, b.return_datetime)
+            return {
+                ...b,
+                duration: dur.display,
+                durationHours: dur.durationHours
+            }
+        })
+
         res.status(200).json({
-            bookings
+            bookings: formattedBookings
         })
 
     } catch (error) {
@@ -208,7 +334,6 @@ const cancelBooking = async (req, res) => {
         )
 
         if (updateResult.affectedRows === 0) {
-            // Concurrent status change or modification between check and update
             const [currentRows] = await db.query(
                 'SELECT status FROM bookings WHERE booking_id = ? AND user_id = ?',
                 [bookingId, userId]
@@ -245,8 +370,10 @@ const cancelBooking = async (req, res) => {
                 b.booking_id,
                 b.vehicle_id,
                 v.name AS vehicle_name,
-                b.start_date,
-                b.end_date,
+                b.pickup_datetime,
+                b.return_datetime,
+                b.pickup_datetime AS start_date,
+                b.return_datetime AS end_date,
                 b.total_price,
                 b.status,
                 b.created_at
@@ -258,9 +385,16 @@ const cancelBooking = async (req, res) => {
             [bookingId, userId]
         )
 
+        const updated = updatedRows[0]
+        const dur = calculateRentalDuration(updated.pickup_datetime, updated.return_datetime)
+
         return res.status(200).json({
             message: 'Booking cancelled successfully',
-            booking: updatedRows[0]
+            booking: {
+                ...updated,
+                duration: dur.display,
+                durationHours: dur.durationHours
+            }
         })
 
     } catch (error) {

@@ -108,6 +108,7 @@ function VehicleDetails() {
 
                     <BookingForm
                         vehicleId={vehicle.vehicle_id}
+                        vehicleName={vehicle.brand ? `${vehicle.brand} ${vehicle.name}` : vehicle.name}
                         pricePerDay={vehicle.price_per_day}
                         isAvailable={vehicle.is_available}
                     />

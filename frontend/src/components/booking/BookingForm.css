@@ -1,12 +1,13 @@
 .booking-form {
     margin-top: 32px;
     padding: 28px;
-    background: #ffffff;
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 16px;
     max-width: 520px;
     box-sizing: border-box;
     box-shadow: var(--shadow-sm);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .booking-form h2 {
@@ -40,7 +41,7 @@
     padding: 0 14px;
     box-sizing: border-box;
 
-    background: #ffffff;
+    background: var(--input-bg);
     color: var(--text-primary);
 
     border: 1px solid var(--border-light);
@@ -53,7 +54,8 @@
     transition:
         border-color 0.2s ease,
         box-shadow 0.2s ease,
-        background 0.2s ease;
+        background 0.2s ease,
+        color 0.2s ease;
 }
 
 .booking-form input[type="date"]:hover {
@@ -64,7 +66,7 @@
     outline: none;
     border-color: var(--blue-primary);
     box-shadow: 0 0 0 3px rgba(29, 104, 189, 0.15);
-    background: #ffffff;
+    background: var(--input-bg);
 }
 
 .booking-form input[type="date"]::-webkit-calendar-picker-indicator {
@@ -83,9 +85,9 @@
     margin: 0;
     padding: 12px 14px;
 
-    color: #b91c1c;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
+    color: var(--error-text);
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
     border-radius: 9px;
 
     font-size: 14px;
@@ -157,8 +159,8 @@
 }
 
 .booking-form button:disabled {
-    background: #e2e8f0;
-    color: #94a3b8;
+    background: var(--border);
+    color: var(--text-muted);
     cursor: not-allowed;
     box-shadow: none;
     transform: none;

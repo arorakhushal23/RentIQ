@@ -1,11 +1,12 @@
 .navbar {
     width: 100%;
     height: 76px;
-    background: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
+    background: var(--navbar-bg);
+    border-bottom: 1px solid var(--navbar-border);
     position: sticky;
     top: 0;
     z-index: 1000;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .navbar-container {
@@ -19,7 +20,6 @@
     justify-content: space-between;
 }
 
-
 .navbar-logo {
     display: flex;
     align-items: center;
@@ -31,18 +31,21 @@
     width: 155px;
     height: auto;
     display: block;
+    transition: filter 0.2s ease;
 }
 
-
+[data-theme="dark"] .navbar-logo img {
+    filter: brightness(1.2) drop-shadow(0 0 2px rgba(255, 255, 255, 0.45));
+}
 
 .navbar-links {
     display: flex;
     align-items: center;
-    gap: 32px;
+    gap: 28px;
 }
 
 .navbar-links a {
-    color: #0f172a;
+    color: var(--navbar-text);
     text-decoration: none;
     font-size: 15px;
     font-weight: 500;
@@ -50,17 +53,15 @@
 }
 
 .navbar-links a:hover {
-    color: #2563eb;
+    color: var(--blue-primary);
 }
-
-
 
 .navbar-admin {
     padding: 6px 14px;
     border-radius: 6px;
-    background: #f1f5f9;
-    color: #0f172a !important;
-    border: 1px solid #cbd5e1;
+    background: var(--bg-secondary);
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-light);
     font-size: 14px !important;
     font-weight: 600 !important;
     letter-spacing: 0.3px;
@@ -68,23 +69,24 @@
 }
 
 .navbar-admin:hover {
-    background: #e2e8f0;
-    color: #2563eb !important;
-    border-color: #94a3b8;
+    background: var(--blue-soft);
+    color: var(--blue-primary) !important;
+    border-color: var(--blue-border);
 }
 
 .navbar-register {
     padding: 10px 18px;
     border-radius: 8px;
-    background: #2563eb;
+    background: var(--blue-primary);
     color: #ffffff !important;
+    font-weight: 600;
+    transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .navbar-register:hover {
-    background: #1d4ed8;
+    background: var(--blue-bright);
+    transform: translateY(-1px);
 }
-
-
 
 .navbar-profile {
     width: 40px;
@@ -95,8 +97,9 @@
     align-items: center;
     justify-content: center;
 
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
+    background: var(--navbar-profile-bg);
+    border: 1px solid var(--border);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .navbar-profile span {
@@ -104,10 +107,69 @@
 }
 
 .navbar-profile:hover {
-    background: #e8f2ff;
+    background: var(--navbar-profile-hover);
+    border-color: var(--blue-border);
 }
 
+/* Theme Toggle Button */
+.theme-toggle-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
 
+.theme-toggle-btn:hover {
+    background: var(--blue-soft);
+    border-color: var(--blue-border);
+    color: var(--blue-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.theme-toggle-btn:focus-visible {
+    outline: 2px solid var(--blue-primary);
+    outline-offset: 2px;
+}
+
+.theme-toggle-icon {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s ease;
+}
+
+.sun-icon {
+    color: #f59e0b;
+}
+
+.theme-toggle-btn:hover .sun-icon {
+    transform: rotate(45deg);
+    color: #fbbf24;
+}
+
+.moon-icon {
+    color: var(--text-secondary);
+}
+
+.theme-toggle-btn:hover .moon-icon {
+    transform: rotate(-15deg);
+    color: var(--blue-primary);
+}
+
+@media (max-width: 820px) {
+    .navbar-links {
+        gap: 18px;
+    }
+}
 
 @media (max-width: 700px) {
     .navbar-container {
@@ -115,14 +177,39 @@
     }
 
     .navbar-logo img {
-        width: 125px;
+        width: 120px;
     }
 
     .navbar-links {
-        gap: 16px;
+        gap: 12px;
     }
 
     .navbar-links a {
-        font-size: 14px;
+        font-size: 13.5px;
+    }
+
+    .navbar-register {
+        padding: 7px 12px;
+        font-size: 13px !important;
+    }
+
+    .theme-toggle-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    .theme-toggle-icon {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar-links {
+        gap: 8px;
+    }
+
+    .navbar-links a:not(.navbar-register):not(.navbar-profile):not(.navbar-admin) {
+        font-size: 13px;
     }
 }

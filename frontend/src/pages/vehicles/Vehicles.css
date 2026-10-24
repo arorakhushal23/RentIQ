@@ -37,7 +37,7 @@
     max-width: 720px;
     width: 100%;
 
-    background: #ffffff;
+    background: var(--bg-card);
 
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -46,6 +46,7 @@
 
     box-shadow: var(--shadow-sm);
     transition:
+        background-color 0.2s ease,
         border-color 0.2s ease,
         box-shadow 0.2s ease;
 }
@@ -122,13 +123,14 @@
 
     padding: 24px;
 
-    background: #ffffff;
+    background: var(--bg-card);
 
     border: 1px solid var(--border);
 
     border-radius: 12px;
 
     box-shadow: var(--shadow-sm);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .vehicle-filters h2 {
@@ -165,14 +167,21 @@
 
     outline: none;
 
-    background: #ffffff;
+    background: var(--input-bg);
     color: var(--text-primary);
 
     font-size: 14px;
 
     transition:
+        background-color 0.2s ease,
         border-color 0.2s ease,
-        box-shadow 0.2s ease;
+        box-shadow 0.2s ease,
+        color 0.2s ease;
+}
+
+.filter-group select option {
+    background: var(--bg-card);
+    color: var(--text-primary);
 }
 
 .filter-group select:focus,
@@ -190,7 +199,7 @@
     border: 1px solid var(--border);
     border-radius: 7px;
 
-    background: #ffffff;
+    background: var(--bg-card);
     color: var(--text-secondary);
 
     font-size: 14px;
@@ -274,7 +283,7 @@
 
 .wishlist-button {
     border: 1px solid var(--border);
-    background: #ffffff;
+    background: var(--bg-card);
     color: var(--text-secondary);
     box-shadow: var(--shadow-sm);
 }
@@ -315,7 +324,7 @@
 
     text-align: center;
 
-    background: #ffffff;
+    background: var(--bg-card);
     color: var(--text-secondary);
 }
 
@@ -373,7 +382,7 @@
     border: 1px solid var(--border);
     border-right: none;
     border-radius: 8px 0 0 8px;
-    background: #ffffff;
+    background: var(--input-bg);
     color: var(--text-primary);
     font-size: 15px;
     outline: none;

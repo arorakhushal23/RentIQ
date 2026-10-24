@@ -1,12 +1,13 @@
 .vehicle-card {
     overflow: hidden;
-    background: #ffffff;
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 14px;
 
     transition:
         transform 0.25s ease,
         border-color 0.25s ease,
+        background-color 0.25s ease,
         box-shadow 0.25s ease;
 
     box-shadow: var(--shadow-sm);
@@ -14,7 +15,7 @@
 
 .vehicle-card:hover {
     transform: translateY(-4px);
-    background: #ffffff;
+    background: var(--bg-card-hover);
     border-color: var(--blue-primary);
     box-shadow: var(--shadow-md);
 }
@@ -29,7 +30,7 @@
 
     overflow: hidden;
 
-    background: linear-gradient(135deg, #f8fafc, #edf2f7);
+    background: var(--card-image-bg);
 
     border-bottom: 1px solid var(--border);
 }
@@ -150,7 +151,6 @@
     outline: 3px solid rgba(29, 104, 189, 0.35);
     outline-offset: 3px;
 }
-
 
 @media (max-width: 500px) {
     .vehicle-bottom {

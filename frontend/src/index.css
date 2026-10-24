@@ -1,40 +1,115 @@
-:root {
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Surfaces & Backgrounds */
   --bg-primary: #f8fafc;
   --bg-secondary: #f1f5f9;
   --bg-card: #ffffff;
   --bg-card-hover: #f8fbff;
+  --bg-surface: #ffffff;
+  --bg-surface-secondary: #f1f5f9;
+  --bg-modal-overlay: rgba(15, 23, 42, 0.65);
+  --bg-modal: #ffffff;
 
   --navy: #0f172a;
 
+  /* Brand Blues */
   --blue-primary: #1d68bd;
   --blue-bright: #257ae1;
   --blue-light: #1a569b;
   --blue-soft: #eff6ff;
   --blue-border: #bfdbfe;
+  --blue-gradient-start: #eff6ff;
 
+  /* Typography */
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #64748b;
+  --text-inverse: #ffffff;
+  --text-contrast: #0f172a;
 
+  /* Borders */
   --border: #e2e8f0;
   --border-light: #cbd5e1;
   --border-focus: #1d68bd;
+  --border-divider: #e2e8f0;
 
+  /* Form Controls */
+  --input-bg: #ffffff;
+  --input-text: #0f172a;
+  --input-border: #cbd5e1;
+  --input-placeholder: #94a3b8;
+  --input-focus-border: #1d68bd;
+  --input-focus-ring: rgba(29, 104, 189, 0.15);
+
+  /* Buttons */
+  --btn-primary-bg: #1d68bd;
+  --btn-primary-hover: #257ae1;
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: #ffffff;
+  --btn-secondary-border: #cbd5e1;
+  --btn-secondary-text: #0f172a;
+  --btn-secondary-hover-bg: #f8fbff;
+  --btn-secondary-hover-border: #1d68bd;
+  --btn-secondary-hover-text: #1d68bd;
+
+  /* Navbar & Footer */
+  --navbar-bg: #ffffff;
+  --navbar-border: #e2e8f0;
+  --navbar-text: #0f172a;
+  --navbar-profile-bg: #f1f5f9;
+  --navbar-profile-hover: #e8f2ff;
+
+  --footer-bg: #0f172a;
+  --footer-border: #1e293b;
+  --footer-text: #ffffff;
+  --footer-text-secondary: #94a3b8;
+  --footer-bottom-border: #1e293b;
+
+  /* Status & Feedback */
   --success: #16a34a;
-  --error: #dc2626;
+  --success-bg: #dcfce7;
+  --success-border: #bbf7d0;
+  --success-text: #166534;
 
+  --warning: #b45309;
+  --warning-bg: #fef3c7;
+  --warning-border: #fde68a;
+  --warning-text: #92400e;
+
+  --error: #dc2626;
+  --error-bg: #fef2f2;
+  --error-border: #fecaca;
+  --error-text: #b91c1c;
+
+  --info-bg: #eff6ff;
+  --info-border: #bfdbfe;
+  --info-text: #1d4ed8;
+
+  /* Gradients & Special Sections */
+  --hero-bg: radial-gradient(circle at 80% 30%, rgba(29, 104, 189, 0.08), transparent 45%), linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  --cta-bg: linear-gradient(180deg, #f1f5f9 0%, #ffffff 100%);
+  --auth-bg: radial-gradient(circle at 10% 10%, #dbeafe 0, transparent 25%), radial-gradient(circle at 90% 90%, #dbeafe 0, transparent 25%), #f8fafc;
+  --card-image-bg: linear-gradient(135deg, #f8fafc, #edf2f7);
+
+  /* Tables & Administration */
+  --table-thead-bg: #f0f5fb;
+  --table-row-hover: #f9fbfe;
+  --table-border: #e9eef5;
+  --stats-card-bg: #e8f2ff;
+  --stats-card-border: #bfdbfe;
+
+  /* Shadows */
   --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
   --shadow-md: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
   --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  --shadow-card: 0 20px 50px rgba(15, 23, 42, 0.10);
 
-  --font-primary:
-    Inter, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, sans-serif;
-
-  --font-heading:
-    Inter, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, sans-serif;
+  /* Fonts */
+  --font-primary: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-heading: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   font-family: var(--font-primary);
   font-size: 16px;
@@ -50,6 +125,131 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Surfaces & Backgrounds */
+  --bg-primary: #0b1120;
+  --bg-secondary: #111b2e;
+  --bg-card: #141f36;
+  --bg-card-hover: #192744;
+  --bg-surface: #141f36;
+  --bg-surface-secondary: #1b2a47;
+  --bg-modal-overlay: rgba(3, 7, 18, 0.82);
+  --bg-modal: #141f36;
+
+  --navy: #f1f5f9;
+
+  /* Brand Blues */
+  --blue-primary: #3b82f6;
+  --blue-bright: #60a5fa;
+  --blue-light: #2563eb;
+  --blue-soft: #172646;
+  --blue-border: #234273;
+  --blue-gradient-start: #192849;
+
+  /* Typography */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-inverse: #0b1120;
+  --text-contrast: #f8fafc;
+
+  /* Borders */
+  --border: #1e2e4a;
+  --border-light: #283e63;
+  --border-focus: #3b82f6;
+  --border-divider: #20314f;
+
+  /* Form Controls */
+  --input-bg: #0e172a;
+  --input-text: #f8fafc;
+  --input-border: #243653;
+  --input-placeholder: #64748b;
+  --input-focus-border: #3b82f6;
+  --input-focus-ring: rgba(59, 130, 246, 0.25);
+
+  /* Buttons */
+  --btn-primary-bg: #3b82f6;
+  --btn-primary-hover: #60a5fa;
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: #141f36;
+  --btn-secondary-border: #283e63;
+  --btn-secondary-text: #f8fafc;
+  --btn-secondary-hover-bg: #192744;
+  --btn-secondary-hover-border: #3b82f6;
+  --btn-secondary-hover-text: #60a5fa;
+
+  /* Navbar & Footer */
+  --navbar-bg: #0d1527;
+  --navbar-border: #1e2e4a;
+  --navbar-text: #f8fafc;
+  --navbar-profile-bg: #192744;
+  --navbar-profile-hover: #23375c;
+
+  --footer-bg: #070b14;
+  --footer-border: #152033;
+  --footer-text: #f8fafc;
+  --footer-text-secondary: #94a3b8;
+  --footer-bottom-border: #152033;
+
+  /* Status & Feedback */
+  --success: #4ade80;
+  --success-bg: #0d2818;
+  --success-border: #184e28;
+  --success-text: #86efac;
+
+  --warning: #fbbf24;
+  --warning-bg: #352309;
+  --warning-border: #684510;
+  --warning-text: #fde047;
+
+  --error: #f87171;
+  --error-bg: #331317;
+  --error-border: #63232c;
+  --error-text: #fca5a5;
+
+  --info-bg: #14284b;
+  --info-border: #1f3f77;
+  --info-text: #93c5fd;
+
+  /* Gradients & Special Sections */
+  --hero-bg: radial-gradient(circle at 80% 30%, rgba(59, 130, 246, 0.12), transparent 45%), linear-gradient(180deg, #0d1527 0%, #0b1120 100%);
+  --cta-bg: linear-gradient(180deg, var(--bg-secondary) 0%, #0d1527 100%);
+  --auth-bg: radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.12) 0, transparent 30%), radial-gradient(circle at 90% 90%, rgba(59, 130, 246, 0.08) 0, transparent 30%), #0b1120;
+  --card-image-bg: linear-gradient(135deg, #10192e, #17243e);
+
+  /* Tables & Administration */
+  --table-thead-bg: #10192e;
+  --table-row-hover: #17243e;
+  --table-border: #1e2e4a;
+  --stats-card-bg: #162441;
+  --stats-card-border: #234273;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.45), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.55), 0 4px 6px -4px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.65), 0 8px 10px -6px rgba(0, 0, 0, 0.45);
+  --shadow-card: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+/* Global Transition when user switches theme */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease !important;
+  transition-delay: 0s !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-transitioning,
+  html.theme-transitioning * {
+    transition: none !important;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -58,6 +258,7 @@ html {
   margin: 0;
   padding: 0;
   background: var(--bg-primary);
+  color-scheme: light dark;
 }
 
 body {
@@ -67,6 +268,7 @@ body {
   min-height: 100vh;
   background: var(--bg-primary);
   color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 #root {
@@ -109,4 +311,30 @@ input,
 select,
 textarea {
   font-family: inherit;
+  color: var(--input-text);
+}
+
+/* Date picker calendar indicator adapted to theme */
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.9) hue-rotate(180deg);
+}
+
+/* Scrollbar polish */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 6px;
+  border: 2px solid var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--blue-primary);
 }

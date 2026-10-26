@@ -61,8 +61,21 @@
     margin-bottom: 24px;
 }
 
-.contact-item>span {
-    font-size: 24px;
+.contact-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--blue-soft);
+    color: var(--blue-primary);
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.contact-item:hover .contact-icon-wrap {
+    transform: scale(1.05);
 }
 
 .contact-item h3 {

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Car, Search, Zap } from 'lucide-react'
 import './Landing.css'
 
 function Landing() {
@@ -56,8 +57,8 @@ function Landing() {
 
                     <article className="feature-card">
 
-                        <div className="feature-icon">
-                            🚗
+                        <div className="feature-icon-wrapper">
+                            <Car className="feature-icon" size={26} strokeWidth={2} aria-hidden="true" />
                         </div>
 
                         <h3>
@@ -74,8 +75,8 @@ function Landing() {
 
                     <article className="feature-card">
 
-                        <div className="feature-icon">
-                            🔍
+                        <div className="feature-icon-wrapper">
+                            <Search className="feature-icon" size={26} strokeWidth={2} aria-hidden="true" />
                         </div>
 
                         <h3>
@@ -92,8 +93,8 @@ function Landing() {
 
                     <article className="feature-card">
 
-                        <div className="feature-icon">
-                            ⚡
+                        <div className="feature-icon-wrapper">
+                            <Zap className="feature-icon" size={26} strokeWidth={2} aria-hidden="true" />
                         </div>
 
                         <h3>
@@ -114,7 +115,7 @@ function Landing() {
 
             <section className="landing-cta">
 
-                <div>
+                <div className="landing-cta-inner">
 
                     <p className="section-label">
                         READY TO GO?

@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useWishlist } from '../../context/WishlistContext'
 import rentiqLogo from '../../assets/logo/rentiq-logo.png'
+import rentiqLogoDark from '../../assets/logo/rentiq-logo-dark.png'
 import './Navbar.css'
 
 function Navbar() {
@@ -12,6 +13,8 @@ function Navbar() {
     const { wishlistCount } = useWishlist()
     const navigate = useNavigate()
     const location = useLocation()
+
+    const currentLogo = isDarkMode ? rentiqLogoDark : rentiqLogo
 
     // Search state
     const [searchQuery, setSearchQuery] = useState('')
@@ -122,7 +125,7 @@ function Navbar() {
                 <div className="navbar-brand">
                     <Link to="/" className="navbar-logo" aria-label="RentIQ Home">
                         <img
-                            src={rentiqLogo}
+                            src={currentLogo}
                             alt="RentIQ"
                             className="navbar-logo-img"
                         />
@@ -566,7 +569,7 @@ function Navbar() {
                         onClick={() => setIsMobileMenuOpen(false)}
                         aria-label="RentIQ Home"
                     >
-                        <img src={rentiqLogo} alt="RentIQ" />
+                        <img src={currentLogo} alt="RentIQ" />
                     </Link>
 
                     <button

@@ -56,11 +56,6 @@
     max-width: 155px;
     object-fit: contain;
     display: block;
-    transition: filter 0.2s ease;
-}
-
-[data-theme="dark"] .navbar-logo-img {
-    filter: brightness(1.2) drop-shadow(0 0 2px rgba(255, 255, 255, 0.45));
 }
 
 /* --------------------------------------------------------------------------

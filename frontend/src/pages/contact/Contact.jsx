@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Mail, Phone, MapPin } from 'lucide-react'
 import axiosInstance from '../../api/axiosInstance'
 import './Contact.css'
 
@@ -135,7 +136,9 @@ function Contact() {
                     </p>
 
                     <div className="contact-item">
-                        <span>📧</span>
+                        <span className="contact-icon-wrap" aria-hidden="true">
+                            <Mail size={20} strokeWidth={2} />
+                        </span>
                         <div>
                             <h3>Email</h3>
                             <p>support@rentiq.com</p>
@@ -143,7 +146,9 @@ function Contact() {
                     </div>
 
                     <div className="contact-item">
-                        <span>📞</span>
+                        <span className="contact-icon-wrap" aria-hidden="true">
+                            <Phone size={20} strokeWidth={2} />
+                        </span>
                         <div>
                             <h3>Phone</h3>
                             <p>+91 98765 43210</p>
@@ -151,7 +156,9 @@ function Contact() {
                     </div>
 
                     <div className="contact-item">
-                        <span>📍</span>
+                        <span className="contact-icon-wrap" aria-hidden="true">
+                            <MapPin size={20} strokeWidth={2} />
+                        </span>
                         <div>
                             <h3>Location</h3>
                             <p>Chandigarh, India</p>

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { Users, Settings2, Zap } from 'lucide-react';
 import { useCompare } from '../../context/CompareContext';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/vehicleImages';
 import './Compare.css';
@@ -37,7 +38,7 @@ function Compare() {
                     <p>
                         {compareCount === 1
                             ? `You currently have 1 vehicle selected (${comparedVehicles[0].name}). Select at least one more vehicle to view side-by-side specifications.`
-                            : 'Choose 2 to 4 vehicles from our verified fleet to evaluate their specifications, features, and daily rates.'}
+                            : 'Choose 2 to 3 vehicles from our verified fleet to evaluate their specifications, features, and daily rates.'}
                     </p>
 
                     {compareCount === 1 && (
@@ -203,8 +204,9 @@ function Compare() {
                                 </th>
                                 {comparedVehicles.map((vehicle) => (
                                     <td key={vehicle.vehicle_id} className="feature-val-cell">
-                                        <span>
-                                            👥 {vehicle.seating_capacity} {vehicle.seating_capacity === 1 ? 'Seat' : 'Seats'}
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                            <Users size={14} strokeWidth={2} aria-hidden="true" />
+                                            {vehicle.seating_capacity} {vehicle.seating_capacity === 1 ? 'Seat' : 'Seats'}
                                         </span>
                                     </td>
                                 ))}
@@ -217,8 +219,9 @@ function Compare() {
                                 </th>
                                 {comparedVehicles.map((vehicle) => (
                                     <td key={vehicle.vehicle_id} className="feature-val-cell">
-                                        <span className="capitalize-val">
-                                            ⚙️ {vehicle.transmission || 'Automatic'}
+                                        <span className="capitalize-val" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                            <Settings2 size={14} strokeWidth={2} aria-hidden="true" />
+                                            {vehicle.transmission || 'Automatic'}
                                         </span>
                                     </td>
                                 ))}
@@ -234,7 +237,10 @@ function Compare() {
                                     return (
                                         <td key={vehicle.vehicle_id} className="feature-val-cell">
                                             {isEv ? (
-                                                <span className="ev-tag">⚡ Electric (EV)</span>
+                                                <span className="ev-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                                    <Zap size={14} strokeWidth={2} aria-hidden="true" />
+                                                    Electric (EV)
+                                                </span>
                                             ) : (
                                                 <span>Internal Combustion (Standard)</span>
                                             )}

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Lock, Heart, Users, Settings2, Zap } from 'lucide-react';
 import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
 import Loader from '../../components/common/Loader';
@@ -19,7 +20,9 @@ function Wishlist() {
                 </header>
 
                 <div className="wishlist-auth-prompt">
-                    <div className="wishlist-auth-icon">🔒</div>
+                    <div className="wishlist-auth-icon">
+                        <Lock size={36} strokeWidth={2} aria-hidden="true" />
+                    </div>
                     <h2>Please Log In</h2>
                     <p>Log in or create an account to view and manage your saved vehicles.</p>
                     <div className="wishlist-auth-actions">
@@ -80,7 +83,7 @@ function Wishlist() {
             {wishlist.length === 0 ? (
                 <section className="wishlist-empty-state" aria-labelledby="empty-wishlist-heading">
                     <div className="wishlist-empty-icon" aria-hidden="true">
-                        ♡
+                        <Heart size={44} strokeWidth={1.5} />
                     </div>
                     <h2 id="empty-wishlist-heading">Your wishlist is empty.</h2>
                     <p>Save vehicles you&apos;re interested in and find them here later.</p>
@@ -130,14 +133,17 @@ function Wishlist() {
 
                                     <div className="wishlist-specs-row">
                                         <span className="wishlist-spec-item">
-                                            👥 {vehicle.seating_capacity} {vehicle.seating_capacity === 1 ? 'Seat' : 'Seats'}
+                                            <Users size={14} strokeWidth={2} aria-hidden="true" />
+                                            {vehicle.seating_capacity} {vehicle.seating_capacity === 1 ? 'Seat' : 'Seats'}
                                         </span>
                                         <span className="wishlist-spec-item">
-                                            ⚙️ {vehicle.transmission}
+                                            <Settings2 size={14} strokeWidth={2} aria-hidden="true" />
+                                            {vehicle.transmission}
                                         </span>
                                         {isEv && (
                                             <span className="wishlist-spec-item wishlist-spec-ev">
-                                                ⚡ Electric
+                                                <Zap size={14} strokeWidth={2} aria-hidden="true" />
+                                                Electric
                                             </span>
                                         )}
                                     </div>

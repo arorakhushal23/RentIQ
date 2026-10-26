@@ -22,7 +22,7 @@ function FloatingCompareBar() {
                 <div className="compare-bar-left">
                     <div className="compare-bar-header">
                         <span className="compare-bar-title">Compare</span>
-                        <span className="compare-bar-counter">({compareCount}/4)</span>
+                        <span className="compare-bar-counter">({compareCount}/3)</span>
                     </div>
 
                     <div className="compare-bar-items">
@@ -55,8 +55,8 @@ function FloatingCompareBar() {
                             );
                         })}
 
-                        {/* Placeholder slots for up to 4 */}
-                        {Array.from({ length: 4 - compareCount }).map((_, idx) => (
+                        {/* Placeholder slots for up to 3 */}
+                        {Array.from({ length: Math.max(0, 3 - compareCount) }).map((_, idx) => (
                             <div key={`empty-slot-${idx}`} className="compare-empty-slot" aria-hidden="true">
                                 <span>+</span>
                             </div>

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Users, Settings2, Zap } from 'lucide-react';
 import './VehicleCard.css';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/vehicleImages';
 
@@ -40,14 +41,17 @@ function VehicleCard({
 
                 <div className="vehicle-specs-row">
                     <span className="spec-item">
-                        👥 {seats} {seats === 1 ? 'Seat' : 'Seats'}
+                        <Users size={14} strokeWidth={2} aria-hidden="true" />
+                        {seats} {seats === 1 ? 'Seat' : 'Seats'}
                     </span>
                     <span className="spec-item spec-transmission">
-                        ⚙️ {transmission}
+                        <Settings2 size={14} strokeWidth={2} aria-hidden="true" />
+                        {transmission}
                     </span>
                     {isEv && (
                         <span className="spec-item spec-ev">
-                            ⚡ Electric
+                            <Zap size={14} strokeWidth={2} aria-hidden="true" />
+                            Electric
                         </span>
                     )}
                 </div>

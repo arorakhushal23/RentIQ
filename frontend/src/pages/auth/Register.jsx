@@ -1,8 +1,10 @@
 
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { ShieldCheck, Car, Headphones } from 'lucide-react'
 import axiosInstance from '../../api/axiosInstance'
 import { useAuth } from '../../context/AuthContext'
+import { InputField, FormError } from '../../components/common/form'
 import './Register.css'
 
 function Register() {
@@ -135,72 +137,60 @@ function Register() {
                     </p>
                 </div>
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} noValidate>
 
-                    <div className="form-group">
-                        <label htmlFor="name">
-                            Full Name
-                        </label>
+                    <InputField
+                        label="Full Name"
+                        id="name"
+                        name="name"
+                        type="text"
+                        placeholder="Enter your full name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        required
+                        autoComplete="name"
+                    />
 
-                        <input
-                            id="name"
-                            name="name"
-                            type="text"
-                            placeholder="Enter your full name"
-                            value={formData.name}
-                            onChange={handleChange}
-                        />
-                    </div>
+                    <InputField
+                        label="Email Address"
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                        autoComplete="email"
+                    />
 
-                    <div className="form-group">
-                        <label htmlFor="email">
-                            Email
-                        </label>
+                    <InputField
+                        label="Password"
+                        id="password"
+                        name="password"
+                        type="password"
+                        placeholder="Enter your password (min. 6 characters)"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                        autoComplete="new-password"
+                    />
 
-                        <input
-                            id="email"
-                            name="email"
-                            type="text"
-                            placeholder="Enter your email"
-                            value={formData.email}
-                            onChange={handleChange}
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="password">
-                            Password
-                        </label>
-
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            placeholder="Enter your password"
-                            value={formData.password}
-                            onChange={handleChange}
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="confirmPassword">
-                            Confirm Password
-                        </label>
-
-                        <input
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            type="password"
-                            placeholder="Confirm your password"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                        />
-                    </div>
+                    <InputField
+                        label="Confirm Password"
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        placeholder="Confirm your password"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        required
+                        autoComplete="new-password"
+                    />
 
                     {error && (
-                        <p className="register-error">
-                            {error}
-                        </p>
+                        <div style={{ marginBottom: '16px' }}>
+                            <FormError message={error} />
+                        </div>
                     )}
 
                     <button
@@ -234,8 +224,8 @@ function Register() {
                 <div className="register-features">
 
                     <div className="register-feature">
-                        <div className="feature-icon">
-                            🛡
+                        <div className="feature-icon" aria-hidden="true">
+                            <ShieldCheck size={20} strokeWidth={2} />
                         </div>
 
                         <div>
@@ -250,8 +240,8 @@ function Register() {
                     </div>
 
                     <div className="register-feature">
-                        <div className="feature-icon">
-                            🚗
+                        <div className="feature-icon" aria-hidden="true">
+                            <Car size={20} strokeWidth={2} />
                         </div>
 
                         <div>
@@ -266,8 +256,8 @@ function Register() {
                     </div>
 
                     <div className="register-feature">
-                        <div className="feature-icon">
-                            ◉
+                        <div className="feature-icon" aria-hidden="true">
+                            <Headphones size={20} strokeWidth={2} />
                         </div>
 
                         <div>

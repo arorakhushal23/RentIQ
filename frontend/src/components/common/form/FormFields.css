@@ -1,0 +1,130 @@
+/* Reusable Form Components Design System - Light & Dark Theme */
+
+.form-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 18px;
+    width: 100%;
+}
+
+.form-field-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+    user-select: none;
+}
+
+.form-required-marker {
+    color: var(--error, #ef4444);
+    font-weight: 700;
+}
+
+.form-input-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.form-field-input,
+.form-field-select,
+.form-field-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    background-color: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 14.5px;
+    outline: none;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.form-field-input::placeholder,
+.form-field-textarea::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.form-field-input:focus,
+.form-field-select:focus,
+.form-field-textarea:focus {
+    border-color: var(--blue-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.form-field-input.input-error,
+.form-field-select.input-error,
+.form-field-textarea.input-error {
+    border-color: var(--error, #ef4444);
+    background-color: var(--error-bg, rgba(239, 68, 68, 0.04));
+}
+
+.form-field-input.input-error:focus,
+.form-field-select.input-error:focus,
+.form-field-textarea.input-error:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+}
+
+.form-field-group.is-disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.form-field-input:disabled,
+.form-field-select:disabled,
+.form-field-textarea:disabled {
+    background-color: var(--border);
+    cursor: not-allowed;
+}
+
+.form-field-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-select-wrapper select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+}
+
+[data-theme='dark'] .form-select-wrapper select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+.form-field-helper {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* Error message component */
+.form-field-error {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    font-size: 12.5px;
+    color: var(--error, #ef4444);
+    font-weight: 500;
+}
+
+.form-error-icon {
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.form-error-text {
+    line-height: 1.35;
+}

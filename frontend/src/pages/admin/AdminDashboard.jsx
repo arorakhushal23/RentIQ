@@ -1,4 +1,16 @@
 import { useEffect, useState } from 'react';
+import {
+    Car,
+    CheckCircle2,
+    Users,
+    IndianRupee,
+    ClipboardList,
+    Clock,
+    CheckCircle,
+    Flag,
+    XCircle,
+    AlertCircle
+} from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import Loader from '../../components/common/Loader';
 import './AdminDashboard.css';
@@ -109,7 +121,9 @@ function AdminDashboard() {
 
             {!loading && error && (
                 <div className="admin-error-card">
-                    <div className="admin-error-icon">⚠️</div>
+                    <div className="admin-error-icon" aria-hidden="true">
+                        <AlertCircle size={32} strokeWidth={2} />
+                    </div>
                     <div className="admin-error-content">
                         <h3>Failed to Load Statistics</h3>
                         <p>{error}</p>
@@ -134,7 +148,9 @@ function AdminDashboard() {
                             <article className="admin-kpi-card">
                                 <div className="kpi-header">
                                     <span className="kpi-label">Total Fleet</span>
-                                    <span className="kpi-icon">🚗</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <Car size={20} strokeWidth={2} />
+                                    </span>
                                 </div>
                                 <div className="kpi-value">{formatNumber(stats.totalVehicles)}</div>
                                 <div className="kpi-subtext">Registered vehicles in catalog</div>
@@ -143,7 +159,9 @@ function AdminDashboard() {
                             <article className="admin-kpi-card highlight-success">
                                 <div className="kpi-header">
                                     <span className="kpi-label">Available Vehicles</span>
-                                    <span className="kpi-icon">🟢</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <CheckCircle2 size={20} strokeWidth={2} />
+                                    </span>
                                 </div>
                                 <div className="kpi-value">{formatNumber(stats.availableVehicles)}</div>
                                 <div className="kpi-subtext">Active and ready to rent</div>
@@ -152,7 +170,9 @@ function AdminDashboard() {
                             <article className="admin-kpi-card">
                                 <div className="kpi-header">
                                     <span className="kpi-label">Total Customers</span>
-                                    <span className="kpi-icon">👥</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <Users size={20} strokeWidth={2} />
+                                    </span>
                                 </div>
                                 <div className="kpi-value">{formatNumber(stats.totalCustomers)}</div>
                                 <div className="kpi-subtext">Registered customer accounts</div>
@@ -161,7 +181,9 @@ function AdminDashboard() {
                             <article className="admin-kpi-card highlight-revenue">
                                 <div className="kpi-header">
                                     <span className="kpi-label">Booking Value</span>
-                                    <span className="kpi-icon">💰</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <IndianRupee size={20} strokeWidth={2} />
+                                    </span>
                                 </div>
                                 <div className="kpi-value">{formatCurrency(stats.totalRevenue)}</div>
                                 <div className="kpi-subtext">
@@ -177,7 +199,9 @@ function AdminDashboard() {
 
                         <div className="admin-booking-grid">
                             <article className="admin-status-card total-card">
-                                <div className="status-indicator">📋</div>
+                                <div className="status-indicator" aria-hidden="true">
+                                    <ClipboardList size={20} strokeWidth={2} />
+                                </div>
                                 <div className="status-info">
                                     <span className="status-name">Total Bookings</span>
                                     <strong className="status-count">{formatNumber(stats.totalBookings)}</strong>
@@ -185,7 +209,9 @@ function AdminDashboard() {
                             </article>
 
                             <article className="admin-status-card pending-card">
-                                <div className="status-indicator">⏳</div>
+                                <div className="status-indicator" aria-hidden="true">
+                                    <Clock size={20} strokeWidth={2} />
+                                </div>
                                 <div className="status-info">
                                     <span className="status-name">Pending</span>
                                     <strong className="status-count">{formatNumber(stats.pendingBookings)}</strong>
@@ -193,7 +219,9 @@ function AdminDashboard() {
                             </article>
 
                             <article className="admin-status-card confirmed-card">
-                                <div className="status-indicator">✅</div>
+                                <div className="status-indicator" aria-hidden="true">
+                                    <CheckCircle size={20} strokeWidth={2} />
+                                </div>
                                 <div className="status-info">
                                     <span className="status-name">Confirmed</span>
                                     <strong className="status-count">{formatNumber(stats.confirmedBookings)}</strong>
@@ -201,7 +229,9 @@ function AdminDashboard() {
                             </article>
 
                             <article className="admin-status-card completed-card">
-                                <div className="status-indicator">🏁</div>
+                                <div className="status-indicator" aria-hidden="true">
+                                    <Flag size={20} strokeWidth={2} />
+                                </div>
                                 <div className="status-info">
                                     <span className="status-name">Completed</span>
                                     <strong className="status-count">{formatNumber(stats.completedBookings)}</strong>
@@ -209,7 +239,9 @@ function AdminDashboard() {
                             </article>
 
                             <article className="admin-status-card cancelled-card">
-                                <div className="status-indicator">❌</div>
+                                <div className="status-indicator" aria-hidden="true">
+                                    <XCircle size={20} strokeWidth={2} />
+                                </div>
                                 <div className="status-info">
                                     <span className="status-name">Cancelled</span>
                                     <strong className="status-count">{formatNumber(stats.cancelledBookings)}</strong>

@@ -96,17 +96,15 @@ exports.login = async (req, res) => {
             [normalizedEmail]
         );
 
-        const genericAuthError = { message: 'Invalid email or password' };
-
         if (users.length === 0) {
-            return res.status(401).json(genericAuthError);
+            return res.status(401).json({ message: 'No account found with this email address' });
         }
 
         const user = users[0];
 
         const isPasswordValid = await bcrypt.compare(password, user.password_hash);
         if (!isPasswordValid) {
-            return res.status(401).json(genericAuthError);
+            return res.status(401).json({ message: 'Invalid email or password' });
         }
 
         const token = jwt.sign(

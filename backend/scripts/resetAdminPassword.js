@@ -2,12 +2,14 @@
  * Administrator Password Reset Script
  *
  * File: backend/scripts/resetAdminPassword.js
- * Purpose: Interactively update the password hash of an existing administrator account.
+ * Purpose: Update the password hash of an existing administrator account.
+ * Supports:
+ *   - Interactive mode: prompts for email and new password (masked).
+ *   - CLI flag mode: node scripts/resetAdminPassword.js --email "..." --password "..."
  * Safety:
  *   - Verifies the target account exists and strictly holds the 'admin' role.
  *   - Updates ONLY the 'password_hash' column; never modifies email, name, role, or other fields.
  *   - Never outputs or logs plaintext passwords, password hashes, or database secrets.
- *   - Masks password input in terminal using Node.js built-in readline and stream modules.
  *   - Enforces the project's existing password policies (minimum 6 characters).
  */
 
@@ -24,6 +26,24 @@ const db = require('../config/db');
 // Validation regular expression matching authController.js and createAdmin.js
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const BCRYPT_SALT_ROUNDS = 10;
+
+function parseArgs() {
+    const args = process.argv.slice(2);
+    const parsed = {};
+    for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+        if (arg.startsWith('--')) {
+            const key = arg.slice(2);
+            if (i + 1 < args.length && !args[i + 1].startsWith('--')) {
+                parsed[key] = args[i + 1];
+                i++;
+            } else {
+                parsed[key] = true;
+            }
+        }
+    }
+    return parsed;
+}
 
 /**
  * Creates an interactive prompt interface that supports visible text input
@@ -78,7 +98,12 @@ async function main() {
     console.log('       RentIQ — Administrator Password Reset        ');
     console.log('====================================================\n');
 
-    const terminal = createTerminal();
+    const flags = parseArgs();
+    const isCliMode = Boolean(flags.email && flags.password);
+
+    let terminal = null;
+    let emailInput = '';
+    let newPassword = '';
 
     // Handle abrupt cancellation gracefully (e.g. Ctrl+C)
     let isTerminating = false;
@@ -86,7 +111,7 @@ async function main() {
         if (isTerminating) return;
         isTerminating = true;
         console.log('\n[INFO] Operation cancelled by operator. Exiting...');
-        terminal.close();
+        if (terminal) terminal.close();
         try {
             await db.end();
         } catch (_) {}
@@ -95,8 +120,14 @@ async function main() {
     process.once('SIGINT', handleSigint);
 
     try {
-        // Step 1: Prompt for administrator email
-        const emailInput = await terminal.ask('Enter administrator email address: ');
+        if (isCliMode) {
+            emailInput = flags.email.trim();
+            newPassword = flags.password;
+        } else {
+            terminal = createTerminal();
+            emailInput = await terminal.ask('Enter administrator email address: ');
+        }
+
         if (!emailInput) {
             console.error('\n[VALIDATION ERROR] Email is required and cannot be empty.');
             process.exitCode = 1;
@@ -116,7 +147,7 @@ async function main() {
             return;
         }
 
-        // Step 2: Query MySQL to verify administrator account existence and role
+        // Query MySQL to verify administrator account existence and role
         const [users] = await db.query(
             'SELECT user_id, name, email, role FROM users WHERE email = ?',
             [normalizedEmail]
@@ -134,35 +165,32 @@ async function main() {
         if (adminUser.role !== 'admin') {
             console.error(`\n[ABORTED] The account "${normalizedEmail}" is not an administrator (current role: "${adminUser.role}").`);
             console.error('Safety Policy: This script only resets passwords for accounts with the "admin" role.');
-            console.error('Customer accounts must use standard customer password reset procedures.');
+            console.error('To promote an existing customer account to admin, run: node scripts/promoteAdmin.js --email "' + normalizedEmail + '"');
             process.exitCode = 1;
             return;
         }
 
         console.log(`\nVerified target administrator: ${adminUser.name} (User ID: ${adminUser.user_id})`);
 
-        // Step 3: Prompt for new password (masked)
-        const newPassword = await terminal.askPassword('\nEnter new administrator password (min 6 characters): ');
+        if (!isCliMode) {
+            newPassword = await terminal.askPassword('\nEnter new administrator password (min 6 characters): ');
+            const confirmPassword = await terminal.askPassword('Confirm new administrator password: ');
+            if (newPassword !== confirmPassword) {
+                console.error('\n[VALIDATION ERROR] Passwords do not match. Aborting.');
+                process.exitCode = 1;
+                return;
+            }
+        }
+
         if (!newPassword || newPassword.length < 6) {
             console.error('\n[VALIDATION ERROR] Password must be at least 6 characters long.');
             process.exitCode = 1;
             return;
         }
 
-        // Step 4: Confirm new password (masked)
-        const confirmPassword = await terminal.askPassword('Confirm new administrator password: ');
-        if (newPassword !== confirmPassword) {
-            console.error('\n[VALIDATION ERROR] Passwords do not match. Aborting.');
-            process.exitCode = 1;
-            return;
-        }
-
         console.log('\nGenerating secure bcrypt password hash...');
-
-        // Step 5: Hash password using bcryptjs with 10 salt rounds (matching authController & createAdmin)
         const passwordHash = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS);
 
-        // Step 6: Parameterized update targeting strictly password_hash for this user
         const [result] = await db.query(
             'UPDATE users SET password_hash = ? WHERE user_id = ? AND role = ?',
             [passwordHash, adminUser.user_id, 'admin']
@@ -190,7 +218,7 @@ async function main() {
         process.exitCode = 1;
     } finally {
         process.removeListener('SIGINT', handleSigint);
-        terminal.close();
+        if (terminal) terminal.close();
         try {
             await db.end();
         } catch (_) {}

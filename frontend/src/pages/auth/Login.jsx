@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
 import "./Login.css";
 import { useAuth } from "../../context/AuthContext";
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
@@ -14,6 +15,8 @@ function Login() {
   const [error, setError] = useState("");
   
   const [loading, setLoading] = useState(false);
+
+  const isAdminTarget = location.state?.from?.pathname?.startsWith("/admin");
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -61,7 +64,11 @@ function Login() {
 
       login(response.data.user, response.data.token);
 
-      navigate("/");
+      const redirectDestination =
+        location.state?.from?.pathname ||
+        (response.data.user?.role === "admin" ? "/admin" : "/");
+
+      navigate(redirectDestination, { replace: true });
     } catch (error) {
       console.error("Login failed:", error);
 
@@ -85,6 +92,16 @@ function Login() {
 
           <p>Login to your RentIQ account.</p>
         </div>
+
+        {isAdminTarget && (
+          <div className="login-admin-notice" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" width="18" height="18">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <span>Administrator credentials required to access this portal.</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">

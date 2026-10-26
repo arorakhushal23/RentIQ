@@ -1,36 +1,28 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { createContext, useContext, useCallback, useMemo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { useToast } from './ToastContext';
+import {
+    addToCompare as addToCompareAction,
+    removeFromCompare as removeFromCompareAction,
+    clearCompare as clearCompareAction,
+    selectComparedVehicles,
+    selectCompareCount,
+    selectCompareIds,
+    selectCanCompare,
+    selectCompareMaxLimit
+} from '../store/slices/compareSlice';
 
 const CompareContext = createContext();
-const STORAGE_KEY = 'rentiq_compare_vehicles';
 
 export function CompareProvider({ children }) {
+    const dispatch = useDispatch();
     const { showToast } = useToast();
 
-    const [comparedVehicles, setComparedVehicles] = useState(() => {
-        try {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (!saved) return [];
-            const parsed = JSON.parse(saved);
-            return Array.isArray(parsed) ? parsed.slice(0, 4) : [];
-        } catch (e) {
-            console.error('Failed to parse compare storage:', e);
-            return [];
-        }
-    });
-
-    // Save to localStorage whenever comparedVehicles changes
-    useEffect(() => {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(comparedVehicles));
-        } catch (e) {
-            console.error('Failed to save compare storage:', e);
-        }
-    }, [comparedVehicles]);
-
-    const compareIds = useMemo(() => {
-        return new Set(comparedVehicles.map((v) => Number(v.vehicle_id || v.vehicleId || v.id)));
-    }, [comparedVehicles]);
+    const comparedVehicles = useSelector(selectComparedVehicles);
+    const compareCount = useSelector(selectCompareCount);
+    const compareIds = useSelector(selectCompareIds);
+    const canCompare = useSelector(selectCanCompare);
+    const maxLimit = useSelector(selectCompareMaxLimit) || 3;
 
     const isInCompare = useCallback((vehicleId) => {
         if (!vehicleId) return false;
@@ -43,43 +35,31 @@ export function CompareProvider({ children }) {
         const vName = vehicle.name || 'Vehicle';
 
         if (compareIds.has(vId)) {
-            // Already in comparison
             return true;
         }
 
-        if (comparedVehicles.length >= 4) {
-            showToast('Comparison limit reached (maximum 4 vehicles)', 'warning');
+        if (compareCount >= maxLimit) {
+            showToast(`Comparison limit reached (maximum ${maxLimit} vehicles)`, 'warning');
             return false;
         }
 
-        const normalizedVehicle = {
-            vehicle_id: vId,
-            name: vehicle.name || '',
-            brand: vehicle.brand || '',
-            category: vehicle.category || '',
-            price_per_day: vehicle.price_per_day || vehicle.price || '0',
-            seating_capacity: vehicle.seating_capacity || vehicle.seats || 4,
-            transmission: vehicle.transmission || 'automatic',
-            is_available: vehicle.is_available !== undefined ? vehicle.is_available : 1,
-            image_url: vehicle.image_url || vehicle.imageUrl || ''
-        };
-
-        const nextCount = comparedVehicles.length + 1;
-        setComparedVehicles((prev) => [...prev, normalizedVehicle]);
-        showToast(`${vName} added to comparison (${nextCount}/4)`, 'info');
+        dispatch(addToCompareAction(vehicle));
+        showToast(`${vName} added to comparison (${compareCount + 1}/${maxLimit})`, 'info');
         return true;
-    }, [compareIds, comparedVehicles.length, showToast]);
+    }, [compareIds, compareCount, maxLimit, dispatch, showToast]);
 
     const removeFromCompare = useCallback((vehicleId) => {
         const vId = Number(vehicleId);
         if (!vId) return;
 
-        const vehicleToRemove = comparedVehicles.find((v) => Number(v.vehicle_id || v.vehicleId || v.id) === vId);
+        const vehicleToRemove = comparedVehicles.find(
+            (v) => Number(v.vehicle_id || v.vehicleId || v.id) === vId
+        );
         const vName = vehicleToRemove?.name || 'Vehicle';
 
-        setComparedVehicles((prev) => prev.filter((v) => Number(v.vehicle_id || v.vehicleId || v.id) !== vId));
+        dispatch(removeFromCompareAction(vId));
         showToast(`${vName} removed from comparison`, 'info');
-    }, [comparedVehicles, showToast]);
+    }, [comparedVehicles, dispatch, showToast]);
 
     const toggleCompare = useCallback((vehicle) => {
         if (!vehicle) return false;
@@ -93,24 +73,36 @@ export function CompareProvider({ children }) {
     }, [compareIds, removeFromCompare, addToCompare]);
 
     const clearCompare = useCallback(() => {
-        setComparedVehicles([]);
+        dispatch(clearCompareAction());
         showToast('Comparison selection cleared', 'info');
-    }, [showToast]);
+    }, [dispatch, showToast]);
+
+    const value = useMemo(() => ({
+        comparedVehicles,
+        compareCount,
+        compareIds,
+        isInCompare,
+        addToCompare,
+        removeFromCompare,
+        toggleCompare,
+        clearCompare,
+        canCompare,
+        maxLimit
+    }), [
+        comparedVehicles,
+        compareCount,
+        compareIds,
+        isInCompare,
+        addToCompare,
+        removeFromCompare,
+        toggleCompare,
+        clearCompare,
+        canCompare,
+        maxLimit
+    ]);
 
     return (
-        <CompareContext.Provider
-            value={{
-                comparedVehicles,
-                compareCount: comparedVehicles.length,
-                compareIds,
-                isInCompare,
-                addToCompare,
-                removeFromCompare,
-                toggleCompare,
-                clearCompare,
-                canCompare: comparedVehicles.length >= 2
-            }}
-        >
+        <CompareContext.Provider value={value}>
             {children}
         </CompareContext.Provider>
     );
@@ -126,3 +118,4 @@ export function useCompare() {
 }
 
 export default CompareProvider;
+

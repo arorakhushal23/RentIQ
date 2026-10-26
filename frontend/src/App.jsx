@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Landing from "./pages/home/Landing";
 import Navbar from "./components/common/Navbar";
 import Login from "./pages/auth/Login";
@@ -36,6 +36,11 @@ function App() {
         <Route path="/compare" element={<Compare />} />
 
         <Route path="/login" element={<Login />} />
+
+        <Route
+          path="/admin/login"
+          element={<Navigate to="/login" state={{ from: { pathname: '/admin' } }} replace />}
+        />
 
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />

@@ -153,6 +153,26 @@
     font-size: 14px;
 }
 
+.login-admin-notice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.25);
+    color: var(--blue-primary);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.login-admin-notice svg {
+    flex-shrink: 0;
+    stroke: var(--blue-primary);
+}
+
 .login-divider {
     display: flex;
     align-items: center;

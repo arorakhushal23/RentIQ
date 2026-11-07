@@ -79,10 +79,17 @@ const uploadInspectionPhotos = multer({
     fileFilter
 });
 
+const uploadMaintenanceInvoice = multer({
+    storage: createDiskStorage('maintenance_invoices'),
+    limits: { fileSize: MAX_FILE_SIZE },
+    fileFilter
+});
+
 module.exports = {
     uploadVehicleDocument,
     uploadCustomerLicense,
     uploadInspectionPhotos,
+    uploadMaintenanceInvoice,
     ALLOWED_EXTENSIONS,
     ALLOWED_MIME_TYPES,
     MAX_FILE_SIZE

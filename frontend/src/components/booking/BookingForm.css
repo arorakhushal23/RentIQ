@@ -628,3 +628,63 @@
 .licence-redirect-btn:hover {
     background: #b91c1c;
 }
+
+/* Phase 3: Add-on Accessories in Step 3 */
+.addons-selection-block {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+}
+
+.addons-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 10px;
+}
+
+.addons-options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.addon-option-pill {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.addon-option-pill:hover {
+    border-color: var(--blue-primary);
+}
+
+.addon-option-pill.selected {
+    background: rgba(37, 99, 235, 0.08);
+    border-color: var(--blue-primary);
+}
+
+.addon-option-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.addon-opt-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.addon-opt-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--blue-primary);
+}

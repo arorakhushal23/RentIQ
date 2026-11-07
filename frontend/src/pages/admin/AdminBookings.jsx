@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
+import { FileText, Camera, MapPin, Navigation } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
+import AgreementModal from '../../components/agreement/AgreementModal';
+import InspectionModal from '../../components/inspection/InspectionModal';
 import './AdminBookings.css';
 import {
     formatDisplayDateTime,
@@ -10,8 +13,9 @@ const STATUSES = [
     'all',
     'pending',
     'confirmed',
-    'cancelled',
+    'active',
     'completed',
+    'cancelled',
 ];
 
 function formatDate(date) {
@@ -33,6 +37,10 @@ function getStatusActions(status) {
     }
 
     if (status === 'confirmed') {
+        return ['active', 'completed', 'cancelled'];
+    }
+
+    if (status === 'active') {
         return ['completed', 'cancelled'];
     }
 
@@ -52,6 +60,9 @@ function AdminBookings() {
 
     const [updatingBookingId, setUpdatingBookingId] = useState(null);
     const [notice, setNotice] = useState('');
+
+    const [agreementModalBookingId, setAgreementModalBookingId] = useState(null);
+    const [inspectionModalBookingId, setInspectionModalBookingId] = useState(null);
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -404,6 +415,26 @@ function AdminBookings() {
                                                     }
                                                 >
                                                     Details
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    className="booking-action-button"
+                                                    style={{ background: '#ecfdf5', color: '#065f46', borderColor: '#10b981' }}
+                                                    onClick={() => setAgreementModalBookingId(booking.booking_id)}
+                                                    title="View Digital Agreement"
+                                                >
+                                                    Agreement
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    className="booking-action-button"
+                                                    style={{ background: '#eff6ff', color: '#1e40af', borderColor: '#3b82f6' }}
+                                                    onClick={() => setInspectionModalBookingId(booking.booking_id)}
+                                                    title="View or Record Inspection"
+                                                >
+                                                    Inspection
                                                 </button>
 
                                                 {actions.length > 0 && (

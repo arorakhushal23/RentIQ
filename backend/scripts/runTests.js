@@ -152,8 +152,8 @@ async function runTestSuite() {
                 user: customerUser,
                 body: {
                     vehicleId: vehicle.vehicle_id,
-                    pickupDatetime: `2027-05-14 10:00:00`,
-                    returnDatetime: `2027-05-16 10:00:00`
+                    pickupDatetime: `2027-04-20 10:00:00`,
+                    returnDatetime: `2027-04-22 10:00:00`
                 }
             })
             await createBooking(req, res)

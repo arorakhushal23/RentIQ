@@ -33,7 +33,13 @@ const getDashboardStats = async (req, res) => {
                 (SELECT COUNT(*) FROM vehicle_inspections) AS totalInspections,
                 (SELECT COUNT(*) FROM rental_agreements) AS totalAgreements,
                 (SELECT COUNT(*) FROM rental_agreements WHERE agreement_status = 'awaiting_acceptance') AS pendingAgreements,
-                (SELECT COUNT(*) FROM rental_agreements WHERE agreement_status = 'accepted') AS acceptedAgreements
+                (SELECT COUNT(*) FROM rental_agreements WHERE agreement_status = 'accepted') AS acceptedAgreements,
+                (SELECT COUNT(DISTINCT vehicle_id) FROM vehicle_maintenance WHERE status = 'in_progress') AS vehiclesUnderMaintenance,
+                (SELECT COUNT(*) FROM vehicle_maintenance WHERE status = 'scheduled' AND start_date >= CURRENT_DATE) AS upcomingMaintenance,
+                (SELECT COUNT(*) FROM maintenance_reminders WHERE status = 'pending' AND reminder_type = 'overdue') AS overdueMaintenanceReminders,
+                (SELECT COALESCE(SUM(cost), 0) FROM vehicle_maintenance WHERE status IN ('completed', 'in_progress')) AS totalMaintenanceExpense,
+                (SELECT COUNT(*) FROM pricing_rules WHERE is_active = TRUE) AS activePricingRules,
+                (SELECT COUNT(*) FROM seasonal_pricing WHERE is_active = TRUE) AS activeSeasonalRules
         `);
 
         const statsRow = rows[0] || {};
@@ -63,7 +69,14 @@ const getDashboardStats = async (req, res) => {
             totalInspections: Number(statsRow.totalInspections) || 0,
             totalAgreements: Number(statsRow.totalAgreements) || 0,
             pendingAgreements: Number(statsRow.pendingAgreements) || 0,
-            acceptedAgreements: Number(statsRow.acceptedAgreements) || 0
+            acceptedAgreements: Number(statsRow.acceptedAgreements) || 0,
+            // Phase 3: Vehicle Maintenance & Smart Pricing metrics
+            vehiclesUnderMaintenance: Number(statsRow.vehiclesUnderMaintenance) || 0,
+            upcomingMaintenance: Number(statsRow.upcomingMaintenance) || 0,
+            overdueMaintenanceReminders: Number(statsRow.overdueMaintenanceReminders) || 0,
+            totalMaintenanceExpense: Number(statsRow.totalMaintenanceExpense) || 0,
+            activePricingRules: Number(statsRow.activePricingRules) || 0,
+            activeSeasonalRules: Number(statsRow.activeSeasonalRules) || 0
         };
 
         return res.status(200).json({

@@ -16,7 +16,9 @@ import {
     IdCard,
     ArrowRight,
     ShieldAlert,
-    ExternalLink
+    ExternalLink,
+    Wrench,
+    Percent
 } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import Loader from '../../components/common/Loader';
@@ -368,6 +370,78 @@ function AdminDashboard() {
                                 </div>
                                 <p>Generated contracts, verified customer terms acceptance, and PDF agreement downloads.</p>
                                 <span className="op-link-text">Open Agreements →</span>
+                            </Link>
+                        </div>
+                    </section>
+
+                    {/* PHASE 3: VEHICLE MAINTENANCE & SMART PRICING */}
+                    <section className="admin-section">
+                        <h2 className="admin-section-title">Fleet Maintenance & Dynamic Pricing Engine</h2>
+
+                        <div className="admin-kpi-grid">
+                            <article className={`admin-kpi-card ${stats.vehiclesUnderMaintenance > 0 ? 'highlight-warning' : ''}`}>
+                                <div className="kpi-header">
+                                    <span className="kpi-label">Vehicles Under Maintenance</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <Wrench size={20} strokeWidth={2} />
+                                    </span>
+                                </div>
+                                <div className="kpi-value">{formatNumber(stats.vehiclesUnderMaintenance)}</div>
+                                <div className="kpi-subtext">{formatNumber(stats.upcomingMaintenance)} scheduled upcoming service blocks</div>
+                            </article>
+
+                            <article className={`admin-kpi-card ${stats.overdueMaintenanceReminders > 0 ? 'highlight-expired' : ''}`}>
+                                <div className="kpi-header">
+                                    <span className="kpi-label">Overdue Maintenance Reminders</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <AlertTriangle size={20} strokeWidth={2} />
+                                    </span>
+                                </div>
+                                <div className="kpi-value">{formatNumber(stats.overdueMaintenanceReminders)}</div>
+                                <div className="kpi-subtext">Immediate preventive servicing required</div>
+                            </article>
+
+                            <article className="admin-kpi-card">
+                                <div className="kpi-header">
+                                    <span className="kpi-label">Lifetime Fleet Maintenance Cost</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <IndianRupee size={20} strokeWidth={2} />
+                                    </span>
+                                </div>
+                                <div className="kpi-value">{formatCurrency(stats.totalMaintenanceExpense)}</div>
+                                <div className="kpi-subtext">Aggregate repairs, servicing & parts</div>
+                            </article>
+
+                            <article className="admin-kpi-card">
+                                <div className="kpi-header">
+                                    <span className="kpi-label">Active Smart Pricing Rules</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <Percent size={20} strokeWidth={2} />
+                                    </span>
+                                </div>
+                                <div className="kpi-value">{formatNumber(stats.activePricingRules)} Rules / {formatNumber(stats.activeSeasonalRules)} Seasons</div>
+                                <div className="kpi-subtext">Dynamic peak surcharges & discounts active</div>
+                            </article>
+                        </div>
+
+                        {/* Quick Action Navigation Grid for Maintenance & Pricing */}
+                        <div className="operations-modules-grid">
+                            <Link to="/admin/maintenance" className="operation-nav-card">
+                                <div className="op-card-header">
+                                    <div className="op-icon-pill" style={{ background: 'rgba(249, 115, 22, 0.15)', color: '#ea580c' }}>🔧</div>
+                                    <h4>Vehicle Maintenance Management</h4>
+                                </div>
+                                <p>Record services, upload workshop invoices, manage overdue reminders, and track vehicle lifetime costs.</p>
+                                <span className="op-link-text">Open Maintenance Center →</span>
+                            </Link>
+
+                            <Link to="/admin/pricing" className="operation-nav-card">
+                                <div className="op-card-header">
+                                    <div className="op-icon-pill" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#2563eb' }}>⚡</div>
+                                    <h4>Smart Pricing & Additional Charges</h4>
+                                </div>
+                                <p>Weekend surcharges, seasonal holiday calendars, duration discounts, penalty fees, and live pricing simulation.</p>
+                                <span className="op-link-text">Open Pricing Engine →</span>
                             </Link>
                         </div>
                     </section>

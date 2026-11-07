@@ -232,7 +232,29 @@ const getBookingById = async (req, res) => {
             });
         }
 
-        return res.status(200).json(formatBookingRow(rows[0]));
+        const formatted = formatBookingRow(rows[0]);
+
+        const [breakdowns] = await db.query(
+            'SELECT * FROM booking_price_breakdown WHERE booking_id = ?',
+            [bookingId]
+        );
+        if (breakdowns.length > 0) {
+            const bItem = breakdowns[0];
+            if (typeof bItem.breakdown_json === 'string') {
+                try {
+                    bItem.breakdown_json = JSON.parse(bItem.breakdown_json);
+                } catch (_) {}
+            }
+            formatted.price_breakdown = bItem;
+        }
+
+        const [additionalCharges] = await db.query(
+            'SELECT * FROM booking_additional_charges WHERE booking_id = ? ORDER BY id ASC',
+            [bookingId]
+        );
+        formatted.additional_charges = additionalCharges;
+
+        return res.status(200).json(formatted);
     } catch (error) {
         console.error('Error fetching booking details:', error.message);
         return res.status(500).json({

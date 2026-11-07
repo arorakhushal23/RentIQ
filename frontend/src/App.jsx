@@ -19,6 +19,8 @@ import AdminLicenses from './pages/admin/AdminLicenses';
 import AdminLocations from './pages/admin/AdminLocations';
 import AdminInspections from './pages/admin/AdminInspections';
 import AdminAgreements from './pages/admin/AdminAgreements';
+import AdminMaintenance from './pages/admin/AdminMaintenance';
+import AdminPricing from './pages/admin/AdminPricing';
 import ScrollToTop from './components/common/ScrollToTop';
 import "./App.css";
 
@@ -103,6 +105,22 @@ function App() {
           element={
             <AdminRoute>
               <AdminAgreements />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/maintenance"
+          element={
+            <AdminRoute>
+              <AdminMaintenance />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/pricing"
+          element={
+            <AdminRoute>
+              <AdminPricing />
             </AdminRoute>
           }
         />

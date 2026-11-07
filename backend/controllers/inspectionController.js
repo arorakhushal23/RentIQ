@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const db = require('../config/db');
 const { createNotification } = require('../utils/notificationHelper');
+const { calculatePostRentalCharges, saveBookingAdditionalCharges } = require('../utils/pricingEngine');
 
 /**
  * Admin: Create a vehicle inspection (pickup or return)
@@ -471,6 +472,17 @@ const completeRental = async (req, res) => {
         // Transition booking status to 'completed'
         await db.query('UPDATE bookings SET status = "completed" WHERE booking_id = ?', [bookingId]);
 
+        // Evaluate and persist post-rental charges (late return, excess km, fuel refill, cleaning)
+        let additionalChargesResult = null;
+        try {
+            additionalChargesResult = await calculatePostRentalCharges(bookingId);
+            if (additionalChargesResult.itemizedCharges.length > 0) {
+                await saveBookingAdditionalCharges(bookingId, additionalChargesResult.itemizedCharges);
+            }
+        } catch (postErr) {
+            console.warn('Post-rental charges calculation notice:', postErr.message);
+        }
+
         await createNotification(
             row.user_id,
             'booking_completed',
@@ -481,7 +493,8 @@ const completeRental = async (req, res) => {
         return res.status(200).json({
             message: 'Rental completed successfully. Booking status updated to Completed.',
             booking_id: bookingId,
-            status: 'completed'
+            status: 'completed',
+            additional_charges: additionalChargesResult ? additionalChargesResult.itemizedCharges : []
         });
     } catch (err) {
         console.error('Error completing rental:', err.message);

@@ -76,6 +76,12 @@ function BookingForm({
     const [licenseStatus, setLicenseStatus] = useState(null);
     const [licenceRedirect, setLicenceRedirect] = useState(null);
 
+    // Phase 3: Add-on accessories & Smart Pricing Breakdown
+    const [availableAddons, setAvailableAddons] = useState([]);
+    const [selectedAddonIds, setSelectedAddonIds] = useState([]);
+    const [smartPricing, setSmartPricing] = useState(null);
+    const [pricingLoading, setPricingLoading] = useState(false);
+
     // Errors & state
     const [error, setError] = useState('');
     const [stepErrors, setStepErrors] = useState({});
@@ -83,6 +89,19 @@ function BookingForm({
     const [confirmedBooking, setConfirmedBooking] = useState(null);
 
     const isSubmittingRef = useRef(false);
+
+    // Fetch active add-ons from pricing config
+    useEffect(() => {
+        let isMounted = true;
+        axiosInstance.get('/pricing/config')
+            .then(res => {
+                if (isMounted && res.data?.availableAddons) {
+                    setAvailableAddons(res.data.availableAddons);
+                }
+            })
+            .catch(() => {});
+        return () => { isMounted = false; };
+    }, []);
 
     // Fetch user licence verification status on mount
     useEffect(() => {
@@ -143,14 +162,45 @@ function BookingForm({
 
     const isDurationValid = durationInfo.totalMinutes > 0;
 
-    // Price calculations: Base + Delivery = Total
+    // Live Smart Pricing Calculation
+    useEffect(() => {
+        if (!vehicleId || !pickupDatetime || !returnDatetime) return;
+        const pDate = new Date(pickupDatetime);
+        const rDate = new Date(returnDatetime);
+        if (isNaN(pDate.getTime()) || isNaN(rDate.getTime()) || rDate <= pDate) return;
+
+        let isMounted = true;
+        setPricingLoading(true);
+
+        axiosInstance.post('/pricing/calculate', {
+            vehicleId,
+            pickupDatetime,
+            returnDatetime,
+            selectedAddons: selectedAddonIds,
+            deliveryDistanceKm: routeInfo?.route_distance_km || 0
+        }).then(res => {
+            if (isMounted && res.data) {
+                setSmartPricing(res.data);
+            }
+        }).catch(() => {
+            // Keep graceful fallback to standard calculation
+        }).finally(() => {
+            if (isMounted) setPricingLoading(false);
+        });
+
+        return () => { isMounted = false; };
+    }, [vehicleId, pickupDatetime, returnDatetime, selectedAddonIds, routeInfo?.route_distance_km]);
+
+    // Price calculations: Smart authoritative price with fallback
     const baseRentalPrice = useMemo(() => {
         if (!isDurationValid) return 0;
         return calculateRentalPrice(pricePerDay, durationInfo.durationHours);
     }, [isDurationValid, pricePerDay, durationInfo.durationHours]);
 
     const deliveryFee = Number(routeInfo?.delivery_charge || 0);
-    const finalTotalPrice = Number((baseRentalPrice + deliveryFee).toFixed(2));
+    const finalTotalPrice = smartPricing?.finalTotal !== undefined
+        ? smartPricing.finalTotal
+        : Number((baseRentalPrice + deliveryFee).toFixed(2));
 
     const hourlyRate = (Number(pricePerDay) / 24).toFixed(2).replace(/\.00$/, '');
 
@@ -324,6 +374,7 @@ function BookingForm({
                 returnDatetime,
                 startDate: pickupDatetime,
                 endDate: returnDatetime,
+                selectedAddons: selectedAddonIds,
                 pickupAddress,
                 pickupLatitude: pickupCoords?.lat,
                 pickupLongitude: pickupCoords?.lng,
@@ -618,6 +669,37 @@ function BookingForm({
                             </div>
                         )}
 
+                        {/* Optional Add-on Accessories */}
+                        {availableAddons.length > 0 && (
+                            <div className="addons-selection-block">
+                                <h4 className="addons-title">Enhance Your Journey (Optional Add-ons)</h4>
+                                <div className="addons-options-grid">
+                                    {availableAddons.map(addon => {
+                                        const isSelected = selectedAddonIds.includes(addon.id);
+                                        return (
+                                            <label key={addon.id} className={`addon-option-pill ${isSelected ? 'selected' : ''}`}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    onChange={() => {
+                                                        if (isSelected) {
+                                                            setSelectedAddonIds(selectedAddonIds.filter(id => id !== addon.id));
+                                                        } else {
+                                                            setSelectedAddonIds([...selectedAddonIds, addon.id]);
+                                                        }
+                                                    }}
+                                                />
+                                                <div className="addon-option-info">
+                                                    <span className="addon-opt-name">{addon.charge_name}</span>
+                                                    <span className="addon-opt-price">+₹{addon.rate} / {addon.unit.replace('_', ' ')}</span>
+                                                </div>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
                         {error && <FormError message={error} />}
 
                         <div className="step-actions split-align">
@@ -684,9 +766,31 @@ function BookingForm({
                                     <strong>{durationInfo.display} ({durationInfo.durationHours} hrs)</strong>
                                 </div>
                                 <div className="line-item">
-                                    <span>Base Hourly Rental</span>
-                                    <span>₹{hourlyRate} × {durationInfo.durationHours} hrs = ₹{Number(baseRentalPrice).toLocaleString('en-IN')}</span>
+                                    <span>Base Rental ({smartPricing ? smartPricing.rentalDays : Math.max(1, Math.ceil(durationInfo.durationHours / 24))} day{smartPricing?.rentalDays > 1 ? 's' : ''})</span>
+                                    <span>₹{Number(smartPricing ? smartPricing.baseRentalPrice : baseRentalPrice).toLocaleString('en-IN')}</span>
                                 </div>
+
+                                {smartPricing?.weekendAdjustment > 0 && (
+                                    <div className="line-item" style={{ color: '#ea580c' }}>
+                                        <span>Weekend Peak Surcharge ({smartPricing.weekendDaysCount} weekend day{smartPricing.weekendDaysCount > 1 ? 's' : ''})</span>
+                                        <strong>+₹{smartPricing.weekendAdjustment.toFixed(2)}</strong>
+                                    </div>
+                                )}
+
+                                {smartPricing?.seasonalAdjustment > 0 && (
+                                    <div className="line-item" style={{ color: '#ea580c' }}>
+                                        <span>Seasonal Peak ({smartPricing.seasonName || 'Holiday Calendar'})</span>
+                                        <strong>+₹{smartPricing.seasonalAdjustment.toFixed(2)}</strong>
+                                    </div>
+                                )}
+
+                                {smartPricing?.durationDiscount > 0 && (
+                                    <div className="line-item" style={{ color: '#059669' }}>
+                                        <span>Duration Discount ({smartPricing.discountRuleName})</span>
+                                        <strong>-₹{smartPricing.durationDiscount.toFixed(2)}</strong>
+                                    </div>
+                                )}
+
                                 <div className="line-item">
                                     <span>Transit / Delivery Fee ({routeInfo.route_distance_km} km)</span>
                                     <span>
@@ -697,6 +801,18 @@ function BookingForm({
                                         )}
                                     </span>
                                 </div>
+
+                                {smartPricing?.appliedAddons?.length > 0 && (
+                                    <>
+                                        {smartPricing.appliedAddons.map(a => (
+                                            <div key={a.addonId} className="line-item" style={{ color: '#2563eb' }}>
+                                                <span>Add-on: {a.name} ({a.units} {a.unit.replace('_', ' ')})</span>
+                                                <strong>+₹{a.totalCost.toFixed(2)}</strong>
+                                            </div>
+                                        ))}
+                                    </>
+                                )}
+
                                 <div className="line-item green-text">
                                     <span>Standard Damage Waiver & Insurance</span>
                                     <span>Included (₹0)</span>

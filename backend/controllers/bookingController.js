@@ -10,6 +10,8 @@ const {
     calculateDeliveryCharge
 } = require('../utils/distanceCalculator')
 const { ensureAgreementExists } = require('./agreementController')
+const { checkVehicleMaintenanceConflict } = require('../utils/maintenanceHelper')
+const { calculateAuthoritativePrice, saveBookingPriceBreakdown } = require('../utils/pricingEngine')
 
 const createBooking = async (req, res) => {
     let connection
@@ -276,10 +278,41 @@ const createBooking = async (req, res) => {
             })
         }
 
-        // 4. Calculate authoritative price and duration
+        // 3b. Vehicle Maintenance Conflict Check
+        const maintenanceConflict = await checkVehicleMaintenanceConflict(
+            vehicleId,
+            pickupParsed.formatted,
+            returnParsed.formatted,
+            null,
+            connection
+        )
+
+        if (maintenanceConflict.hasConflict) {
+            await connection.rollback()
+            return res.status(400).json({
+                eligible: false,
+                code: 'VEHICLE_UNDER_MAINTENANCE',
+                message: maintenanceConflict.message
+            })
+        }
+
+        // 4. Calculate authoritative price and duration via Smart Pricing Engine
+        const rawAddons = req.body.selectedAddons || req.body.selected_addons || req.body.addonIds || req.body.addon_ids || []
+        const selectedAddonIds = Array.isArray(rawAddons) ? rawAddons : [rawAddons]
+
+        const priceBreakdown = await calculateAuthoritativePrice({
+            vehicleId,
+            pickupDatetime: pickupParsed.date,
+            returnDatetime: returnParsed.date,
+            selectedAddonIds,
+            deliveryDistanceKm: routeDistanceKm,
+            conn: connection
+        })
+
         const durationInfo = calculateRentalDuration(pickupParsed.date, returnParsed.date)
-        const baseRentalPrice = calculateRentalPrice(vehicle.price_per_day, durationInfo.durationHours)
-        const totalPrice = Number((baseRentalPrice + deliveryCharge).toFixed(2))
+        const baseRentalPrice = priceBreakdown.baseRentalPrice
+        deliveryCharge = priceBreakdown.deliveryCharge
+        const totalPrice = priceBreakdown.finalTotal
 
         // 5. Insert booking with location and delivery charge within the serialized transaction
         const [result] = await connection.query(
@@ -312,6 +345,14 @@ const createBooking = async (req, res) => {
         )
 
         const bookingId = result.insertId
+
+        // Save smart pricing breakdown snapshot
+        try {
+            await saveBookingPriceBreakdown(bookingId, priceBreakdown, connection)
+        } catch (bkErr) {
+            console.error('Notice: Saving price breakdown snapshot failed:', bkErr.message)
+        }
+
         await connection.commit()
 
         // 6. Generate digital rental agreement snapshot automatically
@@ -365,7 +406,9 @@ const createBooking = async (req, res) => {
                 total_price: totalPrice,
                 status: 'pending',
                 agreementId: agreement ? agreement.id : null,
-                agreementNumber: agreement ? agreement.agreement_number : null
+                agreementNumber: agreement ? agreement.agreement_number : null,
+                priceBreakdown,
+                price_breakdown: priceBreakdown
             }
         })
 
@@ -592,8 +635,59 @@ const cancelBooking = async (req, res) => {
 }
 
 
+const getBookingByIdCustomer = async (req, res) => {
+    try {
+        const userId = req.user && req.user.user_id
+        const bookingId = Number(req.params.id)
+        if (!bookingId || isNaN(bookingId)) {
+            return res.status(400).json({ message: 'Valid booking ID is required' })
+        }
+        const [rows] = await db.query(
+            `SELECT b.*, v.name AS vehicle_name, v.brand AS vehicle_brand, v.image_url, c.name AS category_name
+             FROM bookings b
+             JOIN vehicles v ON b.vehicle_id = v.vehicle_id
+             LEFT JOIN categories c ON v.category_id = c.category_id
+             WHERE b.booking_id = ? AND b.user_id = ?`,
+            [bookingId, userId]
+        )
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Booking not found' })
+        }
+        const booking = rows[0]
+        const dur = calculateRentalDuration(booking.pickup_datetime, booking.return_datetime)
+        booking.duration = dur.display
+        booking.durationHours = dur.durationHours
+
+        const [breakdowns] = await db.query(
+            'SELECT * FROM booking_price_breakdown WHERE booking_id = ?',
+            [bookingId]
+        )
+        if (breakdowns.length > 0) {
+            const bItem = breakdowns[0]
+            if (typeof bItem.breakdown_json === 'string') {
+                try {
+                    bItem.breakdown_json = JSON.parse(bItem.breakdown_json)
+                } catch (_) {}
+            }
+            booking.price_breakdown = bItem
+        }
+
+        const [addCharges] = await db.query(
+            'SELECT * FROM booking_additional_charges WHERE booking_id = ? ORDER BY id ASC',
+            [bookingId]
+        )
+        booking.additional_charges = addCharges
+
+        return res.status(200).json(booking)
+    } catch (err) {
+        console.error('Error fetching customer booking by ID:', err.message)
+        return res.status(500).json({ message: 'Failed to fetch booking' })
+    }
+}
+
 module.exports = {
     createBooking,
     getMyBookings,
+    getBookingByIdCustomer,
     cancelBooking
 }

@@ -14,6 +14,8 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const locationRoutes = require('./routes/locationRoutes');
 const agreementRoutes = require('./routes/agreementRoutes');
 const inspectionRoutes = require('./routes/inspectionRoutes');
+const maintenanceRoutes = require('./routes/maintenanceRoutes');
+const pricingRoutes = require('./routes/pricingRoutes');
 
 const app = express();
 
@@ -31,6 +33,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/agreements', agreementRoutes);
 app.use('/api/inspections', inspectionRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/pricing', pricingRoutes);
 
 app.get('/api/health', async (req, res) => {
     try {

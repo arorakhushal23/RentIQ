@@ -23,6 +23,7 @@ import {
     AlertTriangle,
     FileText,
     Download,
+    Eye,
     MapPin,
     Navigation,
     Camera
@@ -335,25 +336,53 @@ function Profile() {
         }
     };
 
-    const handleDownloadMyDoc = async (side) => {
+    const handleDownloadMyDoc = async (side, action = 'download') => {
         try {
+            setLicenseError('');
             const res = await axiosInstance.get(`/licenses/my-license/document/${side}`, {
                 responseType: 'blob'
             });
-            const blob = new Blob([res.data], {
-                type: res.headers['content-type'] || 'application/octet-stream'
-            });
+
+            const contentType = res.headers['content-type'] || 'application/octet-stream';
+            let ext = '';
+            if (contentType.includes('pdf')) ext = '.pdf';
+            else if (contentType.includes('png')) ext = '.png';
+            else if (contentType.includes('jpeg') || contentType.includes('jpg')) ext = '.jpg';
+            else if (contentType.includes('webp')) ext = '.webp';
+
+            const disposition = res.headers['content-disposition'] || '';
+            const match = disposition.match(/filename=["']?([^"';]+)["']?/i);
+            const downloadFilename = match && match[1]
+                ? match[1]
+                : `my_driving_license_${side}${ext}`;
+
+            const blob = new Blob([res.data], { type: contentType });
             const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `my_driving_license_${side}`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
+
+            if (action === 'view') {
+                window.open(url, '_blank');
+            } else {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = downloadFilename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            }
+            setTimeout(() => window.URL.revokeObjectURL(url), 10000);
         } catch (err) {
             console.error('Download license document error:', err);
-            setLicenseError('Could not retrieve uploaded document file.');
+            let message = 'Could not retrieve uploaded document file.';
+            if (err.response?.data instanceof Blob) {
+                try {
+                    const text = await err.response.data.text();
+                    const parsed = JSON.parse(text);
+                    if (parsed.message) message = parsed.message;
+                } catch (_) {}
+            } else if (err.response?.data?.message) {
+                message = err.response.data.message;
+            }
+            setLicenseError(message);
         }
     };
 
@@ -791,24 +820,46 @@ function Profile() {
                                             <span>Attached Documents:</span>
                                             <div className="doc-download-buttons">
                                                 {licenseInfo.license.has_front && (
-                                                    <button
-                                                        type="button"
-                                                        className="doc-dl-btn"
-                                                        onClick={() => handleDownloadMyDoc('front')}
-                                                    >
-                                                        <Download size={14} />
-                                                        Download Front Document
-                                                    </button>
+                                                    <div style={{ display: 'inline-flex', gap: '8px' }}>
+                                                        <button
+                                                            type="button"
+                                                            className="doc-dl-btn"
+                                                            onClick={() => handleDownloadMyDoc('front', 'download')}
+                                                        >
+                                                            <Download size={14} />
+                                                            Download Front Document
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="doc-dl-btn"
+                                                            onClick={() => handleDownloadMyDoc('front', 'view')}
+                                                            title="View front document in new browser tab"
+                                                        >
+                                                            <Eye size={14} />
+                                                            View Front
+                                                        </button>
+                                                    </div>
                                                 )}
                                                 {licenseInfo.license.has_back && (
-                                                    <button
-                                                        type="button"
-                                                        className="doc-dl-btn"
-                                                        onClick={() => handleDownloadMyDoc('back')}
-                                                    >
-                                                        <Download size={14} />
-                                                        Download Back Document
-                                                    </button>
+                                                    <div style={{ display: 'inline-flex', gap: '8px' }}>
+                                                        <button
+                                                            type="button"
+                                                            className="doc-dl-btn"
+                                                            onClick={() => handleDownloadMyDoc('back', 'download')}
+                                                        >
+                                                            <Download size={14} />
+                                                            Download Back Document
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="doc-dl-btn"
+                                                            onClick={() => handleDownloadMyDoc('back', 'view')}
+                                                            title="View back document in new browser tab"
+                                                        >
+                                                            <Eye size={14} />
+                                                            View Back
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>

@@ -247,6 +247,45 @@ const submitLicense = async (req, res) => {
 };
 
 /**
+ * Resolves physical file path on server for driving licence documents
+ * Safely tests multiple standard storage candidate locations.
+ */
+function resolveLicenseFilePath(storedPath) {
+    if (!storedPath || typeof storedPath !== 'string') return null;
+
+    const baseDir = path.resolve(__dirname, '..');
+    const uploadLicensesDir = path.resolve(baseDir, 'uploads', 'customer_licenses');
+    const uploadsDir = path.resolve(baseDir, 'uploads');
+
+    // 1. Direct in backend/uploads/customer_licenses/<safeBase>
+    const safeBase = path.basename(storedPath);
+    const candidate1 = path.resolve(uploadLicensesDir, safeBase);
+    if (fs.existsSync(candidate1) && fs.statSync(candidate1).isFile()) {
+        return candidate1;
+    }
+
+    // 2. Relative to backend root directory (e.g. "uploads/customer_licenses/...")
+    const cleanRelative = storedPath.replace(/^[/\\]+/, '').replace(/\//g, path.sep);
+    const candidate2 = path.resolve(baseDir, cleanRelative);
+    if (candidate2.startsWith(baseDir) && fs.existsSync(candidate2) && fs.statSync(candidate2).isFile()) {
+        return candidate2;
+    }
+
+    // 3. Direct in backend/uploads/<safeBase>
+    const candidate3 = path.resolve(uploadsDir, safeBase);
+    if (fs.existsSync(candidate3) && fs.statSync(candidate3).isFile()) {
+        return candidate3;
+    }
+
+    // 4. Absolute path
+    if (path.isAbsolute(storedPath) && fs.existsSync(storedPath) && fs.statSync(storedPath).isFile()) {
+        return storedPath;
+    }
+
+    return null;
+}
+
+/**
  * GET /api/licenses/my-license/document/:side
  * Securely stream customer's own uploaded licence document
  */
@@ -256,7 +295,7 @@ const downloadMyLicenseDoc = async (req, res) => {
         const side = req.params.side; // 'front' or 'back'
 
         if (side !== 'front' && side !== 'back') {
-            return res.status(400).json({ message: 'Invalid document side requested' });
+            return res.status(400).json({ message: 'Invalid document side requested. Must be "front" or "back".' });
         }
 
         const [rows] = await db.query(
@@ -265,35 +304,40 @@ const downloadMyLicenseDoc = async (req, res) => {
         );
 
         if (rows.length === 0) {
-            return res.status(404).json({ message: 'No licence record found' });
+            return res.status(404).json({ message: 'No driving licence record found for your account.' });
         }
 
         const filename = side === 'front' ? rows[0].front_document_path : rows[0].back_document_path;
         if (!filename) {
-            return res.status(404).json({ message: 'Requested document side not found' });
+            return res.status(404).json({ message: `No ${side}-side document has been uploaded for this licence.` });
         }
 
-        const safeBase = path.basename(filename);
-        const filePath = path.resolve(__dirname, '..', 'uploads', 'customer_licenses', safeBase);
-
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ message: 'Physical document file not found on server storage' });
+        const filePath = resolveLicenseFilePath(filename);
+        if (!filePath) {
+            return res.status(404).json({
+                message: `The ${side}-side driving licence document was not found on server storage.`
+            });
         }
 
-        const ext = path.extname(safeBase).toLowerCase();
+        const ext = path.extname(filePath).toLowerCase();
         const mimeMap = {
             '.pdf': 'application/pdf',
             '.jpg': 'image/jpeg',
             '.jpeg': 'image/jpeg',
-            '.png': 'image/png'
+            '.png': 'image/png',
+            '.webp': 'image/webp'
         };
 
-        res.setHeader('Content-Type', mimeMap[ext] || 'application/octet-stream');
-        res.setHeader('Content-Disposition', `inline; filename="${side}_license_${safeBase}"`);
+        const contentType = mimeMap[ext] || 'application/octet-stream';
+        const safeFilename = `${side}_driving_licence_${path.basename(filePath)}`;
+
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Type');
+        res.setHeader('Content-Disposition', `inline; filename="${safeFilename}"`);
         fs.createReadStream(filePath).pipe(res);
     } catch (error) {
-        console.error('Error streaming license document:', error);
-        return res.status(500).json({ message: 'Failed to access licence file' });
+        console.error('Error streaming customer license document:', error);
+        return res.status(500).json({ message: 'Failed to access driving licence document' });
     }
 };
 
@@ -563,8 +607,12 @@ const downloadAdminLicenseDoc = async (req, res) => {
         const id = Number(req.params.id);
         const side = req.params.side;
 
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({ message: 'Invalid driving licence ID' });
+        }
+
         if (side !== 'front' && side !== 'back') {
-            return res.status(400).json({ message: 'Invalid document side' });
+            return res.status(400).json({ message: 'Invalid document side. Must be "front" or "back".' });
         }
 
         const [rows] = await db.query(
@@ -573,31 +621,36 @@ const downloadAdminLicenseDoc = async (req, res) => {
         );
 
         if (rows.length === 0) {
-            return res.status(404).json({ message: 'Driving licence not found' });
+            return res.status(404).json({ message: 'Driving licence record not found.' });
         }
 
         const filename = side === 'front' ? rows[0].front_document_path : rows[0].back_document_path;
         if (!filename) {
-            return res.status(404).json({ message: 'Requested document side not found' });
+            return res.status(404).json({ message: `No ${side}-side document has been uploaded for this licence.` });
         }
 
-        const safeBase = path.basename(filename);
-        const filePath = path.resolve(__dirname, '..', 'uploads', 'customer_licenses', safeBase);
-
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ message: 'Physical document file not found on server storage' });
+        const filePath = resolveLicenseFilePath(filename);
+        if (!filePath) {
+            return res.status(404).json({
+                message: `The ${side}-side driving licence document was not found on server storage.`
+            });
         }
 
-        const ext = path.extname(safeBase).toLowerCase();
+        const ext = path.extname(filePath).toLowerCase();
         const mimeMap = {
             '.pdf': 'application/pdf',
             '.jpg': 'image/jpeg',
             '.jpeg': 'image/jpeg',
-            '.png': 'image/png'
+            '.png': 'image/png',
+            '.webp': 'image/webp'
         };
 
-        res.setHeader('Content-Type', mimeMap[ext] || 'application/octet-stream');
-        res.setHeader('Content-Disposition', `inline; filename="${side}_license_${safeBase}"`);
+        const contentType = mimeMap[ext] || 'application/octet-stream';
+        const safeFilename = `license_${side}_${path.basename(filePath)}`;
+
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Type');
+        res.setHeader('Content-Disposition', `inline; filename="${safeFilename}"`);
         fs.createReadStream(filePath).pipe(res);
     } catch (error) {
         console.error('Error streaming admin license doc:', error);

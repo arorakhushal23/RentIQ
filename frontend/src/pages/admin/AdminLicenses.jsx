@@ -116,25 +116,53 @@ function AdminLicenses() {
         }
     };
 
-    const handleDownloadDoc = async (licId, side) => {
+    const handleDownloadDoc = async (licId, side, action = 'download') => {
         try {
+            setError('');
             const response = await axiosInstance.get(`/admin/licenses/${licId}/document/${side}`, {
                 responseType: 'blob'
             });
-            const blob = new Blob([response.data], {
-                type: response.headers['content-type'] || 'application/octet-stream'
-            });
+
+            const contentType = response.headers['content-type'] || 'application/octet-stream';
+            let ext = '';
+            if (contentType.includes('pdf')) ext = '.pdf';
+            else if (contentType.includes('png')) ext = '.png';
+            else if (contentType.includes('jpeg') || contentType.includes('jpg')) ext = '.jpg';
+            else if (contentType.includes('webp')) ext = '.webp';
+
+            const disposition = response.headers['content-disposition'] || '';
+            const match = disposition.match(/filename=["']?([^"';]+)["']?/i);
+            const downloadFilename = match && match[1]
+                ? match[1]
+                : `license_${side}_${licId}${ext}`;
+
+            const blob = new Blob([response.data], { type: contentType });
             const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `license_${side}_${licId}`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            window.URL.revokeObjectURL(url);
+
+            if (action === 'view') {
+                window.open(url, '_blank');
+            } else {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = downloadFilename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            }
+            setTimeout(() => window.URL.revokeObjectURL(url), 10000);
         } catch (err) {
             console.error('Download error:', err);
-            setError('Could not download document file from storage.');
+            let message = 'Could not download document file from storage.';
+            if (err.response?.data instanceof Blob) {
+                try {
+                    const text = await err.response.data.text();
+                    const parsed = JSON.parse(text);
+                    if (parsed.message) message = parsed.message;
+                } catch (_) {}
+            } else if (err.response?.data?.message) {
+                message = err.response.data.message;
+            }
+            setError(message);
         }
     };
 
@@ -462,14 +490,28 @@ function AdminLicenses() {
                                 </div>
 
                                 <div className="lic-preview-container">
-                                    <div className="lic-preview-actions">
+                                    <div className="lic-preview-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                                         <button
                                             type="button"
                                             className="lic-preview-download-btn"
-                                            onClick={() => handleDownloadDoc(selectedLicense.id, docViewerSide)}
+                                            onClick={() => handleDownloadDoc(selectedLicense.id, docViewerSide, 'download')}
                                         >
                                             <Download size={14} />
                                             Download {docViewerSide === 'front' ? 'Front Document' : 'Back Document'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="lic-preview-download-btn"
+                                            style={{
+                                                background: 'var(--color-surface, #ffffff)',
+                                                color: 'var(--color-text, #1e293b)',
+                                                border: '1px solid var(--color-border, #cbd5e1)'
+                                            }}
+                                            onClick={() => handleDownloadDoc(selectedLicense.id, docViewerSide, 'view')}
+                                            title="Open document directly in browser tab"
+                                        >
+                                            <Eye size={14} />
+                                            View in Browser
                                         </button>
                                     </div>
 

@@ -16,10 +16,18 @@ const agreementRoutes = require('./routes/agreementRoutes');
 const inspectionRoutes = require('./routes/inspectionRoutes');
 const maintenanceRoutes = require('./routes/maintenanceRoutes');
 const pricingRoutes = require('./routes/pricingRoutes');
+const { ensureUploadFiles } = require('./utils/ensureUploadFiles');
+
+// Initialize upload storage and seeded sample documents
+ensureUploadFiles();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: true,
+    credentials: true,
+    exposedHeaders: ['Content-Disposition', 'Content-Type']
+}));
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import {
     Car,
     CheckCircle2,
@@ -9,7 +10,13 @@ import {
     CheckCircle,
     Flag,
     XCircle,
-    AlertCircle
+    AlertCircle,
+    AlertTriangle,
+    FileCheck,
+    IdCard,
+    ArrowRight,
+    ShieldAlert,
+    ExternalLink
 } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import Loader from '../../components/common/Loader';
@@ -17,23 +24,31 @@ import './AdminDashboard.css';
 
 function AdminDashboard() {
     const [stats, setStats] = useState(null);
+    const [alertsData, setAlertsData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    const fetchStats = async () => {
+    const fetchDashboardData = useCallback(async () => {
         setLoading(true);
         setError('');
 
         try {
-            const response = await axiosInstance.get('/admin/dashboard');
-            if (response.data && response.data.stats) {
-                setStats(response.data.stats);
+            const [statsRes, alertsRes] = await Promise.all([
+                axiosInstance.get('/admin/dashboard'),
+                axiosInstance.get('/admin/documents/alerts').catch(() => ({ data: { summary: {}, alerts: [] } }))
+            ]);
+
+            if (statsRes.data && statsRes.data.stats) {
+                setStats(statsRes.data.stats);
             } else {
                 throw new Error('Invalid response structure received from server.');
             }
+
+            if (alertsRes.data) {
+                setAlertsData(alertsRes.data);
+            }
         } catch (err) {
             console.error('Failed to load admin dashboard statistics:', err);
-
             if (err.response?.status === 403) {
                 setError('Access denied: Administrator privileges are required to view this dashboard.');
             } else if (err.response?.status === 401) {
@@ -47,44 +62,11 @@ function AdminDashboard() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
-        let isMounted = true;
-
-        axiosInstance
-            .get('/admin/dashboard')
-            .then((response) => {
-                if (isMounted) {
-                    if (response.data && response.data.stats) {
-                        setStats(response.data.stats);
-                    } else {
-                        setError('Invalid response structure received from server.');
-                    }
-                    setLoading(false);
-                }
-            })
-            .catch((err) => {
-                if (isMounted) {
-                    console.error('Failed to load admin dashboard statistics:', err);
-                    if (err.response?.status === 403) {
-                        setError('Access denied: Administrator privileges are required to view this dashboard.');
-                    } else if (err.response?.status === 401) {
-                        setError('Authentication required: Your session may have expired. Please log in again.');
-                    } else {
-                        setError(
-                            err.response?.data?.message ||
-                            'Unable to retrieve dashboard statistics. Please verify backend connection and try again.'
-                        );
-                    }
-                    setLoading(false);
-                }
-            });
-
-        return () => {
-            isMounted = false;
-        };
-    }, []);
+        fetchDashboardData();
+    }, [fetchDashboardData]);
 
     const formatNumber = (val) => (Number(val) || 0).toLocaleString('en-IN');
     const formatCurrency = (val) => '₹' + (Number(val) || 0).toLocaleString('en-IN');
@@ -93,11 +75,10 @@ function AdminDashboard() {
         <main className="admin-dashboard-page">
             <header className="admin-header">
                 <div className="admin-header-title">
-                    <span className="admin-badge">ADMINISTRATION</span>
-                    <h1>Admin Dashboard</h1>
+                    <span className="admin-badge">ADMINISTRATION & COMPLIANCE</span>
+                    <h1>Admin Operations Dashboard</h1>
                     <p>
-                        Real-time overview of fleet availability, customer registrations,
-                        booking activity, and cumulative booking value.
+                        Real-time overview of fleet availability, document compliance, customer driving licence verification, and booking activity.
                     </p>
                 </div>
 
@@ -105,7 +86,7 @@ function AdminDashboard() {
                     <button
                         type="button"
                         className="admin-refresh-btn"
-                        onClick={fetchStats}
+                        onClick={fetchDashboardData}
                         disabled={loading}
                     >
                         {loading ? 'Refreshing...' : '↻ Refresh Data'}
@@ -115,7 +96,7 @@ function AdminDashboard() {
 
             {loading && (
                 <div className="admin-loading-state">
-                    <Loader message="Loading dashboard statistics..." />
+                    <Loader message="Loading dashboard statistics & compliance records..." />
                 </div>
             )}
 
@@ -130,7 +111,7 @@ function AdminDashboard() {
                         <button
                             type="button"
                             className="admin-retry-btn"
-                            onClick={fetchStats}
+                            onClick={fetchDashboardData}
                         >
                             Retry Request
                         </button>
@@ -193,6 +174,123 @@ function AdminDashboard() {
                         </div>
                     </section>
 
+                    {/* COMPLIANCE & VERIFICATION METRICS (Features 2 & 3) */}
+                    <section className="admin-section">
+                        <div className="section-title-with-actions">
+                            <h2 className="admin-section-title">Compliance & Licence Verification Hub</h2>
+                            <div className="section-actions-links">
+                                <Link to="/admin/licenses" className="quick-action-link">
+                                    <IdCard size={15} />
+                                    Verify Licences ({formatNumber(stats.pendingLicenses)} pending)
+                                    <ArrowRight size={14} />
+                                </Link>
+                                <Link to="/admin/vehicles" className="quick-action-link secondary">
+                                    <FileCheck size={15} />
+                                    Manage Fleet Documents
+                                    <ArrowRight size={14} />
+                                </Link>
+                            </div>
+                        </div>
+
+                        <div className="admin-kpi-grid compliance-grid">
+                            <article className={`admin-kpi-card ${stats.pendingLicenses > 0 ? 'highlight-warning' : ''}`}>
+                                <div className="kpi-header">
+                                    <span className="kpi-label">Pending Licence Reviews</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <Clock size={20} strokeWidth={2} />
+                                    </span>
+                                </div>
+                                <div className="kpi-value">{formatNumber(stats.pendingLicenses)}</div>
+                                <div className="kpi-subtext">Awaiting admin review & approval</div>
+                            </article>
+
+                            <article className="admin-kpi-card highlight-success">
+                                <div className="kpi-header">
+                                    <span className="kpi-label">Verified Customers</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <CheckCircle size={20} strokeWidth={2} />
+                                    </span>
+                                </div>
+                                <div className="kpi-value">{formatNumber(stats.verifiedLicenses)}</div>
+                                <div className="kpi-subtext">Customers eligible for vehicle rental</div>
+                            </article>
+
+                            <article className={`admin-kpi-card ${stats.expiredDocuments > 0 ? 'highlight-danger' : ''}`}>
+                                <div className="kpi-header">
+                                    <span className="kpi-label">Expired Fleet Docs</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <AlertTriangle size={20} strokeWidth={2} />
+                                    </span>
+                                </div>
+                                <div className="kpi-value">{formatNumber(stats.expiredDocuments)}</div>
+                                <div className="kpi-subtext">Blocking customer reservations</div>
+                            </article>
+
+                            <article className={`admin-kpi-card ${stats.expiringDocuments > 0 ? 'highlight-expiring' : ''}`}>
+                                <div className="kpi-header">
+                                    <span className="kpi-label">Expiring Soon (30 Days)</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <Clock size={20} strokeWidth={2} />
+                                    </span>
+                                </div>
+                                <div className="kpi-value">{formatNumber(stats.expiringDocuments)}</div>
+                                <div className="kpi-subtext">Renewal required soon</div>
+                            </article>
+                        </div>
+                    </section>
+
+                    {/* URGENT DOCUMENT EXPIRY ALERTS LIST */}
+                    {alertsData && alertsData.alerts && alertsData.alerts.length > 0 && (
+                        <section className="admin-section alerts-banner-section">
+                            <div className="alerts-banner-header">
+                                <div className="alerts-banner-title">
+                                    <ShieldAlert size={20} className="alerts-header-icon" />
+                                    <h3>Urgent Vehicle Document Expiry Alerts</h3>
+                                </div>
+                                <span className="alerts-count-badge">
+                                    {alertsData.alerts.length} Action Item{alertsData.alerts.length > 1 ? 's' : ''}
+                                </span>
+                            </div>
+
+                            <div className="alerts-items-list">
+                                {alertsData.alerts.slice(0, 6).map((item) => {
+                                    const isExpired = item.status === 'expired' || item.days_remaining < 0;
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            className={`alert-item-row ${isExpired ? 'row-expired' : 'row-expiring'}`}
+                                        >
+                                            <div className="alert-item-left">
+                                                <span className={`alert-tier-tag ${isExpired ? 'tier-expired' : 'tier-warning'}`}>
+                                                    {isExpired ? 'EXPIRED' : `EXPIRING IN ${item.days_remaining}D`}
+                                                </span>
+                                                <div className="alert-item-vehicle">
+                                                    <strong>{item.vehicle_brand} {item.vehicle_name}</strong>
+                                                    <span className="alert-reg-no">({item.registration_number || `ID #${item.vehicle_id}`})</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="alert-item-doc-info">
+                                                <span className="alert-doc-type">{item.document_type?.toUpperCase()} Certificate</span>
+                                                <span className="alert-doc-no">Doc No: {item.document_number}</span>
+                                                <span className="alert-doc-expiry">Expiry: {item.expiry_date ? item.expiry_date.split('T')[0] : 'N/A'}</span>
+                                            </div>
+
+                                            <Link
+                                                to="/admin/vehicles"
+                                                className="alert-action-btn"
+                                                title="Open Vehicle Management to upload renewal"
+                                            >
+                                                Manage Vehicle
+                                                <ExternalLink size={13} />
+                                            </Link>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </section>
+                    )}
+
                     {/* Booking Breakdown */}
                     <section className="admin-section">
                         <h2 className="admin-section-title">Booking Breakdown by Status</h2>
@@ -249,14 +347,6 @@ function AdminDashboard() {
                             </article>
                         </div>
                     </section>
-
-                    {/* Operational Notice / Disclaimer */}
-                    <footer className="admin-notice-box">
-                        <strong>Financial Accounting Notice:</strong> The &quot;Booking Value&quot; metric aggregates
-                        the calculated rental prices of all confirmed and completed bookings recorded in the system.
-                        Actual payment transactions are processed as independent workflows and do not reflect
-                        reconciled merchant collections.
-                    </footer>
                 </div>
             )}
         </main>

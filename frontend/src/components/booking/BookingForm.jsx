@@ -56,6 +56,31 @@ function BookingForm({
     // Step 4 Form Data: Confirmation check
     const [agreeToTerms, setAgreeToTerms] = useState(true);
 
+    // Driving licence status
+    const [licenseStatus, setLicenseStatus] = useState(null);
+    const [licenceRedirect, setLicenceRedirect] = useState(null);
+
+    // Fetch user licence verification status on mount
+    useEffect(() => {
+        if (!isLoggedIn) {
+            setLicenseStatus(null);
+            return;
+        }
+
+        let isMounted = true;
+        axiosInstance.get('/licenses/my-license')
+            .then(res => {
+                if (isMounted) {
+                    setLicenseStatus(res.data?.status || 'not_submitted');
+                }
+            })
+            .catch(() => {
+                if (isMounted) setLicenseStatus('not_submitted');
+            });
+
+        return () => { isMounted = false; };
+    }, [isLoggedIn]);
+
     // Errors & state
     const [error, setError] = useState('');
     const [stepErrors, setStepErrors] = useState({});
@@ -265,8 +290,15 @@ function BookingForm({
             }
         } catch (err) {
             console.error('Booking submission error:', err);
+            const errData = err.response?.data;
+            if (errData?.redirectUrl) {
+                setLicenceRedirect({
+                    message: errData.message,
+                    redirectUrl: errData.redirectUrl
+                });
+            }
             setError(
-                err.response?.data?.message ||
+                errData?.message ||
                 'Unable to create booking. Please check availability and try again.'
             );
         } finally {
@@ -327,6 +359,41 @@ function BookingForm({
                     })}
                 </ol>
             </nav>
+
+            {/* DRIVING LICENCE VERIFICATION NOTICE */}
+            {isLoggedIn && licenseStatus && (
+                <div className={`booking-lic-strip lic-${licenseStatus}`}>
+                    {licenseStatus === 'verified' ? (
+                        <div className="lic-verified-msg">
+                            <span>✓ Driver Verified & Authorized to Rent</span>
+                        </div>
+                    ) : (
+                        <div className="lic-warning-msg">
+                            <span>
+                                {licenseStatus === 'pending'
+                                    ? 'Licence review pending: Admin verification required before pickup.'
+                                    : licenseStatus === 'rejected'
+                                        ? 'Licence verification rejected: Please update documents.'
+                                        : licenseStatus === 'expired'
+                                            ? 'Licence expired: Please update documents.'
+                                            : 'Verified driving licence required to reserve vehicles.'}
+                            </span>
+                            <Link to="/profile?tab=license" className="lic-verify-link">
+                                {licenseStatus === 'pending' ? 'View Status' : 'Verify Licence →'}
+                            </Link>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {licenceRedirect && (
+                <div className="licence-redirect-callout">
+                    <p>{licenceRedirect.message}</p>
+                    <Link to={licenceRedirect.redirectUrl} className="licence-redirect-btn">
+                        Go to Driving Licence Verification →
+                    </Link>
+                </div>
+            )}
 
             <form onSubmit={handleSubmit} noValidate>
                 {/* STEP 1: VEHICLE CONFIRMATION */}

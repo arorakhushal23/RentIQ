@@ -14,9 +14,10 @@ import FloatingCompareBar from './components/vehicle/FloatingCompareBar';
 import AdminRoute from './components/common/AdminRoute';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminVehicles from './pages/admin/AdminVehicles';
-import "./App.css";
 import AdminBookings from './pages/admin/AdminBookings';
+import AdminLicenses from './pages/admin/AdminLicenses';
 import ScrollToTop from './components/common/ScrollToTop';
+import "./App.css";
 
 function App() {
   return (
@@ -67,6 +68,14 @@ function App() {
           element={
             <AdminRoute>
               <AdminBookings />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/licenses"
+          element={
+            <AdminRoute>
+              <AdminLicenses />
             </AdminRoute>
           }
         />

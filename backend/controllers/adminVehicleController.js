@@ -1,20 +1,8 @@
 const db = require('../config/db');
+const { calculateDocumentStatus } = require('../utils/documentStatusHelper');
 
 /**
- * Admin Vehicle Controller
- *
- * File: backend/controllers/adminVehicleController.js
- * Handles fleet inspection, vehicle creation, vehicle modification,
- * category retrieval, and availability status updates for administrators.
- */
-
-/**
- * Validates optional image URL input according to security policies:
- * - Omitted or empty string returns null.
- * - Maximum length 255 characters.
- * - Absolute URLs must use http:// or https://.
- * - Relative paths (e.g. /vehicles/swift.jpg) are permitted.
- * - Disallows dangerous pseudoprotocols (e.g. javascript:, data:).
+ * Validates optional image URL input according to security policies
  */
 function validateImageUrl(url) {
     if (url === undefined || url === null) {
@@ -54,10 +42,8 @@ function validateImageUrl(url) {
     return { valid: true, value: trimmed };
 }
 
-/**
- * Validates a positive integer value (e.g. IDs, seat counts).
- */
 function parsePositiveInt(val) {
+    if (val === undefined || val === null || val === '') return null;
     const num = Number(val);
     if (!Number.isInteger(num) || num <= 0) {
         return null;
@@ -66,14 +52,31 @@ function parsePositiveInt(val) {
 }
 
 /**
- * Formats a raw database row into consistent response types.
+ * Formats a raw database row into consistent response types for administrator views
  */
-function formatVehicleRow(row) {
+function formatVehicleAdminRow(row) {
     return {
         vehicle_id: row.vehicle_id,
         category_id: row.category_id,
         name: row.name,
         brand: row.brand,
+        model: row.model,
+        manufacturing_year: row.manufacturing_year ? Number(row.manufacturing_year) : null,
+        vehicle_color: row.vehicle_color,
+        registration_number: row.registration_number,
+        registration_state: row.registration_state,
+        registration_date: row.registration_date,
+        registration_validity: row.registration_validity,
+        fuel_type: row.fuel_type || 'petrol',
+        mileage: row.mileage,
+        engine_capacity: row.engine_capacity,
+        description: row.description,
+        engine_number: row.engine_number,
+        chassis_number: row.chassis_number,
+        vehicle_identification_number: row.vehicle_identification_number,
+        doors: row.doors !== null && row.doors !== undefined ? Number(row.doors) : 4,
+        boot_space: row.boot_space,
+        max_passengers: row.max_passengers ? Number(row.max_passengers) : null,
         seating_capacity: Number(row.seating_capacity),
         transmission: row.transmission,
         price_per_day: Number(row.price_per_day),
@@ -81,22 +84,69 @@ function formatVehicleRow(row) {
         image_url: row.image_url,
         created_at: row.created_at,
         category: row.category,
-        total_bookings: Number(row.total_bookings) || 0
+        total_bookings: Number(row.total_bookings) || 0,
+        total_documents: Number(row.total_documents) || 0,
+        expired_documents: Number(row.expired_documents) || 0
     };
 }
 
 /**
  * GET /api/admin/vehicles
- * Returns all vehicles (including unavailable) with categories and total booking count.
+ * Returns all vehicles with search and filter capabilities
  */
 const getAllVehicles = async (req, res) => {
     try {
+        const { search, category, fuelType, status } = req.query;
+        const conditions = [];
+        const params = [];
+
+        if (search && search.trim()) {
+            const q = `%${search.trim().toLowerCase()}%`;
+            conditions.push('(LOWER(v.name) LIKE ? OR LOWER(v.brand) LIKE ? OR LOWER(COALESCE(v.registration_number, "")) LIKE ? OR LOWER(COALESCE(v.model, "")) LIKE ?)');
+            params.push(q, q, q, q);
+        }
+
+        if (category && category !== 'all') {
+            conditions.push('LOWER(c.name) = LOWER(?)');
+            params.push(category.trim());
+        }
+
+        if (fuelType && fuelType !== 'all') {
+            conditions.push('v.fuel_type = ?');
+            params.push(fuelType.toLowerCase());
+        }
+
+        if (status === 'available') {
+            conditions.push('v.is_available = TRUE');
+        } else if (status === 'unavailable') {
+            conditions.push('v.is_available = FALSE');
+        }
+
+        const whereSql = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
         const [rows] = await db.query(`
             SELECT
                 v.vehicle_id,
                 v.category_id,
                 v.name,
                 v.brand,
+                v.model,
+                v.manufacturing_year,
+                v.vehicle_color,
+                v.registration_number,
+                v.registration_state,
+                v.registration_date,
+                v.registration_validity,
+                v.fuel_type,
+                v.mileage,
+                v.engine_capacity,
+                v.description,
+                v.engine_number,
+                v.chassis_number,
+                v.vehicle_identification_number,
+                v.doors,
+                v.boot_space,
+                v.max_passengers,
                 v.seating_capacity,
                 v.transmission,
                 v.price_per_day,
@@ -104,13 +154,16 @@ const getAllVehicles = async (req, res) => {
                 v.image_url,
                 v.created_at,
                 c.name AS category,
-                (SELECT COUNT(*) FROM bookings b WHERE b.vehicle_id = v.vehicle_id) AS total_bookings
+                (SELECT COUNT(*) FROM bookings b WHERE b.vehicle_id = v.vehicle_id) AS total_bookings,
+                (SELECT COUNT(*) FROM vehicle_documents vd WHERE vd.vehicle_id = v.vehicle_id) AS total_documents,
+                (SELECT COUNT(*) FROM vehicle_documents vd WHERE vd.vehicle_id = v.vehicle_id AND (vd.expiry_date < CURRENT_DATE OR vd.verification_status IN ('expired', 'rejected'))) AS expired_documents
             FROM vehicles v
             JOIN categories c ON v.category_id = c.category_id
+            ${whereSql}
             ORDER BY v.vehicle_id DESC
-        `);
+        `, params);
 
-        const vehicles = rows.map(formatVehicleRow);
+        const vehicles = rows.map(formatVehicleAdminRow);
         return res.status(200).json(vehicles);
     } catch (error) {
         console.error('Error fetching admin vehicles:', error.message);
@@ -121,15 +174,64 @@ const getAllVehicles = async (req, res) => {
 };
 
 /**
+ * GET /api/admin/vehicles/:id
+ * Returns single vehicle complete details including sensitive numbers and documents
+ */
+const getVehicleByIdAdmin = async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({ message: 'Invalid vehicle ID' });
+        }
+
+        const [rows] = await db.query(`
+            SELECT
+                v.*,
+                c.name AS category
+            FROM vehicles v
+            JOIN categories c ON v.category_id = c.category_id
+            WHERE v.vehicle_id = ?
+        `, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Vehicle not found' });
+        }
+
+        const vehicle = rows[0];
+
+        // Fetch documents
+        const [docs] = await db.query(
+            'SELECT * FROM vehicle_documents WHERE vehicle_id = ? ORDER BY expiry_date ASC',
+            [id]
+        );
+
+        const documents = docs.map(d => {
+            const { status, daysRemaining } = calculateDocumentStatus(d.expiry_date, d.verification_status);
+            return {
+                ...d,
+                calculated_status: status,
+                days_remaining: daysRemaining
+            };
+        });
+
+        return res.status(200).json({
+            ...formatVehicleAdminRow(vehicle),
+            documents
+        });
+    } catch (error) {
+        console.error('Error fetching vehicle by id admin:', error);
+        return res.status(500).json({ message: 'Failed to fetch vehicle details' });
+    }
+};
+
+/**
  * GET /api/admin/categories
- * Returns all vehicle categories for dropdown selection.
  */
 const getCategories = async (req, res) => {
     try {
         const [categories] = await db.query(
             'SELECT category_id, name FROM categories ORDER BY category_id ASC'
         );
-
         return res.status(200).json(categories);
     } catch (error) {
         console.error('Error fetching categories:', error.message);
@@ -140,387 +242,272 @@ const getCategories = async (req, res) => {
 };
 
 /**
+ * Helper to validate vehicle payload
+ */
+async function validateVehiclePayload(body, vehicleId = null) {
+    const {
+        name,
+        category_id,
+        brand,
+        model,
+        manufacturing_year,
+        vehicle_color,
+        registration_number,
+        registration_state,
+        registration_date,
+        registration_validity,
+        fuel_type,
+        mileage,
+        engine_capacity,
+        description,
+        engine_number,
+        chassis_number,
+        vehicle_identification_number,
+        doors,
+        boot_space,
+        max_passengers,
+        seating_capacity,
+        transmission,
+        price_per_day,
+        image_url,
+        is_available
+    } = body;
+
+    if (!name || typeof name !== 'string' || !name.trim()) {
+        return { valid: false, error: 'Vehicle name is required' };
+    }
+    const trimmedName = name.trim();
+    if (trimmedName.length > 100) {
+        return { valid: false, error: 'Vehicle name must not exceed 100 characters' };
+    }
+
+    const categoryId = parsePositiveInt(category_id);
+    if (!categoryId) {
+        return { valid: false, error: 'Category ID is required and must be a positive integer' };
+    }
+    const [catRows] = await db.query('SELECT category_id FROM categories WHERE category_id = ?', [categoryId]);
+    if (catRows.length === 0) {
+        return { valid: false, error: 'Category does not exist' };
+    }
+
+    const seats = parsePositiveInt(seating_capacity);
+    if (!seats) {
+        return { valid: false, error: 'Seating capacity is required and must be a positive whole number' };
+    }
+
+    if (!transmission || (transmission !== 'automatic' && transmission !== 'manual')) {
+        return { valid: false, error: 'Transmission must be either "automatic" or "manual"' };
+    }
+
+    const price = Number(price_per_day);
+    if (isNaN(price) || !isFinite(price) || price <= 0) {
+        return { valid: false, error: 'Price per day must be a positive number' };
+    }
+
+    // Check registration number uniqueness if provided
+    let regNo = null;
+    if (registration_number && typeof registration_number === 'string' && registration_number.trim()) {
+        regNo = registration_number.trim().toUpperCase();
+        let dupQuery = 'SELECT vehicle_id FROM vehicles WHERE UPPER(registration_number) = ?';
+        const dupParams = [regNo];
+        if (vehicleId) {
+            dupQuery += ' AND vehicle_id != ?';
+            dupParams.push(vehicleId);
+        }
+        const [dupRows] = await db.query(dupQuery, dupParams);
+        if (dupRows.length > 0) {
+            return { valid: false, error: `Registration number "${regNo}" is already assigned to vehicle #${dupRows[0].vehicle_id}` };
+        }
+    }
+
+    const imgCheck = validateImageUrl(image_url);
+    if (!imgCheck.valid) {
+        return { valid: false, error: imgCheck.error };
+    }
+
+    const validFuels = ['petrol', 'diesel', 'electric', 'hybrid', 'cng'];
+    const safeFuel = fuel_type && validFuels.includes(fuel_type.toLowerCase()) ? fuel_type.toLowerCase() : 'petrol';
+
+    let validatedIsAvailable = true;
+    if (is_available !== undefined && is_available !== null) {
+        if (typeof is_available === 'boolean') {
+            validatedIsAvailable = is_available;
+        } else if (is_available === 0 || is_available === 1 || is_available === '1' || is_available === '0') {
+            validatedIsAvailable = Boolean(Number(is_available));
+        }
+    }
+
+    return {
+        valid: true,
+        data: {
+            name: trimmedName,
+            category_id: categoryId,
+            brand: brand ? brand.trim() : null,
+            model: model ? model.trim() : null,
+            manufacturing_year: manufacturing_year ? Number(manufacturing_year) : null,
+            vehicle_color: vehicle_color ? vehicle_color.trim() : null,
+            registration_number: regNo,
+            registration_state: registration_state ? registration_state.trim() : null,
+            registration_date: registration_date || null,
+            registration_validity: registration_validity || null,
+            fuel_type: safeFuel,
+            mileage: mileage ? mileage.trim() : null,
+            engine_capacity: engine_capacity ? engine_capacity.trim() : null,
+            description: description ? description.trim() : null,
+            engine_number: engine_number ? engine_number.trim() : null,
+            chassis_number: chassis_number ? chassis_number.trim() : null,
+            vehicle_identification_number: vehicle_identification_number ? vehicle_identification_number.trim() : null,
+            doors: doors ? Number(doors) : 4,
+            boot_space: boot_space ? boot_space.trim() : null,
+            max_passengers: max_passengers ? Number(max_passengers) : seats,
+            seating_capacity: seats,
+            transmission,
+            price_per_day: price,
+            image_url: imgCheck.value,
+            is_available: validatedIsAvailable
+        }
+    };
+}
+
+/**
  * POST /api/admin/vehicles
- * Creates a new vehicle record in the fleet.
  */
 const createVehicle = async (req, res) => {
     try {
-        const {
-            name,
-            category_id,
-            brand,
-            seating_capacity,
-            transmission,
-            price_per_day,
-            image_url,
-            is_available
-        } = req.body;
-
-        // 1. Validate vehicle name
-        if (!name || typeof name !== 'string' || !name.trim()) {
-            return res.status(400).json({ message: 'Name is required and cannot be empty' });
+        const check = await validateVehiclePayload(req.body);
+        if (!check.valid) {
+            return res.status(400).json({ message: check.error });
         }
-        const trimmedName = name.trim();
-        if (trimmedName.length > 100) {
-            return res.status(400).json({ message: 'Name must not exceed 100 characters' });
-        }
+        const d = check.data;
 
-        // 2. Validate category_id
-        const categoryId = parsePositiveInt(category_id);
-        if (!categoryId) {
-            return res.status(400).json({ message: 'Category ID is required and must be a positive integer' });
-        }
-        const [categoryRows] = await db.query(
-            'SELECT category_id FROM categories WHERE category_id = ?',
-            [categoryId]
-        );
-        if (categoryRows.length === 0) {
-            return res.status(400).json({ message: 'Invalid category: Category does not exist' });
-        }
+        const [result] = await db.query(`
+            INSERT INTO vehicles (
+                name, category_id, brand, model, manufacturing_year, vehicle_color,
+                registration_number, registration_state, registration_date, registration_validity,
+                fuel_type, mileage, engine_capacity, description, engine_number, chassis_number,
+                vehicle_identification_number, doors, boot_space, max_passengers,
+                seating_capacity, transmission, price_per_day, image_url, is_available
+            ) VALUES (
+                ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?,
+                ?, ?, ?, ?, ?
+            )
+        `, [
+            d.name, d.category_id, d.brand, d.model, d.manufacturing_year, d.vehicle_color,
+            d.registration_number, d.registration_state, d.registration_date, d.registration_validity,
+            d.fuel_type, d.mileage, d.engine_capacity, d.description, d.engine_number, d.chassis_number,
+            d.vehicle_identification_number, d.doors, d.boot_space, d.max_passengers,
+            d.seating_capacity, d.transmission, d.price_per_day, d.image_url, d.is_available
+        ]);
 
-        // 3. Validate seating_capacity
-        const seats = parsePositiveInt(seating_capacity);
-        if (!seats) {
-            return res.status(400).json({ message: 'Seating capacity is required and must be a positive integer' });
-        }
-
-        // 4. Validate transmission
-        if (!transmission || (transmission !== 'automatic' && transmission !== 'manual')) {
-            return res.status(400).json({ message: 'Transmission must be either "automatic" or "manual"' });
-        }
-
-        // 5. Validate price_per_day
-        const price = Number(price_per_day);
-        if (isNaN(price) || !isFinite(price) || price <= 0) {
-            return res.status(400).json({ message: 'Price per day is required and must be a finite positive number' });
-        }
-
-        // 6. Validate optional brand
-        let validatedBrand = null;
-        if (brand !== undefined && brand !== null) {
-            if (typeof brand !== 'string') {
-                return res.status(400).json({ message: 'Brand must be a string' });
-            }
-            const trimmed = brand.trim();
-            if (trimmed.length > 50) {
-                return res.status(400).json({ message: 'Brand must not exceed 50 characters' });
-            }
-            validatedBrand = trimmed.length > 0 ? trimmed : null;
-        }
-
-        // 7. Validate optional image_url
-        const imgCheck = validateImageUrl(image_url);
-        if (!imgCheck.valid) {
-            return res.status(400).json({ message: imgCheck.error });
-        }
-
-        // 8. Validate optional is_available (defaults to true)
-        let validatedIsAvailable = true;
-        if (is_available !== undefined && is_available !== null) {
-            if (typeof is_available === 'boolean') {
-                validatedIsAvailable = is_available;
-            } else if (is_available === 0 || is_available === 1) {
-                validatedIsAvailable = Boolean(is_available);
-            } else {
-                return res.status(400).json({ message: 'is_available must be a boolean or 0/1' });
-            }
-        }
-
-        // 9. Accidental duplicate submission protection (short time-window safeguard)
-        const [recentDuplicates] = await db.query(
-            `SELECT vehicle_id FROM vehicles
-            WHERE category_id = ?
-              AND name = ?
-              AND brand <=> ?
-              AND seating_capacity = ?
-              AND transmission = ?
-              AND price_per_day = ?
-              AND created_at >= NOW() - INTERVAL 5 SECOND
-            LIMIT 1`,
-            [
-                categoryId,
-                trimmedName,
-                validatedBrand,
-                seats,
-                transmission,
-                price
-            ]
-        );
-
-        if (recentDuplicates.length > 0) {
-            return res.status(409).json({
-                message: 'A vehicle with identical specifications was recently created. Please wait a moment before adding another unit.'
-            });
-        }
-
-        // 10. Insert vehicle
-        const [result] = await db.query(
-            `INSERT INTO vehicles (
-                category_id, name, brand, seating_capacity, transmission, price_per_day, is_available, image_url
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-                categoryId,
-                trimmedName,
-                validatedBrand,
-                seats,
-                transmission,
-                price,
-                validatedIsAvailable,
-                imgCheck.value
-            ]
-        );
-
-        const newVehicleId = result.insertId;
-
-        // 11. Fetch inserted record with joined category
-        const [newRows] = await db.query(
-            `SELECT
-                v.vehicle_id,
-                v.category_id,
-                v.name,
-                v.brand,
-                v.seating_capacity,
-                v.transmission,
-                v.price_per_day,
-                v.is_available,
-                v.image_url,
-                v.created_at,
-                c.name AS category,
-                0 AS total_bookings
+        const [createdRows] = await db.query(`
+            SELECT v.*, c.name AS category
             FROM vehicles v
             JOIN categories c ON v.category_id = c.category_id
-            WHERE v.vehicle_id = ?`,
-            [newVehicleId]
-        );
+            WHERE v.vehicle_id = ?
+        `, [result.insertId]);
 
         return res.status(201).json({
             message: 'Vehicle created successfully',
-            vehicle: formatVehicleRow(newRows[0])
+            vehicle: formatVehicleAdminRow(createdRows[0])
         });
     } catch (error) {
-        console.error('Error creating vehicle:', error.message);
-        return res.status(500).json({
-            message: 'Failed to create vehicle'
-        });
+        console.error('Error creating vehicle:', error);
+        return res.status(500).json({ message: 'Failed to create vehicle' });
     }
 };
 
 /**
  * PUT /api/admin/vehicles/:id
- * Updates all specifications of an existing vehicle.
  */
 const updateVehicle = async (req, res) => {
     try {
-        const vehicleId = parsePositiveInt(req.params.id);
-        if (!vehicleId) {
-            return res.status(400).json({ message: 'Invalid vehicle ID: Must be a positive integer' });
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({ message: 'Invalid vehicle ID' });
         }
 
-        // 1. Confirm vehicle exists
-        const [existingRows] = await db.query(
-            'SELECT vehicle_id, is_available FROM vehicles WHERE vehicle_id = ?',
-            [vehicleId]
-        );
-        if (existingRows.length === 0) {
+        const [existing] = await db.query('SELECT vehicle_id FROM vehicles WHERE vehicle_id = ?', [id]);
+        if (existing.length === 0) {
             return res.status(404).json({ message: 'Vehicle not found' });
         }
 
-        const {
-            name,
-            category_id,
-            brand,
-            seating_capacity,
-            transmission,
-            price_per_day,
-            image_url,
-            is_available
-        } = req.body;
-
-        // 2. Validate required name
-        if (!name || typeof name !== 'string' || !name.trim()) {
-            return res.status(400).json({ message: 'Name is required and cannot be empty' });
+        const check = await validateVehiclePayload(req.body, id);
+        if (!check.valid) {
+            return res.status(400).json({ message: check.error });
         }
-        const trimmedName = name.trim();
-        if (trimmedName.length > 100) {
-            return res.status(400).json({ message: 'Name must not exceed 100 characters' });
-        }
+        const d = check.data;
 
-        // 3. Validate category_id
-        const categoryId = parsePositiveInt(category_id);
-        if (!categoryId) {
-            return res.status(400).json({ message: 'Category ID is required and must be a positive integer' });
-        }
-        const [categoryRows] = await db.query(
-            'SELECT category_id FROM categories WHERE category_id = ?',
-            [categoryId]
-        );
-        if (categoryRows.length === 0) {
-            return res.status(400).json({ message: 'Invalid category: Category does not exist' });
-        }
+        await db.query(`
+            UPDATE vehicles SET
+                name = ?, category_id = ?, brand = ?, model = ?, manufacturing_year = ?, vehicle_color = ?,
+                registration_number = ?, registration_state = ?, registration_date = ?, registration_validity = ?,
+                fuel_type = ?, mileage = ?, engine_capacity = ?, description = ?, engine_number = ?, chassis_number = ?,
+                vehicle_identification_number = ?, doors = ?, boot_space = ?, max_passengers = ?,
+                seating_capacity = ?, transmission = ?, price_per_day = ?, image_url = ?, is_available = ?
+            WHERE vehicle_id = ?
+        `, [
+            d.name, d.category_id, d.brand, d.model, d.manufacturing_year, d.vehicle_color,
+            d.registration_number, d.registration_state, d.registration_date, d.registration_validity,
+            d.fuel_type, d.mileage, d.engine_capacity, d.description, d.engine_number, d.chassis_number,
+            d.vehicle_identification_number, d.doors, d.boot_space, d.max_passengers,
+            d.seating_capacity, d.transmission, d.price_per_day, d.image_url, d.is_available,
+            id
+        ]);
 
-        // 4. Validate seating_capacity
-        const seats = parsePositiveInt(seating_capacity);
-        if (!seats) {
-            return res.status(400).json({ message: 'Seating capacity is required and must be a positive integer' });
-        }
-
-        // 5. Validate transmission
-        if (!transmission || (transmission !== 'automatic' && transmission !== 'manual')) {
-            return res.status(400).json({ message: 'Transmission must be either "automatic" or "manual"' });
-        }
-
-        // 6. Validate price_per_day
-        const price = Number(price_per_day);
-        if (isNaN(price) || !isFinite(price) || price <= 0) {
-            return res.status(400).json({ message: 'Price per day is required and must be a finite positive number' });
-        }
-
-        // 7. Validate optional brand
-        let validatedBrand = null;
-        if (brand !== undefined && brand !== null) {
-            if (typeof brand !== 'string') {
-                return res.status(400).json({ message: 'Brand must be a string' });
-            }
-            const trimmed = brand.trim();
-            if (trimmed.length > 50) {
-                return res.status(400).json({ message: 'Brand must not exceed 50 characters' });
-            }
-            validatedBrand = trimmed.length > 0 ? trimmed : null;
-        }
-
-        // 8. Validate optional image_url
-        const imgCheck = validateImageUrl(image_url);
-        if (!imgCheck.valid) {
-            return res.status(400).json({ message: imgCheck.error });
-        }
-
-        // 9. Validate optional is_available (retains current value if omitted)
-        let validatedIsAvailable = Boolean(existingRows[0].is_available);
-        if (is_available !== undefined && is_available !== null) {
-            if (typeof is_available === 'boolean') {
-                validatedIsAvailable = is_available;
-            } else if (is_available === 0 || is_available === 1) {
-                validatedIsAvailable = Boolean(is_available);
-            } else {
-                return res.status(400).json({ message: 'is_available must be a boolean or 0/1' });
-            }
-        }
-
-        // 10. Update vehicle record
-        await db.query(
-            `UPDATE vehicles
-            SET
-                category_id = ?,
-                name = ?,
-                brand = ?,
-                seating_capacity = ?,
-                transmission = ?,
-                price_per_day = ?,
-                is_available = ?,
-                image_url = ?
-            WHERE vehicle_id = ?`,
-            [
-                categoryId,
-                trimmedName,
-                validatedBrand,
-                seats,
-                transmission,
-                price,
-                validatedIsAvailable,
-                imgCheck.value,
-                vehicleId
-            ]
-        );
-
-        // 11. Fetch updated record with category and booking count
-        const [updatedRows] = await db.query(
-            `SELECT
-                v.vehicle_id,
-                v.category_id,
-                v.name,
-                v.brand,
-                v.seating_capacity,
-                v.transmission,
-                v.price_per_day,
-                v.is_available,
-                v.image_url,
-                v.created_at,
-                c.name AS category,
-                (SELECT COUNT(*) FROM bookings b WHERE b.vehicle_id = v.vehicle_id) AS total_bookings
+        const [updatedRows] = await db.query(`
+            SELECT v.*, c.name AS category
             FROM vehicles v
             JOIN categories c ON v.category_id = c.category_id
-            WHERE v.vehicle_id = ?`,
-            [vehicleId]
-        );
+            WHERE v.vehicle_id = ?
+        `, [id]);
 
         return res.status(200).json({
             message: 'Vehicle updated successfully',
-            vehicle: formatVehicleRow(updatedRows[0])
+            vehicle: formatVehicleAdminRow(updatedRows[0])
         });
     } catch (error) {
-        console.error('Error updating vehicle:', error.message);
-        return res.status(500).json({
-            message: 'Failed to update vehicle'
-        });
+        console.error('Error updating vehicle:', error);
+        return res.status(500).json({ message: 'Failed to update vehicle' });
     }
 };
 
 /**
  * PATCH /api/admin/vehicles/:id/status
- * Updates only the is_available availability flag of a vehicle.
  */
 const updateVehicleStatus = async (req, res) => {
     try {
-        const vehicleId = parsePositiveInt(req.params.id);
-        if (!vehicleId) {
-            return res.status(400).json({ message: 'Invalid vehicle ID: Must be a positive integer' });
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({ message: 'Invalid vehicle ID' });
         }
 
-        const { is_available } = req.body;
-
-        // Must be an explicit boolean or numeric 0/1
-        if (
-            is_available === undefined ||
-            is_available === null ||
-            (typeof is_available !== 'boolean' && is_available !== 0 && is_available !== 1)
-        ) {
-            return res.status(400).json({
-                message: 'is_available is required and must be an explicit boolean or 0/1'
-            });
-        }
-
-        const newStatus = Boolean(is_available);
-
-        // Confirm vehicle exists
-        const [existing] = await db.query(
-            'SELECT vehicle_id FROM vehicles WHERE vehicle_id = ?',
-            [vehicleId]
-        );
+        const [existing] = await db.query('SELECT vehicle_id, is_available FROM vehicles WHERE vehicle_id = ?', [id]);
         if (existing.length === 0) {
             return res.status(404).json({ message: 'Vehicle not found' });
         }
 
-        // Update availability status
-        await db.query(
-            'UPDATE vehicles SET is_available = ? WHERE vehicle_id = ?',
-            [newStatus, vehicleId]
-        );
+        const currentAvailable = Boolean(existing[0].is_available);
+        const newAvailable = req.body.is_available !== undefined ? Boolean(req.body.is_available) : !currentAvailable;
+
+        await db.query('UPDATE vehicles SET is_available = ? WHERE vehicle_id = ?', [newAvailable, id]);
 
         return res.status(200).json({
-            message: 'Vehicle status updated successfully',
-            vehicle_id: vehicleId,
-            is_available: newStatus
+            message: `Vehicle marked as ${newAvailable ? 'available' : 'unavailable'}`,
+            vehicle_id: id,
+            is_available: newAvailable
         });
     } catch (error) {
-        console.error('Error updating vehicle status:', error.message);
-        return res.status(500).json({
-            message: 'Failed to update vehicle status'
-        });
+        console.error('Error toggling vehicle status:', error);
+        return res.status(500).json({ message: 'Failed to update vehicle availability' });
     }
 };
 
 module.exports = {
     getAllVehicles,
+    getVehicleByIdAdmin,
     getCategories,
     createVehicle,
     updateVehicle,

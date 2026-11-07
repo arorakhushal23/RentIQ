@@ -1,4 +1,36 @@
 const db = require('../config/db');
+const { calculateDocumentStatus } = require('../utils/documentStatusHelper');
+
+/**
+ * Formats a public vehicle record, stripping sensitive admin-only fields
+ */
+function formatPublicVehicle(v) {
+    return {
+        vehicle_id: v.vehicle_id,
+        category_id: v.category_id,
+        name: v.name,
+        brand: v.brand,
+        model: v.model,
+        category: v.category,
+        seating_capacity: Number(v.seating_capacity),
+        transmission: v.transmission,
+        price_per_day: Number(v.price_per_day),
+        is_available: Boolean(v.is_available),
+        image_url: v.image_url,
+        manufacturing_year: v.manufacturing_year ? Number(v.manufacturing_year) : null,
+        vehicle_color: v.vehicle_color,
+        registration_number: v.registration_number,
+        registration_state: v.registration_state,
+        registration_validity: v.registration_validity,
+        fuel_type: v.fuel_type || 'petrol',
+        mileage: v.mileage,
+        engine_capacity: v.engine_capacity,
+        description: v.description,
+        doors: v.doors !== null && v.doors !== undefined ? Number(v.doors) : 4,
+        boot_space: v.boot_space,
+        max_passengers: v.max_passengers ? Number(v.max_passengers) : Number(v.seating_capacity)
+    };
+}
 
 const getVehicles = async (req, res) => {
     try {
@@ -15,11 +47,11 @@ const getVehicles = async (req, res) => {
             conditions.push('v.is_available = TRUE');
         }
 
-        // Search by vehicle name or brand
+        // Search by vehicle name, brand, or registration number
         if (req.query.search && typeof req.query.search === 'string' && req.query.search.trim()) {
-            conditions.push('(LOWER(v.name) LIKE ? OR LOWER(v.brand) LIKE ?)');
+            conditions.push('(LOWER(v.name) LIKE ? OR LOWER(v.brand) LIKE ? OR LOWER(COALESCE(v.registration_number, "")) LIKE ?)');
             const searchTerm = `%${req.query.search.trim().toLowerCase()}%`;
-            params.push(searchTerm, searchTerm);
+            params.push(searchTerm, searchTerm, searchTerm);
         }
 
         // Filter by category
@@ -32,6 +64,13 @@ const getVehicles = async (req, res) => {
         if (req.query.transmission && typeof req.query.transmission === 'string' && req.query.transmission.toLowerCase() !== 'all') {
             conditions.push('LOWER(v.transmission) = LOWER(?)');
             params.push(req.query.transmission.trim());
+        }
+
+        // Filter by fuel type
+        const fuelType = req.query.fuelType || req.query.fuel_type;
+        if (fuelType && typeof fuelType === 'string' && fuelType.toLowerCase() !== 'all') {
+            conditions.push('LOWER(v.fuel_type) = LOWER(?)');
+            params.push(fuelType.trim());
         }
 
         // Filter by seating capacity
@@ -67,7 +106,6 @@ const getVehicles = async (req, res) => {
         const isPaginated = req.query.page !== undefined || req.query.limit !== undefined;
 
         if (isPaginated) {
-            // Count query for total matching records
             const countQuery = `
                 SELECT COUNT(*) AS total
                 FROM vehicles v
@@ -88,27 +126,39 @@ const getVehicles = async (req, res) => {
             const dataQuery = `
                 SELECT
                     v.vehicle_id,
+                    v.category_id,
                     v.name,
                     v.brand,
+                    v.model,
                     c.name AS category,
                     v.seating_capacity,
                     v.transmission,
                     v.price_per_day,
                     v.is_available,
-                    v.image_url
+                    v.image_url,
+                    v.manufacturing_year,
+                    v.vehicle_color,
+                    v.registration_number,
+                    v.registration_state,
+                    v.registration_validity,
+                    v.fuel_type,
+                    v.mileage,
+                    v.engine_capacity,
+                    v.description,
+                    v.doors,
+                    v.boot_space,
+                    v.max_passengers
                 FROM vehicles v
-                JOIN categories c
-                    ON v.category_id = c.category_id
+                JOIN categories c ON v.category_id = c.category_id
                 ${whereClause}
                 ${orderByClause}
                 LIMIT ? OFFSET ?
             `;
 
-            // Note: MySQL requires numeric limit/offset values
             const [vehicles] = await db.query(dataQuery, [...params, limit, offset]);
 
             return res.status(200).json({
-                vehicles,
+                vehicles: vehicles.map(formatPublicVehicle),
                 pagination: {
                     totalItems,
                     totalPages,
@@ -120,58 +170,80 @@ const getVehicles = async (req, res) => {
             });
         }
 
-        // Backwards compatibility: return array directly if pagination params are omitted
         const [vehicles] = await db.query(`
             SELECT
                 v.vehicle_id,
+                v.category_id,
                 v.name,
                 v.brand,
+                v.model,
                 c.name AS category,
                 v.seating_capacity,
                 v.transmission,
                 v.price_per_day,
                 v.is_available,
-                v.image_url
+                v.image_url,
+                v.manufacturing_year,
+                v.vehicle_color,
+                v.registration_number,
+                v.registration_state,
+                v.registration_validity,
+                v.fuel_type,
+                v.mileage,
+                v.engine_capacity,
+                v.description,
+                v.doors,
+                v.boot_space,
+                v.max_passengers
             FROM vehicles v
-            JOIN categories c
-                ON v.category_id = c.category_id
+            JOIN categories c ON v.category_id = c.category_id
             ${whereClause}
             ${orderByClause}
         `, params);
 
-        res.status(200).json(vehicles);
-
+        return res.status(200).json(vehicles.map(formatPublicVehicle));
     } catch (error) {
         console.error('Error fetching vehicles:', error.message);
-
-        res.status(500).json({
+        return res.status(500).json({
             message: 'Failed to fetch vehicles'
         });
     }
 };
+
 const getVehicleById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const [vehicles] = await db.query(
-            `
+        // Fetch vehicle with all public fields. EXCLUDE engine_number, chassis_number, VIN
+        const [vehicles] = await db.query(`
             SELECT
                 v.vehicle_id,
+                v.category_id,
                 v.name,
                 v.brand,
+                v.model,
                 c.name AS category,
                 v.seating_capacity,
                 v.transmission,
                 v.price_per_day,
                 v.is_available,
-                v.image_url
+                v.image_url,
+                v.manufacturing_year,
+                v.vehicle_color,
+                v.registration_number,
+                v.registration_state,
+                v.registration_validity,
+                v.fuel_type,
+                v.mileage,
+                v.engine_capacity,
+                v.description,
+                v.doors,
+                v.boot_space,
+                v.max_passengers
             FROM vehicles v
-            JOIN categories c
-                ON v.category_id = c.category_id
+            JOIN categories c ON v.category_id = c.category_id
             WHERE v.vehicle_id = ?
-            `,
-            [id]
-        );
+        `, [id]);
 
         if (vehicles.length === 0) {
             return res.status(404).json({
@@ -179,12 +251,43 @@ const getVehicleById = async (req, res) => {
             });
         }
 
-        res.status(200).json(vehicles[0]);
+        const vehicle = formatPublicVehicle(vehicles[0]);
 
+        // Compute high-level public compliance status without exposing private document numbers or files
+        const [docs] = await db.query(
+            'SELECT document_type, expiry_date, verification_status FROM vehicle_documents WHERE vehicle_id = ?',
+            [id]
+        );
+
+        let rcValid = false;
+        let insuranceValid = false;
+        let pucValid = false;
+        let commercialFitnessValid = false;
+
+        for (const doc of docs) {
+            const { status } = calculateDocumentStatus(doc.expiry_date, doc.verification_status);
+            const isValidOrSoon = status === 'valid' || status === 'expiring_soon';
+            if (doc.document_type === 'rc' && isValidOrSoon) rcValid = true;
+            if (doc.document_type === 'insurance' && isValidOrSoon) insuranceValid = true;
+            if (doc.document_type === 'puc' && isValidOrSoon) pucValid = true;
+            if (doc.document_type === 'fitness' && isValidOrSoon) commercialFitnessValid = true;
+        }
+
+        const compliance = {
+            rc_verified: rcValid,
+            insurance_active: insuranceValid,
+            puc_certified: pucValid,
+            commercial_fitness: commercialFitnessValid,
+            all_mandatory_compliant: rcValid && insuranceValid && pucValid
+        };
+
+        return res.status(200).json({
+            ...vehicle,
+            compliance
+        });
     } catch (error) {
         console.error('Error fetching vehicle:', error.message);
-
-        res.status(500).json({
+        return res.status(500).json({
             message: 'Failed to fetch vehicle'
         });
     }

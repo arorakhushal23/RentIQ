@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
     LayoutDashboard,
     Car,
@@ -16,7 +16,13 @@ import {
     ShieldCheck,
     ChevronRight,
     Users,
-    X
+    X,
+    IdCard,
+    UploadCloud,
+    CheckCircle2,
+    AlertTriangle,
+    FileText,
+    Download
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -33,11 +39,41 @@ function Profile() {
     const { user, logout, updateUser } = useAuth();
     const { wishlist, wishlistCount, removeFromWishlist } = useWishlist();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [activeTab, setActiveTab] = useState('overview');
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    // Driving Licence State
+    const [licenseInfo, setLicenseInfo] = useState(null);
+    const [licenseLoading, setLicenseLoading] = useState(true);
+    const [licenseSubmitting, setLicenseSubmitting] = useState(false);
+    const [licenseError, setLicenseError] = useState('');
+    const [licenseSuccess, setLicenseSuccess] = useState('');
+    const [showEditLicForm, setShowEditLicForm] = useState(false);
+
+    // Form fields for licence
+    const [licNumber, setLicNumber] = useState('');
+    const [licHolderName, setLicHolderName] = useState(user?.name || '');
+    const [licDob, setLicDob] = useState('');
+    const [licIssueDate, setLicIssueDate] = useState('');
+    const [licExpiryDate, setLicExpiryDate] = useState('');
+    const [licVehicleClass, setLicVehicleClass] = useState('LMV');
+    const [frontDocFile, setFrontDocFile] = useState(null);
+    const [backDocFile, setBackDocFile] = useState(null);
+
+    // Customer Notifications
+    const [notifications, setNotifications] = useState([]);
+
+    // Check location query param tab=license
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        if (params.get('tab') === 'license') {
+            setActiveTab('license');
+        }
+    }, [location.search]);
 
     // Booking Details Modal
     const [selectedBooking, setSelectedBooking] = useState(null);
@@ -76,6 +112,42 @@ function Profile() {
         };
 
         fetchBookings();
+
+        const fetchLicenseInfo = async () => {
+            try {
+                const res = await axiosInstance.get('/licenses/my-license');
+                if (isMounted) {
+                    setLicenseInfo(res.data);
+                    if (res.data?.license) {
+                        const lic = res.data.license;
+                        setLicNumber(lic.license_number || '');
+                        setLicHolderName(lic.holder_name || user?.name || '');
+                        setLicDob(lic.date_of_birth ? lic.date_of_birth.split('T')[0] : '');
+                        setLicIssueDate(lic.issue_date ? lic.issue_date.split('T')[0] : '');
+                        setLicExpiryDate(lic.expiry_date ? lic.expiry_date.split('T')[0] : '');
+                        setLicVehicleClass(lic.vehicle_class || 'LMV');
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load license details:', err);
+            } finally {
+                if (isMounted) setLicenseLoading(false);
+            }
+        };
+
+        const fetchNotifications = async () => {
+            try {
+                const res = await axiosInstance.get('/notifications');
+                if (isMounted) {
+                    setNotifications(res.data.notifications || []);
+                }
+            } catch (err) {
+                console.error('Failed to load notifications:', err);
+            }
+        };
+
+        fetchLicenseInfo();
+        fetchNotifications();
 
         return () => {
             isMounted = false;
@@ -210,12 +282,90 @@ function Profile() {
         }
     };
 
+    const handleLicenseSubmit = async (e) => {
+        e.preventDefault();
+        setLicenseError('');
+        setLicenseSuccess('');
+
+        if (!licNumber.trim() || !licHolderName.trim() || !licIssueDate || !licExpiryDate) {
+            setLicenseError('Please complete all mandatory licence fields.');
+            return;
+        }
+
+        if (!frontDocFile && !licenseInfo?.license?.has_front) {
+            setLicenseError('Front-side licence document file is required.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('license_number', licNumber.trim());
+        formData.append('holder_name', licHolderName.trim());
+        if (licDob) formData.append('date_of_birth', licDob);
+        formData.append('issue_date', licIssueDate);
+        formData.append('expiry_date', licExpiryDate);
+        formData.append('vehicle_class', licVehicleClass);
+        if (frontDocFile) formData.append('front', frontDocFile);
+        if (backDocFile) formData.append('back', backDocFile);
+
+        setLicenseSubmitting(true);
+        try {
+            await axiosInstance.post('/licenses/submit', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setLicenseSuccess('Driving licence successfully submitted. It is now awaiting administrator review.');
+            setShowEditLicForm(false);
+            const res = await axiosInstance.get('/licenses/my-license');
+            setLicenseInfo(res.data);
+            const notifRes = await axiosInstance.get('/notifications');
+            setNotifications(notifRes.data.notifications || []);
+        } catch (err) {
+            console.error('Submit license error:', err);
+            setLicenseError(err.response?.data?.message || 'Failed to submit driving licence.');
+        } finally {
+            setLicenseSubmitting(false);
+        }
+    };
+
+    const handleDownloadMyDoc = async (side) => {
+        try {
+            const res = await axiosInstance.get(`/licenses/my-license/document/${side}`, {
+                responseType: 'blob'
+            });
+            const blob = new Blob([res.data], {
+                type: res.headers['content-type'] || 'application/octet-stream'
+            });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `my_driving_license_${side}`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Download license document error:', err);
+            setLicenseError('Could not retrieve uploaded document file.');
+        }
+    };
+
     const isEligibleForCancellation =
         selectedBooking &&
         ['pending', 'confirmed'].includes(selectedBooking.status?.toLowerCase());
 
     const TABS = [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+        {
+            id: 'license',
+            label: 'Driving Licence',
+            icon: IdCard,
+            badge: licenseInfo?.status === 'verified'
+                ? 'Verified'
+                : licenseInfo?.status === 'pending'
+                    ? 'Pending'
+                    : licenseInfo?.status === 'rejected'
+                        ? 'Action Req.'
+                        : 'Submit'
+        },
         { id: 'active', label: 'Active Bookings', icon: Car, badge: activeBookings.length },
         { id: 'history', label: 'Rental History', icon: History, badge: pastBookings.length },
         { id: 'wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount },
@@ -419,6 +569,22 @@ function Profile() {
 
                         {/* Quick Shortcuts */}
                         <div className="overview-shortcuts-grid">
+                            <div className="shortcut-card" onClick={() => setActiveTab('license')}>
+                                <h4>Driving Licence Verification</h4>
+                                <p>
+                                    {licenseInfo?.status === 'verified'
+                                        ? 'Your driving licence is verified and active for bookings.'
+                                        : licenseInfo?.status === 'pending'
+                                            ? 'Licence verification is currently in progress.'
+                                            : licenseInfo?.status === 'rejected'
+                                                ? 'Verification rejected. Action required to resubmit.'
+                                                : 'Upload your driving licence to enable vehicle rentals.'}
+                                </p>
+                                <span className="shortcut-link">
+                                    {licenseInfo?.status === 'verified' ? 'View Licence Details →' : 'Complete Verification →'}
+                                </span>
+                            </div>
+
                             <div className="shortcut-card" onClick={() => setActiveTab('active')}>
                                 <h4>Manage Bookings</h4>
                                 <p>View details, check status, or modify active vehicle reservations.</p>
@@ -437,6 +603,352 @@ function Profile() {
                                 <span className="shortcut-link">Edit Profile →</span>
                             </div>
                         </div>
+                    </section>
+                )}
+
+                {/* 2. DRIVING LICENCE TAB */}
+                {activeTab === 'license' && (
+                    <section
+                        id="profile-panel-license"
+                        role="tabpanel"
+                        aria-labelledby="profile-tab-license"
+                        tabIndex={0}
+                        className="profile-tab-panel"
+                    >
+                        <div className="tab-panel-header">
+                            <div>
+                                <h2>Driving Licence & Identity Verification</h2>
+                                <p>
+                                    Submit your official driving licence to verify your identity and unlock vehicle bookings across the RentIQ fleet.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Customer Notifications Banner */}
+                        {notifications.filter(n => ['license_verified', 'license_rejected', 'license_submitted'].includes(n.type)).length > 0 && (
+                            <div className="profile-notifications-area">
+                                {notifications
+                                    .filter(n => ['license_verified', 'license_rejected', 'license_submitted'].includes(n.type))
+                                    .slice(0, 2)
+                                    .map(notif => (
+                                        <div key={notif.notification_id} className={`profile-notif-pill notif-${notif.type}`}>
+                                            <div className="notif-content">
+                                                <strong>{notif.title}</strong>
+                                                <p>{notif.message}</p>
+                                            </div>
+                                            <span className="notif-time">{notif.created_at ? notif.created_at.split(' ')[0] : ''}</span>
+                                        </div>
+                                    ))}
+                            </div>
+                        )}
+
+                        {licenseLoading ? (
+                            <Loader message="Loading driving licence verification status..." />
+                        ) : (
+                            <div className="license-tab-content">
+                                {/* Current Status Hero Banner */}
+                                {licenseInfo?.status === 'verified' && (
+                                    <div className="lic-status-banner banner-verified">
+                                        <div className="status-banner-icon">
+                                            <CheckCircle2 size={24} strokeWidth={2.5} />
+                                        </div>
+                                        <div className="status-banner-text">
+                                            <h3>Your driving licence has been successfully verified.</h3>
+                                            <p>You are officially cleared to reserve eligible RentIQ self-drive vehicles. Drive responsibly!</p>
+                                        </div>
+                                        <span className="status-badge-verified">Verified Driver</span>
+                                    </div>
+                                )}
+
+                                {licenseInfo?.status === 'pending' && (
+                                    <div className="lic-status-banner banner-pending">
+                                        <div className="status-banner-icon">
+                                            <Clock size={24} strokeWidth={2.5} />
+                                        </div>
+                                        <div className="status-banner-text">
+                                            <h3>Driving licence verification pending</h3>
+                                            <p>Your documents have been submitted and are currently awaiting review by RentIQ operations.</p>
+                                        </div>
+                                        <span className="status-badge-pending">Under Review</span>
+                                    </div>
+                                )}
+
+                                {licenseInfo?.status === 'rejected' && (
+                                    <div className="lic-status-banner banner-rejected">
+                                        <div className="status-banner-icon">
+                                            <AlertTriangle size={24} strokeWidth={2.5} />
+                                        </div>
+                                        <div className="status-banner-text">
+                                            <h3>Your driving licence verification was rejected.</h3>
+                                            <p>Please review the administrator remarks below and resubmit clear, updated documents.</p>
+                                        </div>
+                                        <span className="status-badge-rejected">Action Required</span>
+                                    </div>
+                                )}
+
+                                {licenseInfo?.status === 'expired' && (
+                                    <div className="lic-status-banner banner-expired">
+                                        <div className="status-banner-icon">
+                                            <Clock size={24} strokeWidth={2.5} />
+                                        </div>
+                                        <div className="status-banner-text">
+                                            <h3>Your driving licence has expired. Please upload updated documents.</h3>
+                                            <p>To ensure road regulatory compliance, you must provide your renewed licence before making a booking.</p>
+                                        </div>
+                                        <span className="status-badge-expired">Expired</span>
+                                    </div>
+                                )}
+
+                                {licenseInfo?.status === 'not_submitted' && (
+                                    <div className="lic-status-banner banner-not-submitted">
+                                        <div className="status-banner-icon">
+                                            <IdCard size={24} strokeWidth={2.5} />
+                                        </div>
+                                        <div className="status-banner-text">
+                                            <h3>Driving licence verification required for bookings</h3>
+                                            <p>Complete the quick submission form below with your licence details and document images.</p>
+                                        </div>
+                                        <span className="status-badge-required">Required</span>
+                                    </div>
+                                )}
+
+                                {/* Feedback Alerts */}
+                                {licenseError && (
+                                    <div className="profile-lic-alert alert-error">
+                                        <AlertTriangle size={18} />
+                                        <span>{licenseError}</span>
+                                    </div>
+                                )}
+                                {licenseSuccess && (
+                                    <div className="profile-lic-alert alert-success">
+                                        <CheckCircle2 size={18} />
+                                        <span>{licenseSuccess}</span>
+                                    </div>
+                                )}
+
+                                {/* Admin Rejection Reason Display */}
+                                {licenseInfo?.status === 'rejected' && licenseInfo?.license?.rejection_reason && (
+                                    <div className="admin-rejection-callout">
+                                        <strong>Administrator Rejection Reason:</strong>
+                                        <p>&quot;{licenseInfo.license.rejection_reason}&quot;</p>
+                                    </div>
+                                )}
+
+                                {/* Display Submitted Details Card if already submitted and not currently editing */}
+                                {licenseInfo?.hasSubmitted && !showEditLicForm && licenseInfo?.status !== 'rejected' && licenseInfo?.status !== 'expired' ? (
+                                    <div className="lic-dossier-card">
+                                        <div className="lic-dossier-header">
+                                            <div className="dossier-title">
+                                                <IdCard size={20} className="dossier-icon" />
+                                                <h4>Driving Licence Record</h4>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="lic-update-toggle-btn"
+                                                onClick={() => setShowEditLicForm(true)}
+                                            >
+                                                Update / Renew Licence
+                                            </button>
+                                        </div>
+
+                                        <div className="lic-dossier-grid">
+                                            <div className="dossier-item">
+                                                <span>Licence Number</span>
+                                                <strong>{licenseInfo.license.license_number}</strong>
+                                            </div>
+                                            <div className="dossier-item">
+                                                <span>Holder Name</span>
+                                                <strong>{licenseInfo.license.holder_name}</strong>
+                                            </div>
+                                            <div className="dossier-item">
+                                                <span>Vehicle Class</span>
+                                                <strong className="class-tag">{licenseInfo.license.vehicle_class || 'LMV'}</strong>
+                                            </div>
+                                            <div className="dossier-item">
+                                                <span>Date of Birth</span>
+                                                <strong>{licenseInfo.license.date_of_birth ? licenseInfo.license.date_of_birth.split('T')[0] : 'Not specified'}</strong>
+                                            </div>
+                                            <div className="dossier-item">
+                                                <span>Issue Date</span>
+                                                <strong>{licenseInfo.license.issue_date ? licenseInfo.license.issue_date.split('T')[0] : '—'}</strong>
+                                            </div>
+                                            <div className="dossier-item">
+                                                <span>Expiry Date</span>
+                                                <strong>{licenseInfo.license.expiry_date ? licenseInfo.license.expiry_date.split('T')[0] : '—'}</strong>
+                                            </div>
+                                        </div>
+
+                                        <div className="lic-attached-docs-row">
+                                            <span>Attached Documents:</span>
+                                            <div className="doc-download-buttons">
+                                                {licenseInfo.license.has_front && (
+                                                    <button
+                                                        type="button"
+                                                        className="doc-dl-btn"
+                                                        onClick={() => handleDownloadMyDoc('front')}
+                                                    >
+                                                        <Download size={14} />
+                                                        Download Front Document
+                                                    </button>
+                                                )}
+                                                {licenseInfo.license.has_back && (
+                                                    <button
+                                                        type="button"
+                                                        className="doc-dl-btn"
+                                                        onClick={() => handleDownloadMyDoc('back')}
+                                                    >
+                                                        <Download size={14} />
+                                                        Download Back Document
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    /* Submission / Resubmission Form */
+                                    <form className="lic-submission-form" onSubmit={handleLicenseSubmit}>
+                                        <div className="form-subheading">
+                                            <h4>{licenseInfo?.hasSubmitted ? 'Resubmit Driving Licence Documents' : 'Submit Driving Licence Information'}</h4>
+                                            {showEditLicForm && (
+                                                <button
+                                                    type="button"
+                                                    className="cancel-edit-btn"
+                                                    onClick={() => setShowEditLicForm(false)}
+                                                >
+                                                    Cancel Edit
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className="lic-form-grid">
+                                            <div className="lic-field">
+                                                <label htmlFor="cust-lic-num">Driving Licence Number *</label>
+                                                <input
+                                                    id="cust-lic-num"
+                                                    type="text"
+                                                    required
+                                                    value={licNumber}
+                                                    onChange={(e) => setLicNumber(e.target.value)}
+                                                    placeholder="e.g. DL-0420110012345 or UP-1620200054321"
+                                                />
+                                            </div>
+
+                                            <div className="lic-field">
+                                                <label htmlFor="cust-lic-holder">Licence Holder Full Name *</label>
+                                                <input
+                                                    id="cust-lic-holder"
+                                                    type="text"
+                                                    required
+                                                    value={licHolderName}
+                                                    onChange={(e) => setLicHolderName(e.target.value)}
+                                                    placeholder="As printed on driving licence"
+                                                />
+                                            </div>
+
+                                            <div className="lic-field">
+                                                <label htmlFor="cust-lic-dob">Date of Birth</label>
+                                                <input
+                                                    id="cust-lic-dob"
+                                                    type="date"
+                                                    value={licDob}
+                                                    onChange={(e) => setLicDob(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="lic-field">
+                                                <label htmlFor="cust-lic-class">Vehicle Class *</label>
+                                                <select
+                                                    id="cust-lic-class"
+                                                    value={licVehicleClass}
+                                                    onChange={(e) => setLicVehicleClass(e.target.value)}
+                                                >
+                                                    <option value="LMV">LMV (Light Motor Vehicle - Cars, SUVs, Sedans)</option>
+                                                    <option value="MCWG">MCWG (Motorcycle With Gear - Two Wheelers)</option>
+                                                    <option value="ALL">ALL (Both Two-Wheeler & Four-Wheeler)</option>
+                                                </select>
+                                            </div>
+
+                                            <div className="lic-field">
+                                                <label htmlFor="cust-lic-issue">Licence Issue Date *</label>
+                                                <input
+                                                    id="cust-lic-issue"
+                                                    type="date"
+                                                    required
+                                                    value={licIssueDate}
+                                                    onChange={(e) => setLicIssueDate(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="lic-field">
+                                                <label htmlFor="cust-lic-expiry">Licence Expiry Date *</label>
+                                                <input
+                                                    id="cust-lic-expiry"
+                                                    type="date"
+                                                    required
+                                                    value={licExpiryDate}
+                                                    onChange={(e) => setLicExpiryDate(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="lic-upload-row">
+                                            <div className="lic-field-file">
+                                                <label>Front-Side Licence Image / PDF *</label>
+                                                <div className="lic-drop-box">
+                                                    <input
+                                                        type="file"
+                                                        accept=".pdf,.jpg,.jpeg,.png"
+                                                        onChange={(e) => setFrontDocFile(e.target.files?.[0] || null)}
+                                                        required={!licenseInfo?.license?.has_front}
+                                                    />
+                                                    <div className="lic-drop-label">
+                                                        <UploadCloud size={24} />
+                                                        <span>
+                                                            {frontDocFile
+                                                                ? `Selected: ${frontDocFile.name}`
+                                                                : licenseInfo?.license?.has_front
+                                                                    ? 'Replace current front document'
+                                                                    : 'Choose front-side file (PDF/JPG/PNG)'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="lic-field-file">
+                                                <label>Back-Side Licence Image / PDF (Optional)</label>
+                                                <div className="lic-drop-box">
+                                                    <input
+                                                        type="file"
+                                                        accept=".pdf,.jpg,.jpeg,.png"
+                                                        onChange={(e) => setBackDocFile(e.target.files?.[0] || null)}
+                                                    />
+                                                    <div className="lic-drop-label">
+                                                        <UploadCloud size={24} />
+                                                        <span>
+                                                            {backDocFile
+                                                                ? `Selected: ${backDocFile.name}`
+                                                                : licenseInfo?.license?.has_back
+                                                                    ? 'Replace current back document'
+                                                                    : 'Choose back-side file (PDF/JPG/PNG)'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="lic-form-submit-row">
+                                            <button
+                                                type="submit"
+                                                className="lic-submit-btn"
+                                                disabled={licenseSubmitting}
+                                            >
+                                                {licenseSubmitting ? 'Submitting Documents...' : 'Submit Licence for Verification'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                )}
+                            </div>
+                        )}
                     </section>
                 )}
 

@@ -351,20 +351,68 @@ function Navbar() {
                                         </Link>
 
                                         {user?.role === 'admin' && (
-                                            <Link
-                                                to="/admin"
-                                                className="profile-dropdown-item"
-                                                role="menuitem"
-                                                onClick={() => setIsProfileOpen(false)}
-                                            >
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                                    <rect x="3" y="3" width="7" height="7" />
-                                                    <rect x="14" y="3" width="7" height="7" />
-                                                    <rect x="14" y="14" width="7" height="7" />
-                                                    <rect x="3" y="14" width="7" height="7" />
-                                                </svg>
-                                                <span>Admin Dashboard</span>
-                                            </Link>
+                                            <>
+                                                <Link
+                                                    to="/admin"
+                                                    className="profile-dropdown-item"
+                                                    role="menuitem"
+                                                    onClick={() => setIsProfileOpen(false)}
+                                                >
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                                        <rect x="3" y="3" width="7" height="7" />
+                                                        <rect x="14" y="3" width="7" height="7" />
+                                                        <rect x="14" y="14" width="7" height="7" />
+                                                        <rect x="3" y="14" width="7" height="7" />
+                                                    </svg>
+                                                    <span>Admin Dashboard</span>
+                                                </Link>
+
+                                                <Link
+                                                    to="/admin/vehicles"
+                                                    className="profile-dropdown-item"
+                                                    role="menuitem"
+                                                    onClick={() => setIsProfileOpen(false)}
+                                                >
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                                        <rect x="1" y="3" width="15" height="13" />
+                                                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                                                        <circle cx="5.5" cy="18.5" r="2.5" />
+                                                        <circle cx="18.5" cy="18.5" r="2.5" />
+                                                    </svg>
+                                                    <span>Fleet & Documents</span>
+                                                </Link>
+
+                                                <Link
+                                                    to="/admin/licenses"
+                                                    className="profile-dropdown-item"
+                                                    role="menuitem"
+                                                    onClick={() => setIsProfileOpen(false)}
+                                                >
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                                        <rect x="3" y="4" width="18" height="16" rx="2" />
+                                                        <circle cx="9" cy="10" r="2" />
+                                                        <line x1="15" y1="8" x2="17" y2="8" />
+                                                        <line x1="15" y1="12" x2="17" y2="12" />
+                                                        <line x1="7" y1="16" x2="17" y2="16" />
+                                                    </svg>
+                                                    <span>Licence Verification</span>
+                                                </Link>
+
+                                                <Link
+                                                    to="/admin/bookings"
+                                                    className="profile-dropdown-item"
+                                                    role="menuitem"
+                                                    onClick={() => setIsProfileOpen(false)}
+                                                >
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                        <polyline points="14 2 14 8 20 8" />
+                                                        <line x1="16" y1="13" x2="8" y2="13" />
+                                                        <line x1="16" y1="17" x2="8" y2="17" />
+                                                    </svg>
+                                                    <span>Manage Bookings</span>
+                                                </Link>
+                                            </>
                                         )}
 
                                         <div className="profile-dropdown-divider" />
@@ -684,19 +732,64 @@ function Navbar() {
                             </NavLink>
 
                             {user?.role === 'admin' && (
-                                <NavLink
-                                    to="/admin"
-                                    className={({ isActive }) => `mobile-nav-link ${isActive ? 'active' : ''}`}
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                >
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                        <rect x="3" y="3" width="7" height="7" />
-                                        <rect x="14" y="3" width="7" height="7" />
-                                        <rect x="14" y="14" width="7" height="7" />
-                                        <rect x="3" y="14" width="7" height="7" />
-                                    </svg>
-                                    <span>Admin Dashboard</span>
-                                </NavLink>
+                                <>
+                                    <NavLink
+                                        to="/admin"
+                                        className={({ isActive }) => `mobile-nav-link ${isActive ? 'active' : ''}`}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                            <rect x="3" y="3" width="7" height="7" />
+                                            <rect x="14" y="3" width="7" height="7" />
+                                            <rect x="14" y="14" width="7" height="7" />
+                                            <rect x="3" y="14" width="7" height="7" />
+                                        </svg>
+                                        <span>Admin Dashboard</span>
+                                    </NavLink>
+
+                                    <NavLink
+                                        to="/admin/vehicles"
+                                        className={({ isActive }) => `mobile-nav-link ${isActive ? 'active' : ''}`}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                            <rect x="1" y="3" width="15" height="13" />
+                                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                                            <circle cx="5.5" cy="18.5" r="2.5" />
+                                            <circle cx="18.5" cy="18.5" r="2.5" />
+                                        </svg>
+                                        <span>Fleet & Documents</span>
+                                    </NavLink>
+
+                                    <NavLink
+                                        to="/admin/licenses"
+                                        className={({ isActive }) => `mobile-nav-link ${isActive ? 'active' : ''}`}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                            <rect x="3" y="4" width="18" height="16" rx="2" />
+                                            <circle cx="9" cy="10" r="2" />
+                                            <line x1="15" y1="8" x2="17" y2="8" />
+                                            <line x1="15" y1="12" x2="17" y2="12" />
+                                            <line x1="7" y1="16" x2="17" y2="16" />
+                                        </svg>
+                                        <span>Licence Verification</span>
+                                    </NavLink>
+
+                                    <NavLink
+                                        to="/admin/bookings"
+                                        className={({ isActive }) => `mobile-nav-link ${isActive ? 'active' : ''}`}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                            <polyline points="14 2 14 8 20 8" />
+                                            <line x1="16" y1="13" x2="8" y2="13" />
+                                            <line x1="16" y1="17" x2="8" y2="17" />
+                                        </svg>
+                                        <span>Manage Bookings</span>
+                                    </NavLink>
+                                </>
                             )}
 
                             <div className="mobile-drawer-divider" />

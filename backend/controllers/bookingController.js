@@ -4,6 +4,7 @@ const {
     calculateRentalDuration,
     calculateRentalPrice
 } = require('../utils/bookingUtils')
+const { checkVehicleDocumentEligibility } = require('../utils/documentStatusHelper')
 
 const createBooking = async (req, res) => {
     let connection
@@ -98,6 +99,111 @@ const createBooking = async (req, res) => {
             await connection.rollback()
             return res.status(400).json({
                 message: 'Vehicle is currently unavailable'
+            })
+        }
+
+        // 1b. Customer Driving Licence Verification Check
+        const [licenses] = await connection.query(
+            `SELECT verification_status, expiry_date, vehicle_class
+             FROM customer_licenses
+             WHERE user_id = ?
+             LIMIT 1`,
+            [userId]
+        )
+
+        if (licenses.length === 0 || licenses[0].verification_status === 'not_submitted') {
+            await connection.rollback()
+            return res.status(403).json({
+                eligible: false,
+                code: 'LICENSE_NOT_SUBMITTED',
+                message: 'Driving licence required: You must submit and verify your driving licence in your profile before booking a vehicle.',
+                redirectUrl: '/profile?tab=license'
+            })
+        }
+
+        const customerLic = licenses[0]
+
+        if (customerLic.verification_status === 'pending') {
+            await connection.rollback()
+            return res.status(403).json({
+                eligible: false,
+                code: 'LICENSE_PENDING',
+                message: 'Licence verification pending: Your driving licence is awaiting administrator approval. You will receive an update once verified.',
+                redirectUrl: '/profile?tab=license'
+            })
+        }
+
+        if (customerLic.verification_status === 'rejected') {
+            await connection.rollback()
+            return res.status(403).json({
+                eligible: false,
+                code: 'LICENSE_REJECTED',
+                message: 'Licence verification rejected: Please review the rejection reason in your profile and submit updated documents.',
+                redirectUrl: '/profile?tab=license'
+            })
+        }
+
+        const todayDate = new Date()
+        todayDate.setHours(0, 0, 0, 0)
+        const licExp = new Date(customerLic.expiry_date)
+        licExp.setHours(0, 0, 0, 0)
+
+        if (licExp.getTime() < todayDate.getTime()) {
+            await connection.rollback()
+            return res.status(403).json({
+                eligible: false,
+                code: 'LICENSE_EXPIRED',
+                message: 'Driving licence expired: Your driving licence on file has expired. Please upload updated documents in your profile.',
+                redirectUrl: '/profile?tab=license'
+            })
+        }
+
+        // Check vehicle class compatibility
+        const vehicleCategoryLower = (vehicle.category_name || '').toLowerCase()
+        const isTwoWheeler = ['bike', 'scooter'].includes(vehicleCategoryLower)
+        const userClass = (customerLic.vehicle_class || '').toUpperCase()
+
+        if (isTwoWheeler) {
+            const twoWheelerClasses = ['MCWG', 'MCWOG', 'TWO_WHEELER', 'ALL', 'LMV+MCWG']
+            const matchesTwoWheeler = twoWheelerClasses.some(c => userClass.includes(c))
+            if (!matchesTwoWheeler) {
+                await connection.rollback()
+                return res.status(403).json({
+                    eligible: false,
+                    code: 'LICENSE_CLASS_MISMATCH',
+                    message: `Licence class mismatch: A motorcycle/two-wheeler endorsement (MCWG) is required for two-wheelers. Your current licence class is ${customerLic.vehicle_class}.`,
+                    redirectUrl: '/profile?tab=license'
+                })
+            }
+        } else {
+            const fourWheelerClasses = ['LMV', 'LMV-NT', 'FOUR_WHEELER', 'ALL', 'LMV+MCWG', 'HMV']
+            const matchesFourWheeler = fourWheelerClasses.some(c => userClass.includes(c))
+            if (!matchesFourWheeler) {
+                await connection.rollback()
+                return res.status(403).json({
+                    eligible: false,
+                    code: 'LICENSE_CLASS_MISMATCH',
+                    message: `Licence class mismatch: A Light Motor Vehicle endorsement (LMV) is required to rent a four-wheeler. Your current licence class is ${customerLic.vehicle_class}.`,
+                    redirectUrl: '/profile?tab=license'
+                })
+            }
+        }
+
+        // 1c. Vehicle Document Compliance Check
+        const [vehDocs] = await connection.query(
+            `SELECT document_type, expiry_date, verification_status
+             FROM vehicle_documents
+             WHERE vehicle_id = ?`,
+            [vehicleId]
+        )
+
+        const docEligibility = checkVehicleDocumentEligibility(vehDocs, vehicle.category_name)
+        if (!docEligibility.eligible) {
+            await connection.rollback()
+            return res.status(400).json({
+                eligible: false,
+                code: 'VEHICLE_COMPLIANCE_HOLD',
+                message: 'This vehicle is temporarily unavailable due to routine compliance maintenance. Please choose another vehicle.'
             })
         }
 

@@ -8,13 +8,14 @@ const ALLOWED_MIME_TYPES = {
     'application/pdf': '.pdf',
     'image/jpeg': '.jpg',
     'image/jpg': '.jpg',
-    'image/png': '.png'
+    'image/png': '.png',
+    'image/webp': '.webp'
 };
 
-const ALLOWED_EXTENSIONS = new Set(['.pdf', '.jpg', '.jpeg', '.png']);
+const ALLOWED_EXTENSIONS = new Set(['.pdf', '.jpg', '.jpeg', '.png', '.webp']);
 
-// Maximum file size: 5MB
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+// Maximum file size: 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /**
  * Configure disk storage for a specific subdirectory
@@ -52,7 +53,7 @@ function fileFilter(req, file, cb) {
     } else {
         cb(
             new Error(
-                'Invalid file format. Only PDF, JPG, JPEG, and PNG files are accepted.'
+                'Invalid file format. Only PDF, JPG, JPEG, PNG, and WebP files are accepted.'
             ),
             false
         );
@@ -62,12 +63,18 @@ function fileFilter(req, file, cb) {
 // Multer upload instances
 const uploadVehicleDocument = multer({
     storage: createDiskStorage('vehicle_documents'),
-    limits: { fileSize: MAX_FILE_SIZE },
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter
 });
 
 const uploadCustomerLicense = multer({
     storage: createDiskStorage('customer_licenses'),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter
+});
+
+const uploadInspectionPhotos = multer({
+    storage: createDiskStorage('inspection_photos'),
     limits: { fileSize: MAX_FILE_SIZE },
     fileFilter
 });
@@ -75,8 +82,8 @@ const uploadCustomerLicense = multer({
 module.exports = {
     uploadVehicleDocument,
     uploadCustomerLicense,
+    uploadInspectionPhotos,
     ALLOWED_EXTENSIONS,
     ALLOWED_MIME_TYPES,
     MAX_FILE_SIZE
 };
-

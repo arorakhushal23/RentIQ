@@ -2297,3 +2297,104 @@
         align-items: flex-start;
     }
 }
+
+
+/* Phase 2 Agreement & Inspection Buttons in Profile */
+.booking-agreement-btn,
+.booking-inspection-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.booking-agreement-btn {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #10b981;
+}
+
+.booking-agreement-btn:hover {
+    background: #10b981;
+    color: #ffffff;
+}
+
+.booking-inspection-btn {
+    background: #eff6ff;
+    color: #1e40af;
+    border: 1px solid #3b82f6;
+}
+
+.booking-inspection-btn:hover {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+/* Modal location & Phase 2 buttons */
+.modal-location-details-box {
+    background: var(--bg-secondary, #f8fafc);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+}
+
+.modal-loc-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--text-secondary, #475569);
+    margin-bottom: 4px;
+}
+
+.modal-route-metric {
+    font-size: 0.75rem;
+    color: var(--text-muted, #94a3b8);
+}
+
+.modal-phase2-buttons-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.modal-phase2-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.modal-agr-btn {
+    background: #0284c7;
+    color: #ffffff;
+    border: none;
+}
+
+.modal-agr-btn:hover {
+    background: #0369a1;
+}
+
+.modal-insp-btn {
+    background: var(--bg-secondary, #f8fafc);
+    color: var(--text-primary, #0f172a);
+    border: 1px solid var(--border-color, #cbd5e1);
+}
+
+.modal-insp-btn:hover {
+    border-color: #0284c7;
+    color: #0284c7;
+}

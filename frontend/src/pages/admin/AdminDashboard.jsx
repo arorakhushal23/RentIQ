@@ -291,6 +291,87 @@ function AdminDashboard() {
                         </section>
                     )}
 
+                    {/* ADVANCED OPERATIONS: LOCATIONS, INSPECTIONS & AGREEMENTS */}
+                    <section className="admin-section">
+                        <h2 className="admin-section-title">Rental Operations & Inspection Center</h2>
+                        
+                        <div className="admin-kpi-grid">
+                            <article className="admin-kpi-card highlight-success">
+                                <div className="kpi-header">
+                                    <span className="kpi-label">Active Handed-Over Rentals</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <Car size={20} strokeWidth={2} />
+                                    </span>
+                                </div>
+                                <div className="kpi-value">{formatNumber(stats.activeBookings)}</div>
+                                <div className="kpi-subtext">Vehicles currently on the road with customers</div>
+                            </article>
+
+                            <article className={`admin-kpi-card ${stats.pendingPickupInspections > 0 ? 'highlight-warning' : ''}`}>
+                                <div className="kpi-header">
+                                    <span className="kpi-label">Pending Pickup Inspections</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <Clock size={20} strokeWidth={2} />
+                                    </span>
+                                </div>
+                                <div className="kpi-value">{formatNumber(stats.pendingPickupInspections)}</div>
+                                <div className="kpi-subtext">Confirmed bookings awaiting pre-rental inspection</div>
+                            </article>
+
+                            <article className={`admin-kpi-card ${stats.pendingReturnInspections > 0 ? 'highlight-expiring' : ''}`}>
+                                <div className="kpi-header">
+                                    <span className="kpi-label">Pending Return Inspections</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <Clock size={20} strokeWidth={2} />
+                                    </span>
+                                </div>
+                                <div className="kpi-value">{formatNumber(stats.pendingReturnInspections)}</div>
+                                <div className="kpi-subtext">Active rentals awaiting check-in & return report</div>
+                            </article>
+
+                            <article className="admin-kpi-card">
+                                <div className="kpi-header">
+                                    <span className="kpi-label">Rental Agreements</span>
+                                    <span className="kpi-icon" aria-hidden="true">
+                                        <FileCheck size={20} strokeWidth={2} />
+                                    </span>
+                                </div>
+                                <div className="kpi-value">{formatNumber(stats.acceptedAgreements)} / {formatNumber(stats.totalAgreements)}</div>
+                                <div className="kpi-subtext">{formatNumber(stats.pendingAgreements)} awaiting customer digital sign-off</div>
+                            </article>
+                        </div>
+
+                        {/* Quick Action Navigation Grid for the 3 Modules */}
+                        <div className="operations-modules-grid">
+                            <Link to="/admin/locations" className="operation-nav-card">
+                                <div className="op-card-header">
+                                    <div className="op-icon-pill map-pill">📍</div>
+                                    <h4>Location & Delivery Management</h4>
+                                </div>
+                                <p>Interactive booking routes map, doorstep delivery pricing rules, and service hub depots.</p>
+                                <span className="op-link-text">Open Location Manager →</span>
+                            </Link>
+
+                            <Link to="/admin/inspections" className="operation-nav-card">
+                                <div className="op-card-header">
+                                    <div className="op-icon-pill insp-pill">📸</div>
+                                    <h4>Vehicle Inspection System</h4>
+                                </div>
+                                <p>Before & after rental photo inspections, damage comparison, and handover authorization.</p>
+                                <span className="op-link-text">Open Inspections →</span>
+                            </Link>
+
+                            <Link to="/admin/agreements" className="operation-nav-card">
+                                <div className="op-card-header">
+                                    <div className="op-icon-pill agr-pill">📄</div>
+                                    <h4>Digital Rental Agreements</h4>
+                                </div>
+                                <p>Generated contracts, verified customer terms acceptance, and PDF agreement downloads.</p>
+                                <span className="op-link-text">Open Agreements →</span>
+                            </Link>
+                        </div>
+                    </section>
+
                     {/* Booking Breakdown */}
                     <section className="admin-section">
                         <h2 className="admin-section-title">Booking Breakdown by Status</h2>

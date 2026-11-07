@@ -1,0 +1,204 @@
+/* Admin Inspections Page Styles */
+.admin-inspections-page {
+    padding: 24px 32px;
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+.inspections-filter-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid var(--border-color, #e2e8f0);
+    margin-bottom: 20px;
+    overflow-x: auto;
+}
+
+.stage-tab {
+    padding: 10px 18px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-secondary, #64748b);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.stage-tab:hover {
+    color: var(--primary-color, #0284c7);
+}
+
+.stage-tab.active {
+    color: var(--primary-color, #0284c7);
+    border-bottom-color: var(--primary-color, #0284c7);
+}
+
+.inspections-actions-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    background: var(--input-bg, #ffffff);
+    border: 1px solid var(--border-color, #cbd5e1);
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 500px;
+}
+
+.search-icon {
+    margin-left: 12px;
+    color: var(--text-muted, #94a3b8);
+}
+
+.search-form input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 9px 12px;
+    font-size: 0.85rem;
+    background: transparent;
+    color: var(--text-primary, #0f172a);
+}
+
+.search-btn {
+    padding: 9px 16px;
+    background: var(--bg-secondary, #f8fafc);
+    border: none;
+    border-left: 1px solid var(--border-color, #cbd5e1);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary, #475569);
+    cursor: pointer;
+}
+
+.refresh-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--bg-secondary, #f8fafc);
+    border: 1px solid var(--border-color, #cbd5e1);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.inspections-table-card {
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 12px;
+    overflow-x: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.reg-code {
+    display: block;
+    font-size: 0.75rem;
+    color: #0284c7;
+    margin-top: 2px;
+}
+
+.stage-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+}
+
+.stage-badge.pickup {
+    background: #ecfdf5;
+    color: #065f46;
+}
+
+.stage-badge.return {
+    background: #eff6ff;
+    color: #1e40af;
+}
+
+.fuel-pill {
+    font-weight: 700;
+    color: var(--primary-color, #0284c7);
+}
+
+.condition-pill {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: capitalize;
+}
+
+.condition-pill.excellent { background: #ecfdf5; color: #047857; }
+.condition-pill.good { background: #f0fdf4; color: #16a34a; }
+.condition-pill.fair { background: #fffbeb; color: #b45309; }
+.condition-pill.poor, .condition-pill.damaged { background: #fef2f2; color: #b91c1c; }
+
+.photo-count-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-secondary, #f8fafc);
+    border: 1px solid var(--border-color, #cbd5e1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.accepted-tag {
+    color: #059669;
+    font-weight: 700;
+    font-size: 0.78rem;
+}
+
+.pending-tag {
+    color: #b45309;
+    font-weight: 600;
+    font-size: 0.78rem;
+}
+
+.inspect-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--primary-color, #0284c7);
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.inspect-btn:hover {
+    background: #0369a1;
+}
+
+.empty-state-wrap {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-muted, #94a3b8);
+}
+
+.empty-icon {
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+
+.empty-state-wrap h4 {
+    margin: 0 0 4px 0;
+    color: var(--text-primary, #0f172a);
+}
+

@@ -11,6 +11,9 @@ const adminRoutes = require('./routes/adminRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes');
 const licenseRoutes = require('./routes/licenseRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const locationRoutes = require('./routes/locationRoutes');
+const agreementRoutes = require('./routes/agreementRoutes');
+const inspectionRoutes = require('./routes/inspectionRoutes');
 
 const app = express();
 
@@ -25,6 +28,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/licenses', licenseRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/locations', locationRoutes);
+app.use('/api/agreements', agreementRoutes);
+app.use('/api/inspections', inspectionRoutes);
 
 app.get('/api/health', async (req, res) => {
     try {

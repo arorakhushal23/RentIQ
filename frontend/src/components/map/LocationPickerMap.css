@@ -1,0 +1,307 @@
+/* Location Picker Map Widget Styles */
+.location-picker-map-widget {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.location-controls-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.target-toggle-group {
+    display: flex;
+    background: var(--bg-tertiary, #f1f5f9);
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.target-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary, #64748b);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.target-btn.active-pickup {
+    background: #10b981;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35);
+}
+
+.target-btn.active-drop {
+    background: #f43f5e;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(244, 63, 94, 0.35);
+}
+
+.map-quick-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.geo-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, #cbd5e1);
+    color: var(--text-primary, #0f172a);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.geo-btn:hover:not(:disabled) {
+    background: var(--bg-secondary, #f8fafc);
+    border-color: var(--primary-color, #0284c7);
+    color: var(--primary-color, #0284c7);
+}
+
+.geo-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.same-pickup-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary, #475569);
+    cursor: pointer;
+}
+
+/* Map Search Form */
+.map-search-form {
+    position: relative;
+    width: 100%;
+}
+
+.map-search-input-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--input-bg, #ffffff);
+    border: 1px solid var(--border-color, #cbd5e1);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+}
+
+.map-search-input-wrap:focus-within {
+    border-color: var(--primary-color, #0284c7);
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.search-icon-map {
+    margin-left: 12px;
+    color: var(--text-muted, #94a3b8);
+}
+
+.map-search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 9px 12px;
+    font-size: 0.85rem;
+    color: var(--text-primary, #0f172a);
+    background: transparent;
+}
+
+.map-search-submit-btn {
+    padding: 9px 16px;
+    background: var(--primary-color, #0284c7);
+    color: #ffffff;
+    border: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.map-search-submit-btn:hover:not(:disabled) {
+    background: var(--primary-hover, #0369a1);
+}
+
+.map-search-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, #cbd5e1);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    color: var(--text-primary, #1e293b);
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color, #f1f5f9);
+    transition: background 0.15s;
+}
+
+.search-result-item:hover {
+    background: var(--bg-secondary, #f8fafc);
+    color: var(--primary-color, #0284c7);
+}
+
+.result-pin {
+    flex-shrink: 0;
+    color: #0284c7;
+}
+
+/* Leaflet Map Frame */
+.leaflet-map-frame {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border-color, #cbd5e1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.leaflet-map-element {
+    height: 250px;
+    width: 100%;
+    z-index: 10;
+}
+
+.map-click-hint {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.85);
+    color: #ffffff;
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    z-index: 400;
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+}
+
+/* Selected Location Dossier */
+.selected-locations-dossier {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+@media (min-width: 600px) {
+    .selected-locations-dossier {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.location-summary-card {
+    background: var(--bg-secondary, #f8fafc);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.location-summary-card.pickup-card {
+    border-left: 3px solid #10b981;
+}
+
+.location-summary-card.drop-card {
+    border-left: 3px solid #f43f5e;
+}
+
+.card-badge-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--text-primary, #0f172a);
+    margin-bottom: 4px;
+}
+
+.dot-pill {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.pickup-dot { background: #10b981; }
+.drop-dot { background: #f43f5e; }
+
+.address-text {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--text-secondary, #475569);
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+/* Route Metrics Bar */
+.route-metrics-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.metric-pill {
+    display: flex;
+    flex-direction: column;
+}
+
+.metric-lbl {
+    font-size: 0.7rem;
+    color: var(--text-muted, #94a3b8);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.metric-val {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-primary, #0f172a);
+}
+
+.free-badge {
+    color: #10b981;
+    font-weight: 800;
+}
+
+.spin-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+

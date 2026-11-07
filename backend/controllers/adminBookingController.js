@@ -9,11 +9,12 @@ const { calculateRentalDuration } = require('../utils/bookingUtils');
  * and status transition management for RentIQ.
  */
 
-const VALID_STATUSES = ['pending', 'confirmed', 'cancelled', 'completed'];
+const VALID_STATUSES = ['pending', 'confirmed', 'active', 'cancelled', 'completed'];
 
 const ALLOWED_TRANSITIONS = {
     pending: ['confirmed', 'cancelled'],
-    confirmed: ['completed', 'cancelled'],
+    confirmed: ['active', 'completed', 'cancelled'],
+    active: ['completed', 'cancelled'],
     completed: [],
     cancelled: []
 };
@@ -51,6 +52,17 @@ function formatBookingRow(row) {
         total_price: Number(row.total_price),
         status: row.status,
         created_at: row.created_at,
+
+        // Location & delivery charges
+        pickup_address: row.pickup_address,
+        pickup_latitude: row.pickup_latitude ? Number(row.pickup_latitude) : null,
+        pickup_longitude: row.pickup_longitude ? Number(row.pickup_longitude) : null,
+        drop_address: row.drop_address,
+        drop_latitude: row.drop_latitude ? Number(row.drop_latitude) : null,
+        drop_longitude: row.drop_longitude ? Number(row.drop_longitude) : null,
+        route_distance_km: row.route_distance_km ? Number(row.route_distance_km) : 0,
+        estimated_travel_time: row.estimated_travel_time,
+        delivery_charge: row.delivery_charge ? Number(row.delivery_charge) : 0,
 
         // Flat convenience attributes
         customer_name: row.customer_name,
@@ -100,6 +112,15 @@ const BASE_BOOKING_SELECT = `
         b.total_price,
         b.status,
         b.created_at,
+        b.pickup_address,
+        b.pickup_latitude,
+        b.pickup_longitude,
+        b.drop_address,
+        b.drop_latitude,
+        b.drop_longitude,
+        b.route_distance_km,
+        b.estimated_travel_time,
+        b.delivery_charge,
         u.name AS customer_name,
         u.email AS customer_email,
         u.role AS customer_role,

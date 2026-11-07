@@ -22,8 +22,13 @@ import {
     CheckCircle2,
     AlertTriangle,
     FileText,
-    Download
+    Download,
+    MapPin,
+    Navigation,
+    Camera
 } from 'lucide-react';
+import AgreementModal from '../../components/agreement/AgreementModal';
+import InspectionModal from '../../components/inspection/InspectionModal';
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
 import axiosInstance from '../../api/axiosInstance';
@@ -45,6 +50,10 @@ function Profile() {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    // Phase 2 Modals State
+    const [agreementModalBookingId, setAgreementModalBookingId] = useState(null);
+    const [inspectionModalBookingId, setInspectionModalBookingId] = useState(null);
 
     // Driving Licence State
     const [licenseInfo, setLicenseInfo] = useState(null);
@@ -1065,6 +1074,22 @@ function Profile() {
                                                     >
                                                         View Details
                                                     </button>
+                                                    <button
+                                                        type="button"
+                                                        className="booking-agreement-btn"
+                                                        onClick={() => setAgreementModalBookingId(booking.booking_id)}
+                                                    >
+                                                        <FileText size={13} />
+                                                        <span>{booking.terms_accepted ? 'Agreement ✓' : 'Review Agreement'}</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="booking-inspection-btn"
+                                                        onClick={() => setInspectionModalBookingId(booking.booking_id)}
+                                                    >
+                                                        <Camera size={13} />
+                                                        <span>Inspection</span>
+                                                    </button>
                                                 </div>
                                             </div>
                                         </article>
@@ -1187,6 +1212,22 @@ function Profile() {
                                                         onClick={() => handleOpenDetails(booking)}
                                                     >
                                                         View Details
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="booking-agreement-btn"
+                                                        onClick={() => setAgreementModalBookingId(booking.booking_id)}
+                                                    >
+                                                        <FileText size={13} />
+                                                        <span>{booking.terms_accepted ? 'Agreement ✓' : 'Review Agreement'}</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="booking-inspection-btn"
+                                                        onClick={() => setInspectionModalBookingId(booking.booking_id)}
+                                                    >
+                                                        <Camera size={13} />
+                                                        <span>Inspection</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -1453,6 +1494,55 @@ function Profile() {
                             </strong>
                         </div>
 
+                        {/* Location & Delivery Info */}
+                        {selectedBooking.pickup_address && (
+                            <div className="modal-location-details-box">
+                                <div className="modal-loc-row">
+                                    <MapPin size={14} color="#10b981" />
+                                    <span>Pickup: <strong>{selectedBooking.pickup_address}</strong></span>
+                                </div>
+                                {selectedBooking.drop_address && selectedBooking.drop_address !== selectedBooking.pickup_address && (
+                                    <div className="modal-loc-row">
+                                        <Navigation size={14} color="#f43f5e" />
+                                        <span>Drop: <strong>{selectedBooking.drop_address}</strong></span>
+                                    </div>
+                                )}
+                                {selectedBooking.route_distance_km > 0 && (
+                                    <small className="modal-route-metric">
+                                        Distance: {selectedBooking.route_distance_km} km ({selectedBooking.estimated_travel_time})
+                                        {Number(selectedBooking.delivery_charge) > 0 && ` • Delivery: ₹${selectedBooking.delivery_charge}`}
+                                    </small>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Phase 2 Action Buttons */}
+                        <div className="modal-phase2-buttons-row">
+                            <button
+                                type="button"
+                                className="modal-phase2-btn modal-agr-btn"
+                                onClick={() => {
+                                    setAgreementModalBookingId(selectedBooking.booking_id);
+                                    handleCloseModal();
+                                }}
+                            >
+                                <FileText size={15} />
+                                <span>Digital Rental Agreement</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                className="modal-phase2-btn modal-insp-btn"
+                                onClick={() => {
+                                    setInspectionModalBookingId(selectedBooking.booking_id);
+                                    handleCloseModal();
+                                }}
+                            >
+                                <Camera size={15} />
+                                <span>Vehicle Inspection & Photos</span>
+                            </button>
+                        </div>
+
                         {/* Cancellation Feedback Alerts */}
                         {cancelSuccess && (
                             <div className="booking-modal-alert success" role="status">
@@ -1608,6 +1698,29 @@ function Profile() {
                     </div>
                 </div>,
                 document.body
+            )}
+
+            {/* Digital Rental Agreement Modal */}
+            {agreementModalBookingId && (
+                <AgreementModal
+                    bookingId={agreementModalBookingId}
+                    onClose={() => setAgreementModalBookingId(null)}
+                    onAgreementAccepted={() => {
+                        axiosInstance.get('/bookings/my-bookings').then(res => setBookings(res.data.bookings || []));
+                    }}
+                />
+            )}
+
+            {/* Vehicle Inspection Modal */}
+            {inspectionModalBookingId && (
+                <InspectionModal
+                    bookingId={inspectionModalBookingId}
+                    isAdmin={false}
+                    onClose={() => setInspectionModalBookingId(null)}
+                    onInspectionUpdated={() => {
+                        axiosInstance.get('/bookings/my-bookings').then(res => setBookings(res.data.bookings || []));
+                    }}
+                />
             )}
         </main>
     );

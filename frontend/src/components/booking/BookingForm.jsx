@@ -1,9 +1,10 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { useAuth } from '../../context/AuthContext';
 import { DateTimeField, FormError } from '../common/form';
 import BookingConfirmation from './BookingConfirmation';
+import LocationPickerMap from '../map/LocationPickerMap';
 import {
     formatLocalDate,
     formatLocalTime,
@@ -16,9 +17,10 @@ import './BookingForm.css';
 
 const STEPS = [
     { number: 1, title: 'Vehicle', subtitle: 'Confirm Selection' },
-    { number: 2, title: 'Schedule', subtitle: 'Dates & Times' },
-    { number: 3, title: 'Review', subtitle: 'Price Breakdown' },
-    { number: 4, title: 'Confirm', subtitle: 'Reserve Vehicle' }
+    { number: 2, title: 'Location', subtitle: 'Pickup & Drop' },
+    { number: 3, title: 'Schedule', subtitle: 'Dates & Times' },
+    { number: 4, title: 'Review', subtitle: 'Price Breakdown' },
+    { number: 5, title: 'Confirm', subtitle: 'Reserve Vehicle' }
 ];
 
 function BookingForm({
@@ -30,10 +32,10 @@ function BookingForm({
     const { user, isLoggedIn } = useAuth();
     const location = useLocation();
 
-    // Step state: 1, 2, 3, 4
+    // Step state: 1, 2, 3, 4, 5
     const [currentStep, setCurrentStep] = useState(1);
 
-    // Current date and next round hour for initial setup
+    // Initial date & times
     const now = useMemo(() => new Date(), []);
     const todayStr = useMemo(() => formatLocalDate(now), [now]);
 
@@ -47,18 +49,40 @@ function BookingForm({
         return formatLocalTime(returnT);
     }, [now]);
 
-    // Step 2 Form Data: Dates & Times
+    // Step 2 Form Data: Location & Delivery
+    const [pickupAddress, setPickupAddress] = useState('RentIQ Central Hub, Sector 17, Chandigarh');
+    const [pickupCoords, setPickupCoords] = useState({ lat: 30.7398, lng: 76.7827 });
+    const [dropAddress, setDropAddress] = useState('RentIQ Central Hub, Sector 17, Chandigarh');
+    const [dropCoords, setDropCoords] = useState({ lat: 30.7398, lng: 76.7827 });
+    const [sameAsPickup, setSameAsPickup] = useState(true);
+
+    const [routeInfo, setRouteInfo] = useState({
+        route_distance_km: 0,
+        estimated_travel_time: '0 mins',
+        delivery_charge: 0,
+        is_free_delivery: true
+    });
+
+    // Step 3 Form Data: Dates & Times
     const [pickupDate, setPickupDate] = useState(todayStr);
     const [returnDate, setReturnDate] = useState(todayStr);
     const [pickupTime, setPickupTime] = useState(initialPickupTime);
     const [returnTime, setReturnTime] = useState(initialReturnTime);
 
-    // Step 4 Form Data: Confirmation check
+    // Step 5 Form Data: Terms check
     const [agreeToTerms, setAgreeToTerms] = useState(true);
 
     // Driving licence status
     const [licenseStatus, setLicenseStatus] = useState(null);
     const [licenceRedirect, setLicenceRedirect] = useState(null);
+
+    // Errors & state
+    const [error, setError] = useState('');
+    const [stepErrors, setStepErrors] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [confirmedBooking, setConfirmedBooking] = useState(null);
+
+    const isSubmittingRef = useRef(false);
 
     // Fetch user licence verification status on mount
     useEffect(() => {
@@ -81,19 +105,35 @@ function BookingForm({
         return () => { isMounted = false; };
     }, [isLoggedIn]);
 
-    // Errors & state
-    const [error, setError] = useState('');
-    const [stepErrors, setStepErrors] = useState({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [confirmedBooking, setConfirmedBooking] = useState(null);
+    // Recalculate route and delivery fee when coordinates change
+    useEffect(() => {
+        if (!pickupCoords?.lat || !pickupCoords?.lng) return;
 
-    const isSubmittingRef = useRef(false);
+        let isMounted = true;
+        const targetDropLat = sameAsPickup ? pickupCoords.lat : dropCoords?.lat;
+        const targetDropLng = sameAsPickup ? pickupCoords.lng : dropCoords?.lng;
+
+        axiosInstance.post('/locations/calculate-route', {
+            pickupLat: pickupCoords.lat,
+            pickupLng: pickupCoords.lng,
+            dropLat: targetDropLat,
+            dropLng: targetDropLng
+        }).then(res => {
+            if (isMounted && res.data) {
+                setRouteInfo(res.data);
+            }
+        }).catch(() => {
+            // keep graceful default
+        });
+
+        return () => { isMounted = false; };
+    }, [pickupCoords, dropCoords, sameAsPickup]);
 
     // Formatted ISO-style strings for duration calculation and backend payload
     const pickupDatetime = pickupDate && pickupTime ? `${pickupDate}T${pickupTime}` : '';
     const returnDatetime = returnDate && returnTime ? `${returnDate}T${returnTime}` : '';
 
-    // Calculate duration & price live
+    // Calculate duration live
     const durationInfo = useMemo(() => {
         if (!pickupDatetime || !returnDatetime) {
             return { totalMinutes: 0, durationHours: 0, display: '' };
@@ -103,10 +143,14 @@ function BookingForm({
 
     const isDurationValid = durationInfo.totalMinutes > 0;
 
-    const totalPrice = useMemo(() => {
+    // Price calculations: Base + Delivery = Total
+    const baseRentalPrice = useMemo(() => {
         if (!isDurationValid) return 0;
         return calculateRentalPrice(pricePerDay, durationInfo.durationHours);
     }, [isDurationValid, pricePerDay, durationInfo.durationHours]);
+
+    const deliveryFee = Number(routeInfo?.delivery_charge || 0);
+    const finalTotalPrice = Number((baseRentalPrice + deliveryFee).toFixed(2));
 
     const hourlyRate = (Number(pricePerDay) / 24).toFixed(2).replace(/\.00$/, '');
 
@@ -135,22 +179,14 @@ function BookingForm({
         clearErrors();
     };
 
-    // Validation for Step 2
-    const validateStep2 = () => {
+    // Validation for Step 3: Schedule
+    const validateSchedule = () => {
         const errors = {};
 
-        if (!pickupDate) {
-            errors.pickupDate = 'Please select a pickup date.';
-        }
-        if (!pickupTime) {
-            errors.pickupTime = 'Please select a pickup time.';
-        }
-        if (!returnDate) {
-            errors.returnDate = 'Please select a return date.';
-        }
-        if (!returnTime) {
-            errors.returnTime = 'Please select a return time.';
-        }
+        if (!pickupDate) errors.pickupDate = 'Please select a pickup date.';
+        if (!pickupTime) errors.pickupTime = 'Please select a pickup time.';
+        if (!returnDate) errors.returnDate = 'Please select a return date.';
+        if (!returnTime) errors.returnTime = 'Please select a return time.';
 
         if (Object.keys(errors).length > 0) {
             setStepErrors(errors);
@@ -167,7 +203,6 @@ function BookingForm({
         }
 
         const currentTime = new Date();
-        // 1-minute buffer for form completion latency
         if (parsedPickup.date.getTime() < currentTime.getTime() - 60000) {
             errors.pickupDate = 'Pickup date and time cannot be in the past.';
             setStepErrors(errors);
@@ -196,16 +231,20 @@ function BookingForm({
             }
             setCurrentStep(2);
         } else if (currentStep === 2) {
-            if (!validateStep2()) {
+            if (!pickupAddress) {
+                setError('Please select or enter a valid pickup address.');
                 return;
             }
             setCurrentStep(3);
         } else if (currentStep === 3) {
+            if (!validateSchedule()) return;
+            setCurrentStep(4);
+        } else if (currentStep === 4) {
             if (!isDurationValid) {
-                setError('Please adjust your dates and times in Step 2 to ensure a valid rental duration.');
+                setError('Please adjust your dates and times to ensure a valid rental duration.');
                 return;
             }
-            setCurrentStep(4);
+            setCurrentStep(5);
         }
     };
 
@@ -218,7 +257,6 @@ function BookingForm({
     };
 
     const handleStepJump = (targetStep) => {
-        // Allow jumping to completed or previous steps, but validate forward jumps
         if (targetStep < currentStep) {
             setError('');
             setStepErrors({});
@@ -226,9 +264,11 @@ function BookingForm({
         } else if (targetStep === 2 && currentStep === 1) {
             handleNextStep();
         } else if (targetStep === 3 && currentStep === 2) {
-            if (validateStep2()) setCurrentStep(3);
+            setCurrentStep(3);
         } else if (targetStep === 4 && (currentStep === 2 || currentStep === 3)) {
-            if (validateStep2()) setCurrentStep(4);
+            if (validateSchedule()) setCurrentStep(4);
+        } else if (targetStep === 5 && currentStep < 5) {
+            if (validateSchedule()) setCurrentStep(5);
         }
     };
 
@@ -259,8 +299,8 @@ function BookingForm({
             return;
         }
 
-        if (!validateStep2()) {
-            setCurrentStep(2);
+        if (!validateSchedule()) {
+            setCurrentStep(3);
             return;
         }
 
@@ -274,12 +314,22 @@ function BookingForm({
         setError('');
 
         try {
+            const finalDropAddr = sameAsPickup ? pickupAddress : dropAddress;
+            const finalDropLat = sameAsPickup ? pickupCoords?.lat : dropCoords?.lat;
+            const finalDropLng = sameAsPickup ? pickupCoords?.lng : dropCoords?.lng;
+
             const response = await axiosInstance.post('/bookings', {
                 vehicleId,
                 pickupDatetime,
                 returnDatetime,
                 startDate: pickupDatetime,
-                endDate: returnDatetime
+                endDate: returnDatetime,
+                pickupAddress,
+                pickupLatitude: pickupCoords?.lat,
+                pickupLongitude: pickupCoords?.lng,
+                dropAddress: finalDropAddr,
+                dropLatitude: finalDropLat,
+                dropLongitude: finalDropLng
             });
 
             if (response.data && response.data.booking) {
@@ -322,7 +372,7 @@ function BookingForm({
             <header className="booking-header-area">
                 <h2 id="booking-heading">Book This Vehicle</h2>
                 <p className="booking-form-subtitle">
-                    Complete the 4-step workflow to configure your schedule, review pricing, and reserve.
+                    Configure your pickup & drop locations, schedule, review transparent pricing, and reserve.
                 </p>
             </header>
 
@@ -400,7 +450,7 @@ function BookingForm({
                 {currentStep === 1 && (
                     <div className="booking-step-panel" role="region" aria-label="Step 1: Vehicle Confirmation">
                         <div className="panel-header">
-                            <span className="panel-badge">Step 1 of 4</span>
+                            <span className="panel-badge">Step 1 of 5</span>
                             <h3 className="panel-title">Confirm Vehicle Selection</h3>
                         </div>
 
@@ -423,8 +473,8 @@ function BookingForm({
                             </div>
 
                             <ul className="vehicle-booking-perks">
-                                <li>✓ Instant confirmation with free cancellation up to 6h before pickup</li>
-                                <li>✓ Comprehensive roadside breakdown assistance included</li>
+                                <li>✓ Instant digital rental agreement generation upon confirmation</li>
+                                <li>✓ Pre-rental digital photo inspection & condition verification</li>
                                 <li>✓ Flexible hourly or multi-day rental billing with zero hidden fees</li>
                             </ul>
                         </div>
@@ -440,17 +490,71 @@ function BookingForm({
                                 onClick={handleNextStep}
                                 disabled={!isAvailable}
                             >
-                                Next: Select Dates & Times →
+                                Next: Choose Locations & Map →
                             </button>
                         </div>
                     </div>
                 )}
 
-                {/* STEP 2: DATES AND TIMES SELECTION */}
+                {/* STEP 2: INTERACTIVE PICKUP & DROP LOCATION WITH MAPS */}
                 {currentStep === 2 && (
-                    <div className="booking-step-panel" role="region" aria-label="Step 2: Dates and Times">
+                    <div className="booking-step-panel" role="region" aria-label="Step 2: Pickup and Drop Location">
                         <div className="panel-header">
-                            <span className="panel-badge">Step 2 of 4</span>
+                            <span className="panel-badge">Step 2 of 5</span>
+                            <h3 className="panel-title">Select Pickup & Drop Location</h3>
+                        </div>
+
+                        <LocationPickerMap
+                            pickupAddress={pickupAddress}
+                            pickupCoords={pickupCoords}
+                            dropAddress={dropAddress}
+                            dropCoords={dropCoords}
+                            onPickupChange={({ address, lat, lng }) => {
+                                setPickupAddress(address);
+                                setPickupCoords({ lat, lng });
+                            }}
+                            onDropChange={({ address, lat, lng }) => {
+                                setDropAddress(address);
+                                setDropCoords({ lat, lng });
+                            }}
+                            sameAsPickup={sameAsPickup}
+                            onSameAsPickupToggle={() => {
+                                setSameAsPickup(prev => !prev);
+                                if (!sameAsPickup) {
+                                    setDropAddress(pickupAddress);
+                                    setDropCoords(pickupCoords);
+                                }
+                            }}
+                            routeInfo={routeInfo}
+                        />
+
+                        {error && <FormError message={error} />}
+
+                        <div className="step-actions split-align">
+                            <button
+                                type="button"
+                                className="step-btn back-btn"
+                                onClick={handlePrevStep}
+                            >
+                                ← Back: Vehicle
+                            </button>
+
+                            <button
+                                type="button"
+                                className="step-btn next-btn"
+                                onClick={handleNextStep}
+                            >
+                                Next: Select Schedule →
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* STEP 3: DATES AND TIMES SELECTION */}
+                {currentStep === 3 && (
+                    <div className="booking-step-panel" role="region" aria-label="Step 3: Dates and Times">
+                        <div className="panel-header">
+                            <span className="panel-badge">Step 3 of 5</span>
                             <h3 className="panel-title">Select Pickup & Return Schedule</h3>
                         </div>
 
@@ -522,7 +626,7 @@ function BookingForm({
                                 className="step-btn back-btn"
                                 onClick={handlePrevStep}
                             >
-                                ← Back: Vehicle
+                                ← Back: Location
                             </button>
 
                             <button
@@ -536,11 +640,11 @@ function BookingForm({
                     </div>
                 )}
 
-                {/* STEP 3: REVIEW & PRICE BREAKDOWN */}
-                {currentStep === 3 && (
-                    <div className="booking-step-panel" role="region" aria-label="Step 3: Review and Price Breakdown">
+                {/* STEP 4: REVIEW & PRICE BREAKDOWN */}
+                {currentStep === 4 && (
+                    <div className="booking-step-panel" role="region" aria-label="Step 4: Review and Price Breakdown">
                         <div className="panel-header">
-                            <span className="panel-badge">Step 3 of 4</span>
+                            <span className="panel-badge">Step 4 of 5</span>
                             <h3 className="panel-title">Review Booking & Price Breakdown</h3>
                         </div>
 
@@ -559,10 +663,16 @@ function BookingForm({
                                 <div className="schedule-block">
                                     <span className="block-label">Pickup Schedule</span>
                                     <strong className="block-val">{formatDisplayDateTime(pickupDatetime)}</strong>
+                                    <small style={{ display: 'block', color: 'var(--text-secondary, #64748b)', marginTop: '4px' }}>
+                                        📍 {pickupAddress}
+                                    </small>
                                 </div>
                                 <div className="schedule-block">
                                     <span className="block-label">Return Schedule</span>
                                     <strong className="block-val">{formatDisplayDateTime(returnDatetime)}</strong>
+                                    <small style={{ display: 'block', color: 'var(--text-secondary, #64748b)', marginTop: '4px' }}>
+                                        🏁 {sameAsPickup ? pickupAddress : dropAddress}
+                                    </small>
                                 </div>
                             </div>
 
@@ -574,23 +684,29 @@ function BookingForm({
                                     <strong>{durationInfo.display} ({durationInfo.durationHours} hrs)</strong>
                                 </div>
                                 <div className="line-item">
-                                    <span>Hourly Base Rate</span>
-                                    <span>₹{hourlyRate} × {durationInfo.durationHours} hrs</span>
+                                    <span>Base Hourly Rental</span>
+                                    <span>₹{hourlyRate} × {durationInfo.durationHours} hrs = ₹{Number(baseRentalPrice).toLocaleString('en-IN')}</span>
                                 </div>
                                 <div className="line-item">
-                                    <span>Base Rental Amount</span>
-                                    <span>₹{Number(totalPrice).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+                                    <span>Transit / Delivery Fee ({routeInfo.route_distance_km} km)</span>
+                                    <span>
+                                        {deliveryFee === 0 ? (
+                                            <strong style={{ color: '#10b981' }}>FREE (Within Free Radius)</strong>
+                                        ) : (
+                                            `₹${Number(deliveryFee).toLocaleString('en-IN')}`
+                                        )}
+                                    </span>
                                 </div>
                                 <div className="line-item green-text">
                                     <span>Standard Damage Waiver & Insurance</span>
                                     <span>Included (₹0)</span>
                                 </div>
                                 <div className="line-item green-text">
-                                    <span>Roadside Assistance (24/7)</span>
+                                    <span>24/7 Roadside Assistance Hotline</span>
                                     <span>Included (₹0)</span>
                                 </div>
                                 <div className="line-item">
-                                    <span>Applicable GST & Fees</span>
+                                    <span>Applicable GST & Platform Tolls</span>
                                     <span>Included</span>
                                 </div>
                             </div>
@@ -600,7 +716,7 @@ function BookingForm({
                             <div className="breakdown-total-row">
                                 <span className="total-title">Total Rental Payable</span>
                                 <strong className="total-amount">
-                                    ₹{Number(totalPrice).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                    ₹{Number(finalTotalPrice).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                                 </strong>
                             </div>
                         </div>
@@ -627,11 +743,11 @@ function BookingForm({
                     </div>
                 )}
 
-                {/* STEP 4: CONFIRMATION & SUBMIT */}
-                {currentStep === 4 && (
-                    <div className="booking-step-panel" role="region" aria-label="Step 4: Final Confirmation">
+                {/* STEP 5: CONFIRMATION & SUBMIT */}
+                {currentStep === 5 && (
+                    <div className="booking-step-panel" role="region" aria-label="Step 5: Final Confirmation">
                         <div className="panel-header">
-                            <span className="panel-badge">Step 4 of 4</span>
+                            <span className="panel-badge">Step 5 of 5</span>
                             <h3 className="panel-title">Finalize Reservation</h3>
                         </div>
 
@@ -642,11 +758,15 @@ function BookingForm({
                             </div>
                             <div className="final-summary-row">
                                 <span className="f-label">Pickup:</span>
-                                <span className="f-val">{formatDisplayDateTime(pickupDatetime)}</span>
+                                <span className="f-val">{formatDisplayDateTime(pickupDatetime)} ({pickupAddress})</span>
                             </div>
                             <div className="final-summary-row">
                                 <span className="f-label">Return:</span>
-                                <span className="f-val">{formatDisplayDateTime(returnDatetime)}</span>
+                                <span className="f-val">{formatDisplayDateTime(returnDatetime)} ({sameAsPickup ? pickupAddress : dropAddress})</span>
+                            </div>
+                            <div className="final-summary-row">
+                                <span className="f-label">Route:</span>
+                                <span className="f-val">{routeInfo.route_distance_km} km ({routeInfo.estimated_travel_time})</span>
                             </div>
                             <div className="final-summary-row">
                                 <span className="f-label">Duration:</span>
@@ -655,7 +775,7 @@ function BookingForm({
                             <div className="final-summary-row total-highlight">
                                 <span className="f-label">Grand Total:</span>
                                 <strong className="f-val total-price">
-                                    ₹{Number(totalPrice).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                    ₹{Number(finalTotalPrice).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                                 </strong>
                             </div>
                         </div>
@@ -695,7 +815,7 @@ function BookingForm({
                                     id="booking-terms-agree"
                                 />
                                 <span>
-                                    I agree to RentIQ&apos;s rental agreement, age/driver requirements, and cancellation policy.
+                                    I agree to RentIQ&apos;s rental agreement terms, age/driver requirements, and digital vehicle inspection process.
                                 </span>
                             </label>
                         </div>
@@ -720,7 +840,7 @@ function BookingForm({
                                 {isSubmitting ? (
                                     <span className="submitting-spinner">Reserving Vehicle...</span>
                                 ) : (
-                                    <span>Confirm & Book Now (₹{Number(totalPrice).toLocaleString('en-IN')})</span>
+                                    <span>Confirm & Book Now (₹{Number(finalTotalPrice).toLocaleString('en-IN')})</span>
                                 )}
                             </button>
                         </div>

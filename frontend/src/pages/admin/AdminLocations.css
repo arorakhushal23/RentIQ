@@ -1,0 +1,314 @@
+/* Admin Locations Page Styles */
+.admin-locations-page {
+    padding: 24px 32px;
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+.page-header {
+    margin-bottom: 20px;
+}
+
+.page-header h2 {
+    margin: 0 0 6px 0;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-primary, #0f172a);
+}
+
+.page-header p {
+    margin: 0;
+    color: var(--text-secondary, #64748b);
+    font-size: 0.92rem;
+}
+
+.admin-nav-tabs {
+    display: flex;
+    gap: 10px;
+    border-bottom: 2px solid var(--border-color, #e2e8f0);
+    margin-bottom: 24px;
+    overflow-x: auto;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-secondary, #64748b);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.tab-btn:hover {
+    color: var(--primary-color, #0284c7);
+}
+
+.tab-btn.active {
+    color: var(--primary-color, #0284c7);
+    border-bottom-color: var(--primary-color, #0284c7);
+}
+
+/* Map Pane */
+.map-meta-strip {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background: var(--card-bg, #ffffff);
+    padding: 10px 16px;
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.meta-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-secondary, #475569);
+}
+
+.meta-indicator .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dot-pickup { background: #10b981; }
+.dot-drop { background: #f43f5e; }
+
+.line-sample {
+    width: 20px;
+    height: 3px;
+    background: #0284c7;
+    border-radius: 2px;
+}
+
+.refresh-btn {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--bg-secondary, #f8fafc);
+    border: 1px solid var(--border-color, #cbd5e1);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.admin-leaflet-canvas-wrap {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color, #cbd5e1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.admin-leaflet-canvas {
+    height: 520px;
+    width: 100%;
+}
+
+/* Pricing Card */
+.pricing-config-card {
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.card-header-bar h4 {
+    margin: 0 0 4px 0;
+    font-size: 1.15rem;
+}
+
+.card-header-bar p {
+    margin: 0 0 18px 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #64748b);
+}
+
+.pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 700px) {
+    .pricing-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.pricing-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pricing-field label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-primary, #0f172a);
+}
+
+.pricing-field input {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color, #cbd5e1);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: var(--input-bg, #ffffff);
+    color: var(--text-primary, #0f172a);
+}
+
+.pricing-field small {
+    font-size: 0.78rem;
+    color: var(--text-muted, #94a3b8);
+}
+
+.save-pricing-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    background: var(--primary-color, #0284c7);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.save-pricing-btn:hover:not(:disabled) {
+    background: #0369a1;
+}
+
+.success-callout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #10b981;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 18px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Hubs */
+.add-hub-card {
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+}
+
+.add-hub-card h4 {
+    margin: 0 0 12px 0;
+    font-size: 1rem;
+}
+
+.hub-form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+@media (max-width: 800px) {
+    .hub-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.hub-form-grid input {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color, #cbd5e1);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    background: var(--input-bg, #ffffff);
+    color: var(--text-primary, #0f172a);
+}
+
+.add-hub-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #10b981;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.hubs-table-card {
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.admin-table th {
+    background: var(--bg-secondary, #f8fafc);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    color: var(--text-secondary, #64748b);
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.admin-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+    color: var(--text-primary, #0f172a);
+}
+
+.admin-table tr:hover td {
+    background: var(--bg-secondary, #f8fafc);
+}
+
+.badge-active {
+    background: #ecfdf5;
+    color: #065f46;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.delete-hub-btn {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+}
+
+.delete-hub-btn:hover {
+    background: #fee2e2;
+}
+

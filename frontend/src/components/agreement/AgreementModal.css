@@ -1,0 +1,411 @@
+/* Digital Rental Agreement Modal Styles */
+.modal-backdrop-agreement {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    padding: 16px;
+    animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.agreement-modal-window {
+    background: var(--card-bg, #ffffff);
+    color: var(--text-primary, #0f172a);
+    width: 100%;
+    max-width: 760px;
+    max-height: 90vh;
+    border-radius: 14px;
+    border: 1px solid var(--border-color, #e2e8f0);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.agreement-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--bg-secondary, #f8fafc);
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.header-title-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-icon {
+    color: #0284c7;
+}
+
+.agreement-modal-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.agreement-ref {
+    font-size: 0.78rem;
+    color: var(--text-secondary, #64748b);
+    font-family: monospace;
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary, #64748b);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.15s;
+}
+
+.close-btn:hover {
+    background: var(--bg-tertiary, #e2e8f0);
+    color: var(--text-primary, #0f172a);
+}
+
+.agreement-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.agreement-loading-wrap {
+    padding: 60px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.agreement-error-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+/* Status Banners */
+.accepted-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #ecfdf5;
+    border: 1px solid #10b981;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+}
+
+.accepted-banner .check-icon {
+    color: #10b981;
+    flex-shrink: 0;
+}
+
+.accepted-banner strong {
+    color: #065f46;
+    font-size: 0.95rem;
+}
+
+.accepted-banner p {
+    margin: 2px 0 0;
+    font-size: 0.8rem;
+    color: #047857;
+}
+
+.download-pdf-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: #10b981;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+.download-pdf-btn:hover {
+    background: #059669;
+}
+
+.pending-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fffbeb;
+    border: 1px solid #f59e0b;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+}
+
+.pending-banner .warn-icon {
+    color: #f59e0b;
+    flex-shrink: 0;
+}
+
+.pending-banner strong {
+    color: #92400e;
+    font-size: 0.9rem;
+}
+
+.pending-banner p {
+    margin: 2px 0 0;
+    font-size: 0.8rem;
+    color: #b45309;
+}
+
+/* Dossier Content */
+.dossier-section {
+    margin-bottom: 22px;
+}
+
+.section-title {
+    font-size: 0.88rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary, #475569);
+    margin: 0 0 10px 0;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+    padding-bottom: 6px;
+}
+
+.parties-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 600px) {
+    .parties-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.party-box {
+    background: var(--bg-secondary, #f8fafc);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 0.82rem;
+}
+
+.party-role {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--primary-color, #0284c7);
+    margin-bottom: 4px;
+}
+
+.party-box p {
+    margin: 2px 0;
+    color: var(--text-secondary, #64748b);
+}
+
+.party-box small {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.75rem;
+}
+
+/* Specs Table */
+.specs-table-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    background: var(--bg-secondary, #f8fafc);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+@media (max-width: 600px) {
+    .specs-table-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.spec-row {
+    display: flex;
+    flex-direction: column;
+}
+
+.spec-name {
+    font-size: 0.72rem;
+    color: var(--text-muted, #94a3b8);
+    text-transform: uppercase;
+}
+
+.spec-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary, #0f172a);
+}
+
+.reg-pill {
+    font-family: monospace;
+    color: #0284c7;
+}
+
+/* Financials */
+.financial-card {
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.fin-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    padding: 4px 0;
+    color: var(--text-secondary, #475569);
+}
+
+.fin-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding-top: 8px;
+    margin-top: 6px;
+    border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+.total-highlight {
+    color: #0284c7;
+    font-size: 1.05rem;
+}
+
+/* Terms */
+.terms-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.term-entry {
+    background: var(--bg-secondary, #f8fafc);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+.term-entry strong {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-primary, #0f172a);
+    margin-bottom: 2px;
+}
+
+.term-entry p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-secondary, #64748b);
+    line-height: 1.4;
+}
+
+/* Acceptance Action Box */
+.agreement-acceptance-box {
+    background: var(--bg-secondary, #f8fafc);
+    border: 2px solid var(--primary-color, #0284c7);
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.acceptance-checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.83rem;
+    color: var(--text-primary, #1e293b);
+    line-height: 1.45;
+}
+
+.acceptance-checkbox-label input {
+    margin-top: 3px;
+    cursor: pointer;
+}
+
+.acceptance-action-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.confirm-accept-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.confirm-accept-btn:hover:not(:disabled) {
+    background: #0369a1;
+}
+
+.confirm-accept-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.download-pdf-outline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, #cbd5e1);
+    color: var(--text-primary, #1e293b);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.download-pdf-outline:hover {
+    border-color: #0284c7;
+    color: #0284c7;
+}
+

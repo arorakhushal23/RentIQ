@@ -555,3 +555,76 @@
     color: var(--blue-primary);
     background: var(--blue-soft);
 }
+
+
+/* Phase 2 Operations Modules Grid */
+.operations-modules-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 20px;
+}
+
+@media (max-width: 900px) {
+    .operations-modules-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.operation-nav-card {
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 12px;
+    padding: 18px 20px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.operation-nav-card:hover {
+    border-color: var(--primary-color, #0284c7);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(2, 132, 199, 0.12);
+}
+
+.op-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.op-card-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary, #0f172a);
+}
+
+.op-icon-pill {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    background: var(--bg-secondary, #f8fafc);
+}
+
+.operation-nav-card p {
+    margin: 0 0 14px 0;
+    font-size: 0.82rem;
+    color: var(--text-secondary, #64748b);
+    line-height: 1.45;
+}
+
+.op-link-text {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--primary-color, #0284c7);
+}

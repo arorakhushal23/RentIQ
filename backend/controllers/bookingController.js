@@ -5,6 +5,11 @@ const {
     calculateRentalPrice
 } = require('../utils/bookingUtils')
 const { checkVehicleDocumentEligibility } = require('../utils/documentStatusHelper')
+const {
+    calculateDrivingRoute,
+    calculateDeliveryCharge
+} = require('../utils/distanceCalculator')
+const { ensureAgreementExists } = require('./agreementController')
 
 const createBooking = async (req, res) => {
     let connection
@@ -61,6 +66,27 @@ const createBooking = async (req, res) => {
             return res.status(400).json({
                 message: 'Return date and time must be after pickup date and time'
             })
+        }
+
+        // Location & Delivery calculation
+        const rawPickupAddr = req.body.pickupAddress || req.body.pickup_address || 'RentIQ Central Hub, Sector 17, Chandigarh'
+        const rawDropAddr = req.body.dropAddress || req.body.drop_address || rawPickupAddr
+
+        const pLat = req.body.pickupLatitude !== undefined ? req.body.pickupLatitude : req.body.pickupLat !== undefined ? req.body.pickupLat : req.body.pickup_latitude
+        const pLng = req.body.pickupLongitude !== undefined ? req.body.pickupLongitude : req.body.pickupLng !== undefined ? req.body.pickupLng : req.body.pickup_longitude
+        const dLat = req.body.dropLatitude !== undefined ? req.body.dropLatitude : req.body.dropLat !== undefined ? req.body.dropLat : req.body.drop_latitude
+        const dLng = req.body.dropLongitude !== undefined ? req.body.dropLongitude : req.body.dropLng !== undefined ? req.body.dropLng : req.body.drop_longitude
+
+        let routeDistanceKm = 0.00
+        let estimatedTravelTime = '0 mins'
+        let deliveryCharge = 0.00
+
+        if (pLat !== undefined && pLng !== undefined && dLat !== undefined && dLng !== undefined && !isNaN(Number(pLat)) && !isNaN(Number(pLng))) {
+            const route = await calculateDrivingRoute(pLat, pLng, dLat, dLng)
+            routeDistanceKm = route.distanceKm
+            estimatedTravelTime = route.durationDisplay
+            const deliveryRes = await calculateDeliveryCharge(routeDistanceKm)
+            deliveryCharge = deliveryRes.deliveryCharge
         }
 
         // Acquire dedicated connection from the pool for the transaction
@@ -216,7 +242,7 @@ const createBooking = async (req, res) => {
               AND vehicle_id = ?
               AND pickup_datetime = ?
               AND return_datetime = ?
-              AND status IN ('pending', 'confirmed')
+              AND status IN ('pending', 'confirmed', 'active')
             LIMIT 1
             `,
             [userId, vehicleId, pickupParsed.formatted, returnParsed.formatted]
@@ -230,15 +256,12 @@ const createBooking = async (req, res) => {
         }
 
         // 3. Prevent overlapping active bookings for the same vehicle
-        // Half-open interval rule: existing.pickup_datetime < newReturn AND existing.return_datetime > newPickup
-        // Allows adjacent bookings (e.g. one ends at 12:00, another starts at 12:00).
-        // Cancelled and completed bookings do not block availability.
         const [overlaps] = await connection.query(
             `
             SELECT booking_id
             FROM bookings
             WHERE vehicle_id = ?
-              AND status IN ('pending', 'confirmed')
+              AND status IN ('pending', 'confirmed', 'active')
               AND pickup_datetime < ?
               AND return_datetime > ?
             LIMIT 1
@@ -255,15 +278,18 @@ const createBooking = async (req, res) => {
 
         // 4. Calculate authoritative price and duration
         const durationInfo = calculateRentalDuration(pickupParsed.date, returnParsed.date)
-        const totalPrice = calculateRentalPrice(vehicle.price_per_day, durationInfo.durationHours)
+        const baseRentalPrice = calculateRentalPrice(vehicle.price_per_day, durationInfo.durationHours)
+        const totalPrice = Number((baseRentalPrice + deliveryCharge).toFixed(2))
 
-        // 5. Insert booking within the serialized transaction
+        // 5. Insert booking with location and delivery charge within the serialized transaction
         const [result] = await connection.query(
             `
             INSERT INTO bookings
-                (user_id, vehicle_id, pickup_datetime, return_datetime, start_date, end_date, total_price, status)
+                (user_id, vehicle_id, pickup_datetime, return_datetime, start_date, end_date, total_price, status,
+                 pickup_address, pickup_latitude, pickup_longitude, drop_address, drop_latitude, drop_longitude,
+                 route_distance_km, estimated_travel_time, delivery_charge)
             VALUES
-                (?, ?, ?, ?, ?, ?, ?, 'pending')
+                (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
                 userId,
@@ -272,17 +298,35 @@ const createBooking = async (req, res) => {
                 returnParsed.formatted,
                 pickupParsed.dateOnly,
                 returnParsed.dateOnly,
-                totalPrice
+                totalPrice,
+                rawPickupAddr,
+                pLat !== undefined && !isNaN(Number(pLat)) ? Number(pLat) : null,
+                pLng !== undefined && !isNaN(Number(pLng)) ? Number(pLng) : null,
+                rawDropAddr,
+                dLat !== undefined && !isNaN(Number(dLat)) ? Number(dLat) : null,
+                dLng !== undefined && !isNaN(Number(dLng)) ? Number(dLng) : null,
+                routeDistanceKm,
+                estimatedTravelTime,
+                deliveryCharge
             ]
         )
 
+        const bookingId = result.insertId
         await connection.commit()
+
+        // 6. Generate digital rental agreement snapshot automatically
+        let agreement = null
+        try {
+            agreement = await ensureAgreementExists(bookingId, userId)
+        } catch (agrErr) {
+            console.error('Notice: Auto-generating agreement failed (will generate on view):', agrErr.message)
+        }
 
         return res.status(201).json({
             message: 'Booking created successfully',
             booking: {
-                bookingId: result.insertId,
-                booking_id: result.insertId,
+                bookingId,
+                booking_id: bookingId,
                 userId,
                 user_id: userId,
                 vehicleId,
@@ -305,9 +349,23 @@ const createBooking = async (req, res) => {
                 end_date: returnParsed.formatted,
                 duration: durationInfo.display,
                 durationHours: durationInfo.durationHours,
+                baseRentalPrice,
+                base_rental_price: baseRentalPrice,
+                deliveryCharge,
+                delivery_charge: deliveryCharge,
+                routeDistanceKm,
+                route_distance_km: routeDistanceKm,
+                estimatedTravelTime,
+                estimated_travel_time: estimatedTravelTime,
+                pickupAddress: rawPickupAddr,
+                pickup_address: rawPickupAddr,
+                dropAddress: rawDropAddr,
+                drop_address: rawDropAddr,
                 totalPrice,
                 total_price: totalPrice,
-                status: 'pending'
+                status: 'pending',
+                agreementId: agreement ? agreement.id : null,
+                agreementNumber: agreement ? agreement.agreement_number : null
             }
         })
 
@@ -344,20 +402,39 @@ const getMyBookings = async (req, res) => {
                 b.vehicle_id,
                 v.name AS vehicle_name,
                 v.brand AS vehicle_brand,
+                v.registration_number,
                 v.image_url,
                 c.name AS category_name,
                 b.pickup_datetime,
                 b.return_datetime,
                 b.pickup_datetime AS start_date,
                 b.return_datetime AS end_date,
+                b.pickup_address,
+                b.pickup_latitude,
+                b.pickup_longitude,
+                b.drop_address,
+                b.drop_latitude,
+                b.drop_longitude,
+                b.route_distance_km,
+                b.estimated_travel_time,
+                b.delivery_charge,
                 b.total_price,
                 b.status,
-                b.created_at
+                b.created_at,
+                ra.id AS agreement_id,
+                ra.agreement_number,
+                ra.agreement_status,
+                ra.terms_accepted,
+                (SELECT id FROM vehicle_inspections vi WHERE vi.booking_id = b.booking_id AND vi.inspection_type = 'pickup') AS pickup_inspection_id,
+                (SELECT customer_accepted FROM vehicle_inspections vi WHERE vi.booking_id = b.booking_id AND vi.inspection_type = 'pickup') AS pickup_customer_accepted,
+                (SELECT id FROM vehicle_inspections vi WHERE vi.booking_id = b.booking_id AND vi.inspection_type = 'return') AS return_inspection_id
             FROM bookings b
             JOIN vehicles v
                 ON b.vehicle_id = v.vehicle_id
             LEFT JOIN categories c
                 ON v.category_id = c.category_id
+            LEFT JOIN rental_agreements ra
+                ON b.booking_id = ra.booking_id
             WHERE b.user_id = ?
             ORDER BY b.booking_id DESC
             `,
@@ -458,34 +535,13 @@ const cancelBooking = async (req, res) => {
         )
 
         if (updateResult.affectedRows === 0) {
-            const [currentRows] = await db.query(
-                'SELECT status FROM bookings WHERE booking_id = ? AND user_id = ?',
-                [bookingId, userId]
-            )
-
-            if (currentRows.length === 0) {
-                return res.status(404).json({
-                    message: 'Booking not found'
-                })
-            }
-
-            const currentStatus = currentRows[0].status
-            if (currentStatus === 'cancelled') {
-                return res.status(400).json({
-                    message: 'Booking is already cancelled'
-                })
-            }
-
-            if (currentStatus === 'completed') {
-                return res.status(400).json({
-                    message: 'Cannot cancel a completed booking'
-                })
-            }
-
             return res.status(400).json({
-                message: `Booking could not be cancelled in its current status ("${currentStatus}")`
+                message: 'Booking cancellation failed'
             })
         }
+
+        // Also update agreement status to cancelled if exists
+        await db.query('UPDATE rental_agreements SET agreement_status = "cancelled" WHERE booking_id = ?', [bookingId])
 
         // 5. Fetch updated booking record with joined vehicle name matching getMyBookings
         const [updatedRows] = await db.query(

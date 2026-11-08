@@ -88,6 +88,14 @@ function BookingForm({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [confirmedBooking, setConfirmedBooking] = useState(null);
 
+    // Live vehicle availability verification state
+    const [availabilityStatus, setAvailabilityStatus] = useState({
+        checking: false,
+        available: Boolean(isAvailable),
+        reason: !isAvailable ? 'This vehicle is currently unavailable for rental. Please choose another vehicle.' : '',
+        code: !isAvailable ? 'VEHICLE_UNAVAILABLE' : ''
+    });
+
     const isSubmittingRef = useRef(false);
 
     // Fetch active add-ons from pricing config
@@ -151,6 +159,62 @@ function BookingForm({
     // Formatted ISO-style strings for duration calculation and backend payload
     const pickupDatetime = pickupDate && pickupTime ? `${pickupDate}T${pickupTime}` : '';
     const returnDatetime = returnDate && returnTime ? `${returnDate}T${returnTime}` : '';
+
+    // Live check vehicle availability whenever vehicleId, dates, or isAvailable prop changes
+    useEffect(() => {
+        if (!isAvailable) {
+            setAvailabilityStatus({
+                checking: false,
+                available: false,
+                reason: 'This vehicle is currently unavailable for rental. Please choose another vehicle.',
+                code: 'VEHICLE_UNAVAILABLE'
+            });
+            return;
+        }
+
+        if (!vehicleId) return;
+
+        let isMounted = true;
+        setAvailabilityStatus(prev => ({ ...prev, checking: true }));
+
+        const payload = {
+            vehicleId,
+            pickupDatetime: pickupDatetime || undefined,
+            returnDatetime: returnDatetime || undefined
+        };
+
+        axiosInstance.post('/bookings/check-availability', payload)
+            .then(res => {
+                if (isMounted && res.data) {
+                    setAvailabilityStatus({
+                        checking: false,
+                        available: Boolean(res.data.available),
+                        reason: res.data.message || '',
+                        code: res.data.code || ''
+                    });
+                    if (!res.data.available && res.data.message) {
+                        setError(res.data.message);
+                    }
+                }
+            })
+            .catch(err => {
+                if (isMounted) {
+                    const errData = err.response?.data;
+                    const msg = errData?.message || 'Failed to verify vehicle availability';
+                    setAvailabilityStatus({
+                        checking: false,
+                        available: false,
+                        reason: msg,
+                        code: errData?.code || 'CHECK_FAILED'
+                    });
+                    setError(msg);
+                }
+            });
+
+        return () => { isMounted = false; };
+    }, [vehicleId, pickupDatetime, returnDatetime, isAvailable]);
+
+    const isEffectiveAvailable = Boolean(isAvailable) && Boolean(availabilityStatus.available) && !availabilityStatus.checking;
 
     // Calculate duration live
     const durationInfo = useMemo(() => {
@@ -275,8 +339,8 @@ function BookingForm({
         setStepErrors({});
 
         if (currentStep === 1) {
-            if (!isAvailable) {
-                setError('This vehicle is currently marked unavailable for reservations.');
+            if (!isEffectiveAvailable) {
+                setError(availabilityStatus.reason || 'This vehicle is currently marked unavailable for reservations.');
                 return;
             }
             setCurrentStep(2);
@@ -354,8 +418,8 @@ function BookingForm({
             return;
         }
 
-        if (!isAvailable) {
-            setError('This vehicle is currently unavailable for rental.');
+        if (!isEffectiveAvailable) {
+            setError(availabilityStatus.reason || 'This vehicle is currently unavailable for rental. Please choose another vehicle.');
             return;
         }
 
@@ -398,10 +462,22 @@ function BookingForm({
                     redirectUrl: errData.redirectUrl
                 });
             }
-            setError(
-                errData?.message ||
-                'Unable to create booking. Please check availability and try again.'
-            );
+            const errMessage = errData?.message || 'Unable to create booking. Please check availability and try again.';
+            setError(errMessage);
+
+            if (
+                err.response?.status === 400 ||
+                err.response?.status === 409 ||
+                errData?.code?.startsWith('VEHICLE_') ||
+                errData?.code === 'BOOKING_CONFLICT'
+            ) {
+                setAvailabilityStatus({
+                    checking: false,
+                    available: false,
+                    reason: errMessage,
+                    code: errData?.code || 'UNAVAILABLE'
+                });
+            }
         } finally {
             isSubmittingRef.current = false;
             setIsSubmitting(false);
@@ -516,7 +592,7 @@ function BookingForm({
 
                             <div className="vehicle-status-row">
                                 <span className="status-label">Availability Status:</span>
-                                {isAvailable ? (
+                                {isEffectiveAvailable ? (
                                     <span className="badge-available">● Ready to Book</span>
                                 ) : (
                                     <span className="badge-unavailable">● Currently Unavailable</span>
@@ -530,8 +606,8 @@ function BookingForm({
                             </ul>
                         </div>
 
-                        {!isAvailable && (
-                            <FormError message="This vehicle is currently unavailable. Please browse other vehicles in our fleet." />
+                        {!isEffectiveAvailable && (
+                            <FormError message={availabilityStatus.reason || "This vehicle is currently unavailable. Please browse other vehicles in our fleet."} />
                         )}
 
                         <div className="step-actions right-align">
@@ -539,7 +615,7 @@ function BookingForm({
                                 type="button"
                                 className="step-btn next-btn"
                                 onClick={handleNextStep}
-                                disabled={!isAvailable}
+                                disabled={!isEffectiveAvailable}
                             >
                                 Next: Choose Locations & Map →
                             </button>
@@ -936,7 +1012,24 @@ function BookingForm({
                             </label>
                         </div>
 
-                        {error && <FormError message={error} />}
+                        {(!isEffectiveAvailable || availabilityStatus.available === false) && (
+                            <div className="booking-unavailable-banner" role="alert">
+                                <div className="unavailable-banner-header">
+                                    <span className="unavailable-icon" aria-hidden="true">🚫</span>
+                                    <h4>Vehicle Unavailable for Reservation</h4>
+                                </div>
+                                <p className="unavailable-message">
+                                    {availabilityStatus.reason || error || 'This vehicle is temporarily unavailable due to routine compliance maintenance. Please choose another vehicle.'}
+                                </p>
+                                <div className="unavailable-actions">
+                                    <Link to="/vehicles" className="back-to-fleet-btn">
+                                        ← Back to Vehicle Selection
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
+
+                        {error && isEffectiveAvailable && <FormError message={error} />}
 
                         <div className="step-actions split-align">
                             <button
@@ -950,11 +1043,15 @@ function BookingForm({
 
                             <button
                                 type="submit"
-                                className="step-btn confirm-submit-btn"
-                                disabled={isSubmitting || !isAvailable || !isDurationValid || !isLoggedIn || !agreeToTerms}
+                                className={`step-btn confirm-submit-btn ${!isEffectiveAvailable ? 'btn-disabled-unavailable' : ''}`}
+                                disabled={isSubmitting || !isEffectiveAvailable || !isDurationValid || !isLoggedIn || !agreeToTerms}
+                                title={!isEffectiveAvailable ? (availabilityStatus.reason || 'Vehicle is currently unavailable for reservation') : 'Confirm and book now'}
+                                aria-disabled={!isEffectiveAvailable}
                             >
                                 {isSubmitting ? (
                                     <span className="submitting-spinner">Reserving Vehicle...</span>
+                                ) : !isEffectiveAvailable ? (
+                                    <span>🚫 Vehicle Unavailable for Reservation</span>
                                 ) : (
                                     <span>Confirm & Book Now (₹{Number(finalTotalPrice).toLocaleString('en-IN')})</span>
                                 )}

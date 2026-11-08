@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapPin, Navigation, Search, Crosshair, Check, RefreshCw } from 'lucide-react';
+import { MapPin, Navigation, Search, Crosshair, RefreshCw, AlertCircle, X } from 'lucide-react';
 import './LocationPickerMap.css';
 
 // Custom SVG HTML Icons for robust rendering in all bundler environments
@@ -55,13 +55,71 @@ function LocationPickerMap({
     const pickupMarkerRef = useRef(null);
     const dropMarkerRef = useRef(null);
     const routePolylineRef = useRef(null);
+    const searchContainerRef = useRef(null);
 
     // Active selection mode: 'pickup' | 'drop'
     const [activeTarget, setActiveTarget] = useState('pickup');
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [searchError, setSearchError] = useState('');
     const [geoLoading, setGeoLoading] = useState(false);
+
+    // Keep active refs to avoid stale closures in map event handlers
+    const activeTargetRef = useRef(activeTarget);
+    activeTargetRef.current = activeTarget;
+
+    const sameAsPickupRef = useRef(sameAsPickup);
+    sameAsPickupRef.current = sameAsPickup;
+
+    const onPickupChangeRef = useRef(onPickupChange);
+    onPickupChangeRef.current = onPickupChange;
+
+    const onDropChangeRef = useRef(onDropChange);
+    onDropChangeRef.current = onDropChange;
+
+    // Dismiss search dropdown on click outside
+    useEffect(() => {
+        const handleOutsideClick = (e) => {
+            if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+                setSearchResults([]);
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+        };
+    }, []);
+
+    // Reverse geocode and update coordinates
+    const handleMapLocationSelect = async (lat, lng) => {
+        let resolvedAddress = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+                headers: { 'Accept-Language': 'en' }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.display_name) {
+                    resolvedAddress = data.display_name;
+                }
+            }
+        } catch (err) {
+            // Keep coordinates as fallback address
+        }
+
+        const currentTarget = activeTargetRef.current;
+        const currentSameAsPickup = sameAsPickupRef.current;
+
+        if (currentTarget === 'pickup') {
+            onPickupChangeRef.current?.({ address: resolvedAddress, lat, lng });
+            if (currentSameAsPickup) {
+                onDropChangeRef.current?.({ address: resolvedAddress, lat, lng });
+            }
+        } else {
+            onDropChangeRef.current?.({ address: resolvedAddress, lat, lng });
+        }
+    };
 
     // Initialize Leaflet Map
     useEffect(() => {
@@ -85,6 +143,8 @@ function LocationPickerMap({
 
         // Map click handler to place marker for currently active target
         map.on('click', async (e) => {
+            setSearchResults([]);
+            setSearchError('');
             const { lat, lng } = e.latlng;
             await handleMapLocationSelect(lat, lng);
         });
@@ -94,33 +154,6 @@ function LocationPickerMap({
             mapInstanceRef.current = null;
         };
     }, []);
-
-    // Reverse geocode and update coordinates
-    const handleMapLocationSelect = async (lat, lng) => {
-        let resolvedAddress = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-        try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
-                headers: { 'Accept-Language': 'en' }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                if (data && data.display_name) {
-                    resolvedAddress = data.display_name;
-                }
-            }
-        } catch (err) {
-            // Keep coordinates as fallback address
-        }
-
-        if (activeTarget === 'pickup') {
-            onPickupChange({ address: resolvedAddress, lat, lng });
-            if (sameAsPickup) {
-                onDropChange({ address: resolvedAddress, lat, lng });
-            }
-        } else {
-            onDropChange({ address: resolvedAddress, lat, lng });
-        }
-    };
 
     // Update Pickup Marker
     useEffect(() => {
@@ -200,7 +233,11 @@ function LocationPickerMap({
                 routePolylineRef.current = null;
             }
             if (pickupCoords?.lat && pickupCoords?.lng) {
-                map.setView([pickupCoords.lat, pickupCoords.lng], 13);
+                const center = map.getCenter();
+                const dist = Math.hypot(center.lat - pickupCoords.lat, center.lng - pickupCoords.lng);
+                if (dist > 0.0001) {
+                    map.setView([pickupCoords.lat, pickupCoords.lng], Math.max(map.getZoom(), 13));
+                }
             }
         }
     }, [pickupCoords, dropCoords, sameAsPickup]);
@@ -213,12 +250,13 @@ function LocationPickerMap({
         }
 
         setGeoLoading(true);
+        setSearchError('');
         navigator.geolocation.getCurrentPosition(
             async (position) => {
                 const { latitude, longitude } = position.coords;
                 await handleMapLocationSelect(latitude, longitude);
                 if (mapInstanceRef.current) {
-                    mapInstanceRef.current.setView([latitude, longitude], 14);
+                    mapInstanceRef.current.flyTo([latitude, longitude], 14);
                 }
                 setGeoLoading(false);
             },
@@ -230,22 +268,72 @@ function LocationPickerMap({
         );
     };
 
-    // Address Search via Nominatim
-    const handleSearchSubmit = async (e) => {
-        if (e) e.preventDefault();
-        if (!searchQuery.trim()) return;
+    // Address Search via Nominatim Geocoding
+    const handleSearch = async (e) => {
+        if (e && typeof e.preventDefault === 'function') {
+            e.preventDefault();
+        }
+        if (e && typeof e.stopPropagation === 'function') {
+            e.stopPropagation();
+        }
+
+        const query = searchQuery.trim();
+        if (!query) {
+            setSearchError('Please enter a location or landmark to search.');
+            setSearchResults([]);
+            return;
+        }
+
+        if (isSearching) return;
 
         setIsSearching(true);
+        setSearchError('');
+
         try {
             const res = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5&countrycodes=in`,
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=in`,
                 { headers: { 'Accept-Language': 'en' } }
             );
-            if (res.ok) {
-                const data = await res.json();
-                setSearchResults(data || []);
+
+            if (!res.ok) {
+                throw new Error(`Geocoding server responded with HTTP ${res.status}`);
+            }
+
+            const data = await res.json();
+            if (!Array.isArray(data) || data.length === 0) {
+                setSearchError(`No location found for "${query}". Try another city or landmark.`);
+                setSearchResults([]);
+                return;
+            }
+
+            setSearchResults(data);
+
+            // Automatically focus on primary result and update location
+            const primaryMatch = data[0];
+            const lat = parseFloat(primaryMatch.lat);
+            const lng = parseFloat(primaryMatch.lon);
+            const address = primaryMatch.display_name;
+
+            const currentTarget = activeTargetRef.current;
+            const currentSame = sameAsPickupRef.current;
+
+            if (currentTarget === 'pickup') {
+                onPickupChangeRef.current?.({ address, lat, lng });
+                if (currentSame) {
+                    onDropChangeRef.current?.({ address, lat, lng });
+                }
+            } else {
+                onDropChangeRef.current?.({ address, lat, lng });
+            }
+
+            if (mapInstanceRef.current) {
+                mapInstanceRef.current.flyTo([lat, lng], 14, {
+                    duration: 1.2
+                });
             }
         } catch (err) {
+            console.error('Nominatim search error:', err);
+            setSearchError('Location search failed. Please check your network and try again.');
             setSearchResults([]);
         } finally {
             setIsSearching(false);
@@ -257,21 +345,25 @@ function LocationPickerMap({
         const lng = parseFloat(result.lon);
         const address = result.display_name;
 
-        if (activeTarget === 'pickup') {
-            onPickupChange({ address, lat, lng });
-            if (sameAsPickup) {
-                onDropChange({ address, lat, lng });
+        const currentTarget = activeTargetRef.current;
+        const currentSameAsPickup = sameAsPickupRef.current;
+
+        if (currentTarget === 'pickup') {
+            onPickupChangeRef.current?.({ address, lat, lng });
+            if (currentSameAsPickup) {
+                onDropChangeRef.current?.({ address, lat, lng });
             }
         } else {
-            onDropChange({ address, lat, lng });
+            onDropChangeRef.current?.({ address, lat, lng });
         }
 
         if (mapInstanceRef.current) {
-            mapInstanceRef.current.setView([lat, lng], 14);
+            mapInstanceRef.current.flyTo([lat, lng], 14, { duration: 1.2 });
         }
 
         setSearchResults([]);
-        setSearchQuery('');
+        setSearchError('');
+        setSearchQuery(address);
     };
 
     return (
@@ -282,7 +374,10 @@ function LocationPickerMap({
                     <button
                         type="button"
                         className={`target-btn ${activeTarget === 'pickup' ? 'active-pickup' : ''}`}
-                        onClick={() => setActiveTarget('pickup')}
+                        onClick={() => {
+                            setActiveTarget('pickup');
+                            setSearchError('');
+                        }}
                     >
                         <MapPin size={16} />
                         <span>Pickup Location</span>
@@ -293,6 +388,7 @@ function LocationPickerMap({
                         onClick={() => {
                             if (sameAsPickup) onSameAsPickupToggle();
                             setActiveTarget('drop');
+                            setSearchError('');
                         }}
                     >
                         <Navigation size={16} />
@@ -323,21 +419,68 @@ function LocationPickerMap({
                 </div>
             </div>
 
-            {/* Address search bar */}
-            <form onSubmit={handleSearchSubmit} className="map-search-form">
+            {/* Address search bar - non-form container to prevent outer form submission */}
+            <div ref={searchContainerRef} className="map-search-form" role="search">
                 <div className="map-search-input-wrap">
                     <Search size={16} className="search-icon-map" />
                     <input
                         type="text"
                         placeholder={`Search ${activeTarget === 'pickup' ? 'pickup' : 'drop'} address or landmark...`}
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            if (searchError) setSearchError('');
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleSearch(e);
+                            }
+                        }}
                         className="map-search-input"
+                        disabled={isSearching}
+                        aria-label="Search map location"
                     />
-                    <button type="submit" className="map-search-submit-btn" disabled={isSearching}>
-                        {isSearching ? 'Searching...' : 'Search'}
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            className="clear-search-btn"
+                            onClick={() => {
+                                setSearchQuery('');
+                                setSearchError('');
+                                setSearchResults([]);
+                            }}
+                            title="Clear search"
+                            aria-label="Clear search"
+                        >
+                            <X size={14} />
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        className="map-search-submit-btn"
+                        onClick={handleSearch}
+                        disabled={isSearching}
+                        aria-label="Search location"
+                    >
+                        {isSearching ? (
+                            <>
+                                <RefreshCw size={13} className="spin-icon" />
+                                <span>Searching...</span>
+                            </>
+                        ) : (
+                            <span>Search</span>
+                        )}
                     </button>
                 </div>
+
+                {searchError && (
+                    <div className="map-search-error-msg" role="alert">
+                        <AlertCircle size={14} className="search-err-icon" />
+                        <span>{searchError}</span>
+                    </div>
+                )}
 
                 {searchResults.length > 0 && (
                     <div className="map-search-dropdown">
@@ -353,7 +496,7 @@ function LocationPickerMap({
                         ))}
                     </div>
                 )}
-            </form>
+            </div>
 
             {/* Interactive Leaflet Map Canvas */}
             <div className="leaflet-map-frame">
@@ -412,4 +555,3 @@ function LocationPickerMap({
 }
 
 export default LocationPickerMap;
-

@@ -42,7 +42,7 @@ async function checkVehicleMaintenanceConflict(vehicleId, pickupDateStr, returnD
         JOIN vehicles v ON m.vehicle_id = v.vehicle_id
         WHERE m.vehicle_id = ?
           AND m.status IN ('scheduled', 'in_progress')
-          AND m.start_date <= ?
+          AND (m.start_date IS NULL OR m.start_date <= ?)
           AND (m.end_date IS NULL OR m.end_date >= ?)
     `;
     const params = [vId, rDate, pDate];

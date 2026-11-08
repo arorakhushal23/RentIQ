@@ -522,6 +522,109 @@
     box-shadow: none;
 }
 
+.confirm-submit-btn.btn-disabled-unavailable,
+.confirm-submit-btn.btn-disabled-unavailable:disabled {
+    background: #ef4444 !important;
+    border-color: #dc2626 !important;
+    color: #ffffff !important;
+    opacity: 0.7 !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+[data-theme='dark'] .confirm-submit-btn.btn-disabled-unavailable,
+[data-theme='dark'] .confirm-submit-btn.btn-disabled-unavailable:disabled {
+    background: #b91c1c !important;
+    border-color: #991b1b !important;
+    color: #fecaca !important;
+}
+
+/* VEHICLE UNAVAILABLE BANNER */
+.booking-unavailable-banner {
+    margin: 16px 0;
+    padding: 16px 20px;
+    background: #fef2f2;
+    border: 1.5px solid #f87171;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.08);
+}
+
+[data-theme='dark'] .booking-unavailable-banner {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: #ef4444;
+}
+
+.unavailable-banner-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.unavailable-banner-header .unavailable-icon {
+    font-size: 1.25rem;
+}
+
+.unavailable-banner-header h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #b91c1c;
+}
+
+[data-theme='dark'] .unavailable-banner-header h4 {
+    color: #f87171;
+}
+
+.unavailable-message {
+    margin: 0 0 14px 0;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: #7f1d1d;
+    font-weight: 500;
+}
+
+[data-theme='dark'] .unavailable-message {
+    color: #fca5a5;
+}
+
+.unavailable-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.unavailable-actions .back-to-fleet-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 16px;
+    background: #ffffff;
+    border: 1px solid #f87171;
+    border-radius: 7px;
+    color: #b91c1c;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.unavailable-actions .back-to-fleet-btn:hover {
+    background: #fee2e2;
+    border-color: #ef4444;
+}
+
+[data-theme='dark'] .unavailable-actions .back-to-fleet-btn {
+    background: #1e293b;
+    border-color: #ef4444;
+    color: #fca5a5;
+}
+
+[data-theme='dark'] .unavailable-actions .back-to-fleet-btn:hover {
+    background: #334155;
+    color: #ffffff;
+}
+
 /* RESPONSIVE */
 @media (max-width: 600px) {
     .booking-form.multi-step-booking {

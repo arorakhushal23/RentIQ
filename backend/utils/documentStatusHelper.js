@@ -68,7 +68,23 @@ function getDocumentAlertMilestone(daysRemaining) {
  *
  * Returns: { eligible: boolean, reason?: string, missingDocs?: string[], expiredDocs?: string[] }
  */
-function checkVehicleDocumentEligibility(documents, vehicleCategory = '') {
+/**
+ * Checks vehicle document booking eligibility.
+ * Mandatory documents for all rental vehicles:
+ * - RC Certificate ('rc')
+ * - Insurance Certificate ('insurance')
+ * - Pollution Under Control ('puc')
+ *
+ * For commercial/heavy vehicles (if applicable):
+ * - Fitness Certificate ('fitness')
+ * - Commercial Permit ('permit')
+ *
+ * @param {Array} documents - List of vehicle document records
+ * @param {string} vehicleCategory - Category name of vehicle
+ * @param {string|Date} [rentalEndDate=null] - Requested rental end date to verify documents stay valid through entire rental
+ * Returns: { eligible: boolean, reason?: string, missingDocs?: string[], expiredDocs?: string[], adminReason?: string }
+ */
+function checkVehicleDocumentEligibility(documents, vehicleCategory = '', rentalEndDate = null) {
     const isTwoWheeler = ['bike', 'scooter'].includes((vehicleCategory || '').toLowerCase());
     
     // Mandatory document types for standard rental fleet
@@ -82,6 +98,19 @@ function checkVehicleDocumentEligibility(documents, vehicleCategory = '') {
     const missingDocs = [];
     const expiredDocs = [];
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let parsedRentalEnd = null;
+    if (rentalEndDate) {
+        parsedRentalEnd = new Date(rentalEndDate);
+        if (!isNaN(parsedRentalEnd.getTime())) {
+            parsedRentalEnd.setHours(0, 0, 0, 0);
+        } else {
+            parsedRentalEnd = null;
+        }
+    }
+
     for (const type of mandatoryTypes) {
         const doc = presentDocs[type];
         if (!doc) {
@@ -90,6 +119,16 @@ function checkVehicleDocumentEligibility(documents, vehicleCategory = '') {
             const { status } = calculateDocumentStatus(doc.expiry_date, doc.verification_status);
             if (status === 'expired' || status === 'rejected') {
                 expiredDocs.push(`${type.toUpperCase()} (${status})`);
+            } else if (doc.expiry_date) {
+                // If a rental period end date is provided, verify document does not expire during rental
+                if (parsedRentalEnd) {
+                    const exp = new Date(doc.expiry_date);
+                    exp.setHours(0, 0, 0, 0);
+                    if (exp.getTime() < parsedRentalEnd.getTime()) {
+                        const expFormatted = doc.expiry_date.includes('T') ? doc.expiry_date.split('T')[0] : doc.expiry_date;
+                        expiredDocs.push(`${type.toUpperCase()} (expires on ${expFormatted} before rental completion)`);
+                    }
+                }
             }
         }
     }

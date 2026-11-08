@@ -4,12 +4,17 @@ const {
     createBooking,
     getMyBookings,
     getBookingByIdCustomer,
-    cancelBooking
+    cancelBooking,
+    checkVehicleAvailabilityEndpoint
 } = require('../controllers/bookingController')
 
 const authMiddleware = require('../middleware/authMiddleware')
 
 const router = express.Router()
+
+// Check vehicle availability (publicly accessible before or during booking creation)
+router.post('/check-availability', checkVehicleAvailabilityEndpoint)
+router.get('/check-availability', checkVehicleAvailabilityEndpoint)
 
 router.post('/', authMiddleware, createBooking)
 

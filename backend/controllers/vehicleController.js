@@ -281,8 +281,38 @@ const getVehicleById = async (req, res) => {
             all_mandatory_compliant: rcValid && insuranceValid && pucValid
         };
 
+        // Check active ongoing maintenance
+        const [activeMaint] = await db.query(
+            `SELECT id, maintenance_category FROM vehicle_maintenance
+             WHERE vehicle_id = ?
+               AND (status = 'in_progress' OR (status = 'scheduled' AND start_date <= CURDATE() AND (end_date IS NULL OR end_date >= CURDATE())))
+             LIMIT 1`,
+            [id]
+        );
+
+        const isCompliant = compliance.all_mandatory_compliant;
+        const hasOngoingMaintenance = activeMaint.length > 0;
+        const isCurrentlyAvailable = Boolean(vehicle.is_available) && isCompliant && !hasOngoingMaintenance;
+
+        let unavailabilityReason = null;
+        let unavailabilityCode = null;
+
+        if (!vehicle.is_available) {
+            unavailabilityReason = 'This vehicle is currently unavailable for rental. Please choose another vehicle.';
+            unavailabilityCode = 'VEHICLE_UNAVAILABLE';
+        } else if (hasOngoingMaintenance) {
+            unavailabilityReason = `This vehicle is temporarily unavailable due to ongoing ${activeMaint[0].maintenance_category}. Please choose another vehicle.`;
+            unavailabilityCode = 'VEHICLE_UNDER_MAINTENANCE';
+        } else if (!isCompliant) {
+            unavailabilityReason = 'This vehicle is temporarily unavailable due to routine compliance maintenance. Please choose another vehicle.';
+            unavailabilityCode = 'VEHICLE_COMPLIANCE_HOLD';
+        }
+
         return res.status(200).json({
             ...vehicle,
+            is_available: isCurrentlyAvailable,
+            unavailability_reason: unavailabilityReason,
+            unavailability_code: unavailabilityCode,
             compliance
         });
     } catch (error) {

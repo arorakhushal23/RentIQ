@@ -293,3 +293,38 @@
     color: var(--primary-color, #2563eb);
 }
 
+
+
+/* ========================================================
+   DARK THEME DEDICATED STYLING FOR SMART PRICING
+   ======================================================== */
+[data-theme="dark"] .rule-card {
+    background: var(--bg-card);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .rule-card.rule-inactive {
+    background: var(--bg-secondary);
+    opacity: 0.7;
+}
+
+[data-theme="dark"] .rule-type-badge {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+}
+
+[data-theme="dark"] .addon-admin-card {
+    background: var(--bg-card);
+    border-color: var(--border);
+}
+
+[data-theme="dark"] .sim-panel {
+    background: var(--bg-card);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .final-price {
+    color: var(--blue-bright);
+}

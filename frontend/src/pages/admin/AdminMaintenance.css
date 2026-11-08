@@ -594,3 +594,38 @@
     color: var(--text-secondary);
 }
 
+
+
+/* ========================================================
+   DARK THEME DEDICATED STYLING FOR VEHICLE MAINTENANCE
+   ======================================================== */
+[data-theme="dark"] .kpi-card {
+    background: var(--bg-card);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .text-orange { color: #fb923c; }
+[data-theme="dark"] .text-red { color: #f87171; }
+[data-theme="dark"] .text-green { color: #4ade80; }
+[data-theme="dark"] .text-blue { color: #60a5fa; }
+
+[data-theme="dark"] .icon-blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+[data-theme="dark"] .icon-orange { background: rgba(249, 115, 22, 0.2); color: #fb923c; }
+[data-theme="dark"] .icon-cyan { background: rgba(6, 182, 212, 0.2); color: #22d3ee; }
+[data-theme="dark"] .icon-red { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+[data-theme="dark"] .icon-green { background: rgba(16, 185, 129, 0.2); color: #4ade80; }
+
+[data-theme="dark"] .status-scheduled { background: rgba(6, 182, 212, 0.2); color: #22d3ee; }
+[data-theme="dark"] .status-in-progress { background: rgba(249, 115, 22, 0.2); color: #fb923c; }
+[data-theme="dark"] .status-completed { background: rgba(16, 185, 129, 0.2); color: #4ade80; }
+[data-theme="dark"] .status-cancelled { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+
+[data-theme="dark"] .reminder-type-tag.overdue { background: rgba(239, 68, 68, 0.25); color: #fca5a5; }
+[data-theme="dark"] .reminder-type-tag.date_due { background: rgba(249, 115, 22, 0.25); color: #fdba74; }
+[data-theme="dark"] .reminder-type-tag.odometer_due { background: rgba(59, 130, 246, 0.25); color: #93c5fd; }
+[data-theme="dark"] .reminder-card.border-red { border-left-color: #ef4444; }
+
+[data-theme="dark"] .cat-chip { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+[data-theme="dark"] .alert-success { background: #0d2818; color: #86efac; border-color: #184e28; }
+[data-theme="dark"] .alert-danger { background: #331317; color: #fca5a5; border-color: #63232c; }

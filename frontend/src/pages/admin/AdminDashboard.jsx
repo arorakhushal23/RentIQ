@@ -428,7 +428,7 @@ function AdminDashboard() {
                         <div className="operations-modules-grid">
                             <Link to="/admin/maintenance" className="operation-nav-card">
                                 <div className="op-card-header">
-                                    <div className="op-icon-pill" style={{ background: 'rgba(249, 115, 22, 0.15)', color: '#ea580c' }}>🔧</div>
+                                    <div className="op-icon-pill maint-pill">🔧</div>
                                     <h4>Vehicle Maintenance Management</h4>
                                 </div>
                                 <p>Record services, upload workshop invoices, manage overdue reminders, and track vehicle lifetime costs.</p>
@@ -437,7 +437,7 @@ function AdminDashboard() {
 
                             <Link to="/admin/pricing" className="operation-nav-card">
                                 <div className="op-card-header">
-                                    <div className="op-icon-pill" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#2563eb' }}>⚡</div>
+                                    <div className="op-icon-pill pricing-pill">⚡</div>
                                     <h4>Smart Pricing & Additional Charges</h4>
                                 </div>
                                 <p>Weekend surcharges, seasonal holiday calendars, duration discounts, penalty fees, and live pricing simulation.</p>

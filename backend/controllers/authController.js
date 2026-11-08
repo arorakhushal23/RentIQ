@@ -177,3 +177,57 @@ exports.updateMe = async (req, res) => {
     }
 };
 
+exports.changePassword = async (req, res) => {
+    try {
+        const userId = req.user?.user_id;
+        if (!userId) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
+
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || typeof currentPassword !== 'string' || !currentPassword.trim()) {
+            return res.status(400).json({ message: 'Current password is required' });
+        }
+
+        if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6) {
+            return res.status(400).json({ message: 'New password must be at least 6 characters long' });
+        }
+
+        const [users] = await db.query(
+            'SELECT user_id, email, password_hash, role FROM users WHERE user_id = ?',
+            [userId]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const user = users[0];
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Current password does not match' });
+        }
+
+        if (currentPassword === newPassword) {
+            return res.status(400).json({ message: 'New password must be different from current password' });
+        }
+
+        const saltRounds = 10;
+        const newHash = await bcrypt.hash(newPassword, saltRounds);
+
+        await db.query(
+            'UPDATE users SET password_hash = ? WHERE user_id = ?',
+            [newHash, userId]
+        );
+
+        return res.status(200).json({
+            message: 'Password changed successfully'
+        });
+    } catch (error) {
+        console.error('changePassword error:', error);
+        return res.status(500).json({ message: 'Internal server error while changing password' });
+    }
+};
+

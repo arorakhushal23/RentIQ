@@ -98,6 +98,16 @@ function Profile() {
     const [editSaving, setEditSaving] = useState(false);
     const [editError, setEditError] = useState('');
 
+    // Change Password State
+    const [passwordForm, setPasswordForm] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+    });
+    const [passwordLoading, setPasswordLoading] = useState(false);
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSuccess, setPasswordSuccess] = useState('');
+
     const tabListRef = useRef(null);
 
     useEffect(() => {
@@ -215,6 +225,55 @@ function Profile() {
     const handleLogout = () => {
         logout();
         navigate('/');
+    };
+
+    const handlePasswordChange = async (e) => {
+        e.preventDefault();
+        setPasswordError('');
+        setPasswordSuccess('');
+
+        if (!passwordForm.currentPassword) {
+            setPasswordError('Current password is required.');
+            return;
+        }
+        if (!passwordForm.newPassword) {
+            setPasswordError('New password is required.');
+            return;
+        }
+        if (passwordForm.newPassword.length < 6) {
+            setPasswordError('New password must be at least 6 characters long.');
+            return;
+        }
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            setPasswordError('New password and confirmation do not match.');
+            return;
+        }
+        if (passwordForm.newPassword === passwordForm.currentPassword) {
+            setPasswordError('New password must be different from current password.');
+            return;
+        }
+
+        setPasswordLoading(true);
+        try {
+            const res = await axiosInstance.put('/auth/change-password', {
+                currentPassword: passwordForm.currentPassword,
+                newPassword: passwordForm.newPassword,
+            });
+            const msg = res.data?.message || 'Password changed successfully';
+            setPasswordSuccess(msg);
+            showToast(msg, 'success');
+            setPasswordForm({
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: '',
+            });
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Failed to update password. Please check your credentials.';
+            setPasswordError(msg);
+            showToast(msg, 'error');
+        } finally {
+            setPasswordLoading(false);
+        }
     };
 
     const formatDate = (date) => {
@@ -1425,6 +1484,92 @@ function Profile() {
                                         </span>
                                     </div>
                                 </div>
+                            </div>
+
+                            <div className="settings-card">
+                                <div className="settings-card-header">
+                                    <h3>Change Password</h3>
+                                </div>
+                                <p className="settings-desc">
+                                    Update your account password securely. Minimum 6 characters required.
+                                </p>
+                                <form onSubmit={handlePasswordChange} className="settings-password-form">
+                                    <div className="settings-field">
+                                        <label className="s-label" htmlFor="currentPassword">Current Password</label>
+                                        <input
+                                            id="currentPassword"
+                                            name="currentPassword"
+                                            type="password"
+                                            className="profile-edit-input"
+                                            placeholder="Enter your current password"
+                                            value={passwordForm.currentPassword}
+                                            onChange={(e) => {
+                                                setPasswordForm({ ...passwordForm, currentPassword: e.target.value });
+                                                setPasswordError('');
+                                                setPasswordSuccess('');
+                                            }}
+                                            autoComplete="current-password"
+                                        />
+                                    </div>
+
+                                    <div className="settings-field">
+                                        <label className="s-label" htmlFor="newPassword">New Password</label>
+                                        <input
+                                            id="newPassword"
+                                            name="newPassword"
+                                            type="password"
+                                            className="profile-edit-input"
+                                            placeholder="Enter new password (min. 6 characters)"
+                                            value={passwordForm.newPassword}
+                                            onChange={(e) => {
+                                                setPasswordForm({ ...passwordForm, newPassword: e.target.value });
+                                                setPasswordError('');
+                                                setPasswordSuccess('');
+                                            }}
+                                            autoComplete="new-password"
+                                        />
+                                    </div>
+
+                                    <div className="settings-field">
+                                        <label className="s-label" htmlFor="confirmPassword">Confirm New Password</label>
+                                        <input
+                                            id="confirmPassword"
+                                            name="confirmPassword"
+                                            type="password"
+                                            className="profile-edit-input"
+                                            placeholder="Re-enter new password"
+                                            value={passwordForm.confirmPassword}
+                                            onChange={(e) => {
+                                                setPasswordForm({ ...passwordForm, confirmPassword: e.target.value });
+                                                setPasswordError('');
+                                                setPasswordSuccess('');
+                                            }}
+                                            autoComplete="new-password"
+                                        />
+                                    </div>
+
+                                    {passwordError && (
+                                        <div className="settings-error-msg" role="alert">
+                                            {passwordError}
+                                        </div>
+                                    )}
+
+                                    {passwordSuccess && (
+                                        <div className="settings-success-msg" role="status">
+                                            {passwordSuccess}
+                                        </div>
+                                    )}
+
+                                    <div className="settings-actions">
+                                        <button
+                                            type="submit"
+                                            className="profile-save-btn"
+                                            disabled={passwordLoading}
+                                        >
+                                            {passwordLoading ? 'Updating Password...' : 'Update Password'}
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
 
                             <div className="settings-card">

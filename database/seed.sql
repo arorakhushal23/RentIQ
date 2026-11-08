@@ -9,9 +9,9 @@ INSERT INTO categories (name) VALUES
     ('EV');
 
 INSERT INTO users (name, email, password_hash, role) VALUES
-    ('Admin User',   'admin@rentiq.com',   'PLACEHOLDER_HASH', 'admin'),
-    ('Khushal Arora','khushal@example.com','PLACEHOLDER_HASH', 'customer'),
-    ('Priya Sharma', 'priya@example.com',  'PLACEHOLDER_HASH', 'customer');
+    ('Admin User',   'admin@rentiq.com',   '$2b$10$W1Ou3wjPPTAZFDPvGx8sE.uzhdxToZVB.597PShKyCX9ASzEHZHfK', 'admin'),
+    ('Khushal Arora','khushal@example.com','$2b$10$Nhx4lVTkeGucr9qQdSOEQOKvglVRBUguv3GkpFbZaqe.lNTqNEm4y', 'customer'),
+    ('Priya Sharma', 'priya@example.com',  '$2b$10$Nhx4lVTkeGucr9qQdSOEQOKvglVRBUguv3GkpFbZaqe.lNTqNEm4y', 'customer');
 
 INSERT INTO vehicles (category_id, name, brand, seating_capacity, transmission, price_per_day, is_available, image_url) VALUES
     (1, 'Swift',        'Maruti Suzuki', 5, 'manual',    1800.00, TRUE, NULL),

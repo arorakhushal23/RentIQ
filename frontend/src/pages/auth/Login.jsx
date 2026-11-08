@@ -56,7 +56,7 @@ function Login() {
 
     try {
       const response = await axiosInstance.post("/auth/login", {
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         password,
       });
 

@@ -119,7 +119,12 @@ function Login() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <div className="form-label-row">
+              <label htmlFor="password">Password</label>
+              <Link to="/forgot-password" className="forgot-password-link">
+                Forgot Password?
+              </Link>
+            </div>
 
             <input
               id="password"
@@ -128,7 +133,7 @@ function Login() {
               placeholder="Enter your password"
               value={formData.password}
               onChange={handleChange}
-              autoComplete="new-password"
+              autoComplete="current-password"
             />
           </div>
 

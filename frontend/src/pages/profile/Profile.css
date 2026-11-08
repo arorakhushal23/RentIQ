@@ -1819,6 +1819,38 @@
     gap: 16px;
 }
 
+.settings-password-form .password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.settings-password-form .password-input-wrapper input {
+    padding-right: 44px !important;
+}
+
+.settings-password-form .pwd-toggle-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary, #64748b);
+    border-radius: 6px;
+    transition: color 0.2s ease;
+}
+
+.settings-password-form .pwd-toggle-btn:hover {
+    color: var(--blue-primary, #2563eb);
+}
+
 .settings-error-msg {
     padding: 10px 14px;
     background: var(--error-bg, #fef2f2);

@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const db = require('../config/db');
+const { sendPasswordResetEmail, getDevLatestResetLink } = require('../utils/emailService');
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -184,14 +186,18 @@ exports.changePassword = async (req, res) => {
             return res.status(401).json({ message: 'Authentication required' });
         }
 
-        const { currentPassword, newPassword } = req.body;
+        const { currentPassword, newPassword, confirmPassword } = req.body;
 
         if (!currentPassword || typeof currentPassword !== 'string' || !currentPassword.trim()) {
             return res.status(400).json({ message: 'Current password is required' });
         }
 
-        if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6) {
-            return res.status(400).json({ message: 'New password must be at least 6 characters long' });
+        if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 8) {
+            return res.status(400).json({ message: 'New password must be at least 8 characters long' });
+        }
+
+        if (confirmPassword !== undefined && newPassword !== confirmPassword) {
+            return res.status(400).json({ message: 'New password and confirmation do not match' });
         }
 
         const [users] = await db.query(
@@ -222,6 +228,12 @@ exports.changePassword = async (req, res) => {
             [newHash, userId]
         );
 
+        // Invalidate outstanding password reset tokens for this user
+        await db.query(
+            'UPDATE password_reset_tokens SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL',
+            [userId]
+        );
+
         return res.status(200).json({
             message: 'Password changed successfully'
         });
@@ -229,5 +241,176 @@ exports.changePassword = async (req, res) => {
         console.error('changePassword error:', error);
         return res.status(500).json({ message: 'Internal server error while changing password' });
     }
+};
+
+exports.forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email || typeof email !== 'string' || !email.trim()) {
+            return res.status(400).json({ message: 'Email address is required' });
+        }
+
+        const normalizedEmail = email.trim().toLowerCase();
+
+        if (!EMAIL_REGEX.test(normalizedEmail)) {
+            return res.status(400).json({ message: 'Invalid email format' });
+        }
+
+        const GENERIC_RESPONSE = {
+            message: 'If an account exists with that email address, a password reset link has been sent.'
+        };
+
+        const [users] = await db.query(
+            'SELECT user_id, name, email FROM users WHERE email = ?',
+            [normalizedEmail]
+        );
+
+        if (users.length === 0) {
+            return res.status(200).json(GENERIC_RESPONSE);
+        }
+
+        const user = users[0];
+
+        // Invalidate any previously active unused tokens for this user
+        await db.query(
+            'UPDATE password_reset_tokens SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL',
+            [user.user_id]
+        );
+
+        // Generate 32 bytes (64 hex characters) cryptographically secure random token
+        const rawToken = crypto.randomBytes(32).toString('hex');
+
+        // Store SHA-256 hash in database
+        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+        // Token expiry: 15 minutes from now
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+        await db.query(
+            'INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES (?, ?, ?)',
+            [user.user_id, tokenHash, expiresAt]
+        );
+
+        // Construct reset link
+        const frontendBase = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const resetUrl = `${frontendBase}/reset-password?token=${rawToken}`;
+
+        // Send email (never exposes tokens in production logs)
+        await sendPasswordResetEmail({
+            toEmail: user.email,
+            userName: user.name,
+            resetUrl,
+            rawToken
+        });
+
+        // Always return generic response
+        return res.status(200).json(GENERIC_RESPONSE);
+    } catch (error) {
+        console.error('forgotPassword error:', error);
+        return res.status(500).json({ message: 'Internal server error while processing password reset request' });
+    }
+};
+
+exports.resetPassword = async (req, res) => {
+    try {
+        const { token, newPassword, confirmPassword } = req.body;
+
+        if (!token || typeof token !== 'string' || !token.trim()) {
+            return res.status(400).json({ message: 'Password reset token is required' });
+        }
+
+        if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 8) {
+            return res.status(400).json({ message: 'New password must be at least 8 characters long' });
+        }
+
+        if (confirmPassword !== undefined && newPassword !== confirmPassword) {
+            return res.status(400).json({ message: 'Password confirmation does not match' });
+        }
+
+        const cleanToken = token.trim();
+        const tokenHash = crypto.createHash('sha256').update(cleanToken).digest('hex');
+
+        const [tokenRecords] = await db.query(
+            'SELECT id, user_id, expires_at, used_at FROM password_reset_tokens WHERE token_hash = ?',
+            [tokenHash]
+        );
+
+        if (tokenRecords.length === 0) {
+            return res.status(400).json({ message: 'Invalid or expired password reset link' });
+        }
+
+        const tokenRecord = tokenRecords[0];
+
+        if (tokenRecord.used_at !== null) {
+            return res.status(400).json({ message: 'This password reset link has already been used' });
+        }
+
+        const now = new Date();
+        const expiresAt = new Date(tokenRecord.expires_at);
+        if (now > expiresAt) {
+            return res.status(400).json({ message: 'Password reset link has expired. Please request a new one.' });
+        }
+
+        const [users] = await db.query(
+            'SELECT user_id, password_hash FROM users WHERE user_id = ?',
+            [tokenRecord.user_id]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({ message: 'Associated user account not found' });
+        }
+
+        const user = users[0];
+
+        const isCurrentMatch = await bcrypt.compare(newPassword, user.password_hash);
+        if (isCurrentMatch) {
+            return res.status(400).json({ message: 'New password must be different from current password' });
+        }
+
+        const saltRounds = 10;
+        const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
+
+        await db.query(
+            'UPDATE users SET password_hash = ? WHERE user_id = ?',
+            [newPasswordHash, user.user_id]
+        );
+
+        // Invalidate current and all other outstanding reset tokens for this user
+        await db.query(
+            'UPDATE password_reset_tokens SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL',
+            [user.user_id]
+        );
+
+        return res.status(200).json({
+            message: 'Password has been reset successfully. You may now log in.'
+        });
+    } catch (error) {
+        console.error('resetPassword error:', error);
+        return res.status(500).json({ message: 'Internal server error while resetting password' });
+    }
+};
+
+exports.devGetLastResetToken = (req, res) => {
+    if (process.env.NODE_ENV === 'production') {
+        return res.status(404).json({ message: 'Not found' });
+    }
+
+    const { email } = req.query;
+    if (!email) {
+        return res.status(400).json({ message: 'Email query parameter required' });
+    }
+
+    const record = getDevLatestResetLink(email);
+    if (!record) {
+        return res.status(404).json({ message: 'No reset token recorded in dev mailbox for this email' });
+    }
+
+    return res.status(200).json({
+        email: record.toEmail,
+        rawToken: record.rawToken,
+        resetUrl: record.resetUrl,
+        sentAt: record.sentAt
+    });
 };
 

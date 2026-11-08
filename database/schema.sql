@@ -87,7 +87,20 @@ CREATE TABLE wishlist (
     FOREIGN KEY (vehicle_id) REFERENCES vehicles(vehicle_id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_vehicles_category   ON vehicles(category_id);
-CREATE INDEX idx_vehicles_available  ON vehicles(is_available);
-CREATE INDEX idx_bookings_vehicle    ON bookings(vehicle_id, pickup_datetime, return_datetime);
-CREATE INDEX idx_bookings_user       ON bookings(user_id);
+CREATE TABLE password_reset_tokens (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    user_id       INT                 NOT NULL,
+    token_hash    VARCHAR(64)         NOT NULL,
+    expires_at    DATETIME            NOT NULL,
+    used_at       DATETIME            NULL,
+    created_at    TIMESTAMP           DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_vehicles_category       ON vehicles(category_id);
+CREATE INDEX idx_vehicles_available      ON vehicles(is_available);
+CREATE INDEX idx_bookings_vehicle        ON bookings(vehicle_id, pickup_datetime, return_datetime);
+CREATE INDEX idx_bookings_user           ON bookings(user_id);
+CREATE INDEX idx_reset_token_hash        ON password_reset_tokens(token_hash);
+CREATE INDEX idx_reset_user_expires      ON password_reset_tokens(user_id, expires_at);

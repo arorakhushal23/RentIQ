@@ -24,10 +24,12 @@ import {
     FileText,
     Download,
     Eye,
+    EyeOff,
     MapPin,
     Navigation,
     Camera
 } from 'lucide-react';
+import PasswordStrengthMeter from '../../components/common/PasswordStrengthMeter';
 import AgreementModal from '../../components/agreement/AgreementModal';
 import InspectionModal from '../../components/inspection/InspectionModal';
 import { useAuth } from '../../context/AuthContext';
@@ -104,6 +106,9 @@ function Profile() {
         newPassword: '',
         confirmPassword: '',
     });
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [passwordLoading, setPasswordLoading] = useState(false);
     const [passwordError, setPasswordError] = useState('');
     const [passwordSuccess, setPasswordSuccess] = useState('');
@@ -240,8 +245,8 @@ function Profile() {
             setPasswordError('New password is required.');
             return;
         }
-        if (passwordForm.newPassword.length < 6) {
-            setPasswordError('New password must be at least 6 characters long.');
+        if (passwordForm.newPassword.length < 8) {
+            setPasswordError('New password must be at least 8 characters long.');
             return;
         }
         if (passwordForm.newPassword !== passwordForm.confirmPassword) {
@@ -258,6 +263,7 @@ function Profile() {
             const res = await axiosInstance.put('/auth/change-password', {
                 currentPassword: passwordForm.currentPassword,
                 newPassword: passwordForm.newPassword,
+                confirmPassword: passwordForm.confirmPassword,
             });
             const msg = res.data?.message || 'Password changed successfully';
             setPasswordSuccess(msg);
@@ -267,6 +273,9 @@ function Profile() {
                 newPassword: '',
                 confirmPassword: '',
             });
+            setShowCurrentPassword(false);
+            setShowNewPassword(false);
+            setShowConfirmPassword(false);
         } catch (err) {
             const msg = err.response?.data?.message || 'Failed to update password. Please check your credentials.';
             setPasswordError(msg);
@@ -1491,61 +1500,95 @@ function Profile() {
                                     <h3>Change Password</h3>
                                 </div>
                                 <p className="settings-desc">
-                                    Update your account password securely. Minimum 6 characters required.
+                                    Update your account password securely. Minimum 8 characters required.
                                 </p>
                                 <form onSubmit={handlePasswordChange} className="settings-password-form">
                                     <div className="settings-field">
                                         <label className="s-label" htmlFor="currentPassword">Current Password</label>
-                                        <input
-                                            id="currentPassword"
-                                            name="currentPassword"
-                                            type="password"
-                                            className="profile-edit-input"
-                                            placeholder="Enter your current password"
-                                            value={passwordForm.currentPassword}
-                                            onChange={(e) => {
-                                                setPasswordForm({ ...passwordForm, currentPassword: e.target.value });
-                                                setPasswordError('');
-                                                setPasswordSuccess('');
-                                            }}
-                                            autoComplete="current-password"
-                                        />
+                                        <div className="password-input-wrapper">
+                                            <input
+                                                id="currentPassword"
+                                                name="currentPassword"
+                                                type={showCurrentPassword ? 'text' : 'password'}
+                                                className="profile-edit-input"
+                                                placeholder="Enter your current password"
+                                                value={passwordForm.currentPassword}
+                                                onChange={(e) => {
+                                                    setPasswordForm({ ...passwordForm, currentPassword: e.target.value });
+                                                    setPasswordError('');
+                                                    setPasswordSuccess('');
+                                                }}
+                                                autoComplete="current-password"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="pwd-toggle-btn"
+                                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                aria-label={showCurrentPassword ? 'Hide current password' : 'Show current password'}
+                                                tabIndex={-1}
+                                            >
+                                                {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div className="settings-field">
                                         <label className="s-label" htmlFor="newPassword">New Password</label>
-                                        <input
-                                            id="newPassword"
-                                            name="newPassword"
-                                            type="password"
-                                            className="profile-edit-input"
-                                            placeholder="Enter new password (min. 6 characters)"
-                                            value={passwordForm.newPassword}
-                                            onChange={(e) => {
-                                                setPasswordForm({ ...passwordForm, newPassword: e.target.value });
-                                                setPasswordError('');
-                                                setPasswordSuccess('');
-                                            }}
-                                            autoComplete="new-password"
-                                        />
+                                        <div className="password-input-wrapper">
+                                            <input
+                                                id="newPassword"
+                                                name="newPassword"
+                                                type={showNewPassword ? 'text' : 'password'}
+                                                className="profile-edit-input"
+                                                placeholder="Enter new password (min. 8 characters)"
+                                                value={passwordForm.newPassword}
+                                                onChange={(e) => {
+                                                    setPasswordForm({ ...passwordForm, newPassword: e.target.value });
+                                                    setPasswordError('');
+                                                    setPasswordSuccess('');
+                                                }}
+                                                autoComplete="new-password"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="pwd-toggle-btn"
+                                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                                aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+                                                tabIndex={-1}
+                                            >
+                                                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
+                                        </div>
+                                        <PasswordStrengthMeter password={passwordForm.newPassword} />
                                     </div>
 
                                     <div className="settings-field">
                                         <label className="s-label" htmlFor="confirmPassword">Confirm New Password</label>
-                                        <input
-                                            id="confirmPassword"
-                                            name="confirmPassword"
-                                            type="password"
-                                            className="profile-edit-input"
-                                            placeholder="Re-enter new password"
-                                            value={passwordForm.confirmPassword}
-                                            onChange={(e) => {
-                                                setPasswordForm({ ...passwordForm, confirmPassword: e.target.value });
-                                                setPasswordError('');
-                                                setPasswordSuccess('');
-                                            }}
-                                            autoComplete="new-password"
-                                        />
+                                        <div className="password-input-wrapper">
+                                            <input
+                                                id="confirmPassword"
+                                                name="confirmPassword"
+                                                type={showConfirmPassword ? 'text' : 'password'}
+                                                className="profile-edit-input"
+                                                placeholder="Re-enter new password"
+                                                value={passwordForm.confirmPassword}
+                                                onChange={(e) => {
+                                                    setPasswordForm({ ...passwordForm, confirmPassword: e.target.value });
+                                                    setPasswordError('');
+                                                    setPasswordSuccess('');
+                                                }}
+                                                autoComplete="new-password"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="pwd-toggle-btn"
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                                                tabIndex={-1}
+                                            >
+                                                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {passwordError && (

@@ -3,6 +3,8 @@ import Landing from "./pages/home/Landing";
 import Navbar from "./components/common/Navbar";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 import Vehicles from "./pages/vehicles/Vehicles";
 import VehicleDetails from "./pages/vehicles/VehicleDetails";
 import Profile from "./pages/profile/Profile";
@@ -42,6 +44,8 @@ function App() {
         <Route path="/compare" element={<Compare />} />
 
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route
           path="/admin/login"

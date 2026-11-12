@@ -21,7 +21,8 @@ import {
     Briefcase,
     Zap,
     ChevronRight,
-    IdCard
+    IdCard,
+    AlertTriangle
 } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import BookingForm from '../../components/booking/BookingForm';
@@ -118,8 +119,16 @@ function VehicleDetails() {
                                 onError={handleVehicleImageError}
                             />
                             <div className="vehicle-hero-floating-badges">
-                                <span className={`vehicle-avail-pill ${isAvailable ? 'pill-available' : 'pill-unavailable'}`}>
-                                    {isAvailable ? 'Available for Rent' : 'Currently Booked / Maintenance'}
+                                <span className={`vehicle-avail-pill ${
+                                    isAvailable
+                                        ? 'pill-available'
+                                        : vehicle.availability_status === 'compliance_required'
+                                            ? 'pill-compliance'
+                                            : vehicle.availability_status === 'under_maintenance'
+                                                ? 'pill-maintenance'
+                                                : 'pill-unavailable'
+                                }`}>
+                                    {vehicle.availability_badge?.text || (isAvailable ? 'Available for Rent' : vehicle.availability_status === 'compliance_required' ? 'Compliance Required' : vehicle.availability_status === 'under_maintenance' ? 'Under Maintenance' : 'Currently Unavailable')}
                                 </span>
                                 <span className="vehicle-cat-pill">{vehicle.category}</span>
                             </div>
@@ -413,32 +422,48 @@ function VehicleDetails() {
                                     RentIQ enforces rigorous compliance audits. All mandatory statutory documentation is verified before vehicles are made available for rental.
                                 </p>
 
+                                {vehicle.availability_status === 'compliance_required' && (
+                                    <div className="compliance-notice-banner" role="alert">
+                                        <AlertTriangle size={20} className="compliance-notice-icon" />
+                                        <div className="compliance-notice-text">
+                                            <strong>Compliance Verification in Progress</strong>
+                                            <p>{vehicle.customer_message || 'This vehicle is temporarily unavailable because mandatory compliance documents require attention.'}</p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="compliance-status-cards">
-                                    <div className="compliance-card verified">
-                                        <div className="comp-icon"><FileCheck size={20} /></div>
+                                    <div className={`compliance-card ${compliance.rc_verified ? 'verified' : 'attention'}`}>
+                                        <div className={`comp-icon ${compliance.rc_verified ? '' : 'attention'}`}><FileCheck size={20} /></div>
                                         <div className="comp-info">
                                             <strong>Registration Certificate (RC)</strong>
-                                            <span>Verified & RTO Cleared</span>
+                                            <span>{compliance.rc_verified ? 'Verified & RTO Cleared' : 'Mandatory Verification Required'}</span>
                                         </div>
-                                        <span className="comp-status-badge valid">Compliant</span>
+                                        <span className={`comp-status-badge ${compliance.rc_verified ? 'valid' : 'attention'}`}>
+                                            {compliance.rc_verified ? 'Compliant' : 'Attention Required'}
+                                        </span>
                                     </div>
 
-                                    <div className="compliance-card verified">
-                                        <div className="comp-icon"><ShieldCheck size={20} /></div>
+                                    <div className={`compliance-card ${compliance.insurance_active ? 'verified' : 'attention'}`}>
+                                        <div className={`comp-icon ${compliance.insurance_active ? '' : 'attention'}`}><ShieldCheck size={20} /></div>
                                         <div className="comp-info">
                                             <strong>Comprehensive Motor Insurance</strong>
-                                            <span>Active Commercial Coverage</span>
+                                            <span>{compliance.insurance_active ? 'Active Commercial Coverage' : 'Mandatory Policy Required'}</span>
                                         </div>
-                                        <span className="comp-status-badge valid">Active</span>
+                                        <span className={`comp-status-badge ${compliance.insurance_active ? 'valid' : 'attention'}`}>
+                                            {compliance.insurance_active ? 'Active' : 'Attention Required'}
+                                        </span>
                                     </div>
 
-                                    <div className="compliance-card verified">
-                                        <div className="comp-icon"><CheckCircle2 size={20} /></div>
+                                    <div className={`compliance-card ${compliance.puc_certified ? 'verified' : 'attention'}`}>
+                                        <div className={`comp-icon ${compliance.puc_certified ? '' : 'attention'}`}><CheckCircle2 size={20} /></div>
                                         <div className="comp-info">
                                             <strong>Pollution Under Control (PUC)</strong>
-                                            <span>BS6 Certified Emission Standard</span>
+                                            <span>{compliance.puc_certified ? 'BS6 Certified Emission Standard' : 'Mandatory Certification Required'}</span>
                                         </div>
-                                        <span className="comp-status-badge valid">Certified</span>
+                                        <span className={`comp-status-badge ${compliance.puc_certified ? 'valid' : 'attention'}`}>
+                                            {compliance.puc_certified ? 'Certified' : 'Attention Required'}
+                                        </span>
                                     </div>
 
                                     <div className="compliance-card verified">

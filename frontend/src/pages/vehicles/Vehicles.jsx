@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { SlidersHorizontal, Search } from 'lucide-react'
+import { SlidersHorizontal, Search, Sparkles } from 'lucide-react'
 import axiosInstance from '../../api/axiosInstance'
 
 import SearchBar from '../../components/vehicle/SearchBar'
@@ -14,9 +14,13 @@ import './Vehicles.css'
 
 const DEFAULT_SUPPORTED_CATEGORIES = [
     'All Categories',
-    'Sedan',
     'SUV',
+    'Sedan',
     'Hatchback',
+    'MUV',
+    'Luxury',
+    'Sports',
+    'Other',
     'Bike',
     'Scooter',
     'EV',
@@ -289,6 +293,21 @@ function Vehicles() {
                     onSearchChange={handleSearchChange}
                 />
 
+                <button
+                    type="button"
+                    className="ai-find-vehicles-btn"
+                    id="find-vehicles-with-ai-btn"
+                    onClick={() => {
+                        window.dispatchEvent(new CustomEvent('rentiq-open-ai-chat', {
+                            detail: { prompt: 'Recommend a vehicle for me' }
+                        }));
+                    }}
+                    aria-label="Find Vehicles with AI Assistant"
+                >
+                    <Sparkles size={16} aria-hidden="true" />
+                    <span>Find Vehicles with AI</span>
+                </button>
+
                 {/* Mobile Filter Toggle Button */}
                 <button
                     type="button"
@@ -404,6 +423,9 @@ function Vehicles() {
                                             seats={vehicle.seating_capacity}
                                             transmission={vehicle.transmission}
                                             imageUrl={vehicle.image_url}
+                                            isAvailable={vehicle.is_available}
+                                            availabilityStatus={vehicle.availability_status}
+                                            availabilityBadge={vehicle.availability_badge}
                                         />
 
                                         <div className="vehicle-actions">

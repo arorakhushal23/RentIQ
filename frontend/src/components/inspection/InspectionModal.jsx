@@ -13,10 +13,16 @@ const PHOTO_CATEGORIES = [
     { value: 'left', label: 'Left Side' },
     { value: 'right', label: 'Right Side' },
     { value: 'interior', label: 'Interior Cabin' },
+    { value: 'damage', label: 'Existing Damage / Scratches' },
     { value: 'dashboard', label: 'Dashboard & Cluster' },
     { value: 'tyres', label: 'Tyres & Wheels' },
-    { value: 'damage', label: 'Existing Scratches / Dents' }
+    { value: 'other', label: 'Other' }
 ];
+
+const getPhotoUrl = (photoId) => {
+    const token = localStorage.getItem('token');
+    return `/api/inspections/photo/${photoId}${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+};
 
 function InspectionModal({ bookingId, isAdmin = false, onClose, onInspectionUpdated }) {
     const [data, setData] = useState(null);
@@ -128,6 +134,7 @@ function InspectionModal({ bookingId, isAdmin = false, onClose, onInspectionUpda
             alert(`${formType === 'pickup' ? 'Pickup' : 'Return'} inspection recorded successfully!`);
             setSelectedPhotos([]);
             await fetchInspections();
+            setActiveTab('view_report');
             if (onInspectionUpdated) onInspectionUpdated();
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to submit inspection.');
@@ -318,8 +325,33 @@ function InspectionModal({ bookingId, isAdmin = false, onClose, onInspectionUpda
                                         </div>
                                     )}
 
+                                    {/* Admin Awaiting Customer Acceptance notice */}
+                                    {Boolean(isAdmin && pickup && !pickup.customer_accepted && booking.status === 'confirmed') && (
+                                        <div className="admin-handover-pending-card" style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '14px 18px',
+                                            background: 'rgba(234, 179, 8, 0.1)',
+                                            border: '1px solid rgba(234, 179, 8, 0.3)',
+                                            borderRadius: '10px',
+                                            color: 'var(--warning-color, #eab308)',
+                                            marginBottom: '20px'
+                                        }}>
+                                            <AlertTriangle size={20} />
+                                            <div>
+                                                <strong style={{ display: 'block', fontSize: '14px', marginBottom: '2px' }}>
+                                                    Pickup Inspection Recorded — Awaiting Customer Acceptance
+                                                </strong>
+                                                <small style={{ color: 'var(--text-muted)' }}>
+                                                    The customer has been notified to review the vehicle condition. Once accepted, the Handover button will unlock here.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Admin Handover Trigger */}
-                                    {isAdmin && pickup && pickup.customer_accepted && booking.status === 'confirmed' && (
+                                    {Boolean(isAdmin && pickup && pickup.customer_accepted && booking.status === 'confirmed') && (
                                         <div className="admin-handover-card">
                                             <div>
                                                 <h4>Ready for Vehicle Handover</h4>
@@ -424,6 +456,8 @@ function InspectionModal({ bookingId, isAdmin = false, onClose, onInspectionUpda
                                                         <div className="check-item"><span>Tyres:</span> <b>{pickup.tyre_condition}</b></div>
                                                         <div className="check-item"><span>Headlights:</span> <b>{pickup.headlights_condition}</b></div>
                                                         <div className="check-item"><span>Taillights:</span> <b>{pickup.taillights_condition}</b></div>
+                                                        <div className="check-item"><span>Mirrors:</span> <b>{pickup.mirrors_condition || 'intact'}</b></div>
+                                                        <div className="check-item"><span>Windows:</span> <b>{pickup.windows_condition || 'intact'}</b></div>
                                                         <div className="check-item"><span>Brakes:</span> <b>{pickup.brakes_condition}</b></div>
                                                     </div>
 
@@ -442,9 +476,9 @@ function InspectionModal({ bookingId, isAdmin = false, onClose, onInspectionUpda
                                                                     <div
                                                                         key={p.id}
                                                                         className="photo-thumb-card"
-                                                                        onClick={() => setPreviewPhotoUrl(`/api/inspections/photo/${p.id}`)}
+                                                                        onClick={() => setPreviewPhotoUrl(getPhotoUrl(p.id))}
                                                                     >
-                                                                        <img src={`/api/inspections/photo/${p.id}`} alt={p.photo_category} />
+                                                                        <img src={getPhotoUrl(p.id)} alt={p.photo_category} />
                                                                         <span className="cat-tag">{p.photo_category}</span>
                                                                     </div>
                                                                 ))}
@@ -493,6 +527,8 @@ function InspectionModal({ bookingId, isAdmin = false, onClose, onInspectionUpda
                                                         <div className="check-item"><span>Tyres:</span> <b>{ret.tyre_condition}</b></div>
                                                         <div className="check-item"><span>Headlights:</span> <b>{ret.headlights_condition}</b></div>
                                                         <div className="check-item"><span>Taillights:</span> <b>{ret.taillights_condition}</b></div>
+                                                        <div className="check-item"><span>Mirrors:</span> <b>{ret.mirrors_condition || 'intact'}</b></div>
+                                                        <div className="check-item"><span>Windows:</span> <b>{ret.windows_condition || 'intact'}</b></div>
                                                         <div className="check-item"><span>Brakes:</span> <b>{ret.brakes_condition}</b></div>
                                                     </div>
 
@@ -511,9 +547,9 @@ function InspectionModal({ bookingId, isAdmin = false, onClose, onInspectionUpda
                                                                     <div
                                                                         key={p.id}
                                                                         className="photo-thumb-card"
-                                                                        onClick={() => setPreviewPhotoUrl(`/api/inspections/photo/${p.id}`)}
+                                                                        onClick={() => setPreviewPhotoUrl(getPhotoUrl(p.id))}
                                                                     >
-                                                                        <img src={`/api/inspections/photo/${p.id}`} alt={p.photo_category} />
+                                                                        <img src={getPhotoUrl(p.id)} alt={p.photo_category} />
                                                                         <span className="cat-tag">{p.photo_category}</span>
                                                                     </div>
                                                                 ))}
@@ -616,6 +652,42 @@ function InspectionModal({ bookingId, isAdmin = false, onClose, onInspectionUpda
                                                 <option value="optimal">Optimal</option>
                                                 <option value="satisfactory">Satisfactory</option>
                                                 <option value="needs_attention">Needs Attention</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Headlights & Foglamps</label>
+                                            <select value={headlightsCondition} onChange={(e) => setHeadlightsCondition(e.target.value)}>
+                                                <option value="working">Working (Optimal)</option>
+                                                <option value="faulty">Faulty</option>
+                                                <option value="damaged">Damaged / Broken</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Taillights & Indicators</label>
+                                            <select value={taillightsCondition} onChange={(e) => setTaillightsCondition(e.target.value)}>
+                                                <option value="working">Working (Optimal)</option>
+                                                <option value="faulty">Faulty</option>
+                                                <option value="damaged">Damaged / Broken</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Side Mirrors & Rearview</label>
+                                            <select value={mirrorsCondition} onChange={(e) => setMirrorsCondition(e.target.value)}>
+                                                <option value="intact">Intact & Clean</option>
+                                                <option value="cracked">Cracked</option>
+                                                <option value="missing">Missing / Loose</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Windows & Windshield</label>
+                                            <select value={windowsCondition} onChange={(e) => setWindowsCondition(e.target.value)}>
+                                                <option value="intact">Intact & Clear</option>
+                                                <option value="cracked">Cracked / Chipped</option>
+                                                <option value="scratched">Scratched</option>
                                             </select>
                                         </div>
                                     </div>

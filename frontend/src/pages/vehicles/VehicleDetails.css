@@ -126,6 +126,16 @@
     color: #ffffff;
 }
 
+.pill-compliance {
+    background: rgba(234, 88, 12, 0.95);
+    color: #ffffff;
+}
+
+.pill-maintenance {
+    background: rgba(217, 119, 6, 0.95);
+    color: #ffffff;
+}
+
 .pill-unavailable {
     background: rgba(220, 38, 38, 0.9);
     color: #ffffff;
@@ -456,6 +466,60 @@
     margin-bottom: 18px;
 }
 
+/* Compliance Notice Banner */
+.compliance-notice-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    background: #fff7ed;
+    border: 1px solid #fdba74;
+    border-left: 4px solid #ea580c;
+    border-radius: 10px;
+    color: #9a3412;
+}
+
+.compliance-notice-icon {
+    color: #ea580c;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.compliance-notice-text strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #9a3412;
+}
+
+.compliance-notice-text p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #7c2d12;
+}
+
+[data-theme='dark'] .compliance-notice-banner {
+    background: rgba(234, 88, 12, 0.15);
+    border-color: rgba(251, 146, 60, 0.4);
+    border-left-color: #fb923c;
+    color: #fed7aa;
+}
+
+[data-theme='dark'] .compliance-notice-icon {
+    color: #fb923c;
+}
+
+[data-theme='dark'] .compliance-notice-text strong {
+    color: #ffedd5;
+}
+
+[data-theme='dark'] .compliance-notice-text p {
+    color: #fed7aa;
+}
+
 .compliance-status-cards {
     display: flex;
     flex-direction: column;
@@ -476,8 +540,16 @@
     border-left: 4px solid var(--success);
 }
 
+.compliance-card.attention {
+    border-left: 4px solid #ea580c;
+}
+
 .comp-icon {
     color: var(--success);
+}
+
+.comp-icon.attention {
+    color: #ea580c;
 }
 
 .comp-info {
@@ -508,6 +580,18 @@
     background: var(--success-bg);
     color: var(--success-text);
     border: 1px solid var(--success-border);
+}
+
+.comp-status-badge.attention {
+    background: #ffedd5;
+    color: #c2410c;
+    border: 1px solid #fdba74;
+}
+
+[data-theme='dark'] .comp-status-badge.attention {
+    background: rgba(249, 115, 22, 0.2);
+    color: #fb923c;
+    border-color: rgba(251, 146, 60, 0.45);
 }
 
 /* Sidebar */

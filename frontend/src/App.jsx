@@ -13,6 +13,7 @@ import Compare from "./pages/compare/Compare";
 import Contact from './pages/contact/Contact';
 import Footer from './components/common/Footer';
 import FloatingCompareBar from './components/vehicle/FloatingCompareBar';
+import AIAssistant from './components/ai/AIAssistant';
 import AdminRoute from './components/common/AdminRoute';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminVehicles from './pages/admin/AdminVehicles';
@@ -131,6 +132,7 @@ function App() {
       </Routes>
 
       <FloatingCompareBar />
+      <AIAssistant />
       <Footer />
     </BrowserRouter>
   );

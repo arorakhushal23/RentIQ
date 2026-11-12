@@ -12,6 +12,7 @@ const {
 const { ensureAgreementExists } = require('./agreementController')
 const { checkVehicleMaintenanceConflict } = require('../utils/maintenanceHelper')
 const { calculateAuthoritativePrice, saveBookingPriceBreakdown } = require('../utils/pricingEngine')
+const { evaluateVehicleAvailability } = require('../utils/vehicleAvailabilityHelper')
 
 const createBooking = async (req, res) => {
     let connection
@@ -123,17 +124,7 @@ const createBooking = async (req, res) => {
 
         const vehicle = vehicles[0]
 
-        // 1a. Vehicle availability flag check
-        if (!vehicle.is_available) {
-            await connection.rollback()
-            return res.status(400).json({
-                eligible: false,
-                code: 'VEHICLE_UNAVAILABLE',
-                message: 'This vehicle is currently unavailable for rental. Please choose another vehicle.'
-            })
-        }
-
-        // 1b. Customer Driving Licence Verification Check
+        // 1a. Customer Driving Licence Verification Check
         const [licenses] = await connection.query(
             `SELECT verification_status, expiry_date, vehicle_class
              FROM customer_licenses
@@ -220,64 +211,23 @@ const createBooking = async (req, res) => {
             }
         }
 
-        // 1c. Vehicle Document Compliance Check (RC, Insurance, PUC validity for the rental period)
-        const [vehDocs] = await connection.query(
-            `SELECT document_type, expiry_date, verification_status
-             FROM vehicle_documents
-             WHERE vehicle_id = ?`,
-            [vehicleId]
-        )
+        // 1b. Unified Vehicle Availability & Compliance Check (Single Source of Truth)
+        const availability = await evaluateVehicleAvailability(vehicle, {
+            conn: connection,
+            rentalStartDate: pickupParsed.formatted,
+            rentalEndDate: returnParsed.formatted
+        });
 
-        const docEligibility = checkVehicleDocumentEligibility(vehDocs, vehicle.category_name, returnParsed.formatted)
-        if (!docEligibility.eligible) {
-            await connection.rollback()
-            return res.status(400).json({
+        if (!availability.bookingEligible) {
+            await connection.rollback();
+            const httpStatus = availability.statusCode === 'BOOKING_CONFLICT' ? 409 : 400;
+            return res.status(httpStatus).json({
                 eligible: false,
-                code: 'VEHICLE_COMPLIANCE_HOLD',
-                message: 'This vehicle is temporarily unavailable due to routine compliance maintenance. Please choose another vehicle.',
-                adminReason: docEligibility.adminReason
-            })
-        }
-
-        // 1d. Vehicle Maintenance Conflict Check overlapping requested rental dates
-        const maintenanceConflict = await checkVehicleMaintenanceConflict(
-            vehicleId,
-            pickupParsed.formatted,
-            returnParsed.formatted,
-            null,
-            connection
-        )
-
-        if (maintenanceConflict.hasConflict) {
-            await connection.rollback()
-            return res.status(400).json({
-                eligible: false,
-                code: 'VEHICLE_UNDER_MAINTENANCE',
-                message: maintenanceConflict.message || 'This vehicle is temporarily unavailable due to scheduled maintenance. Please choose another vehicle or different dates.'
-            })
-        }
-
-        // 1e. Prevent overlapping active bookings for the same vehicle
-        const [overlaps] = await connection.query(
-            `
-            SELECT booking_id
-            FROM bookings
-            WHERE vehicle_id = ?
-              AND status IN ('pending', 'confirmed', 'active')
-              AND pickup_datetime < ?
-              AND return_datetime > ?
-            LIMIT 1
-            `,
-            [vehicleId, returnParsed.formatted, pickupParsed.formatted]
-        )
-
-        if (overlaps.length > 0) {
-            await connection.rollback()
-            return res.status(409).json({
-                eligible: false,
-                code: 'BOOKING_CONFLICT',
-                message: 'Vehicle is already booked for the selected dates/times. Please choose different times or another vehicle.'
-            })
+                code: availability.statusCode,
+                message: availability.customerMessage,
+                adminReason: availability.displayReason,
+                availabilityStatus: availability.availabilityStatus
+            });
         }
 
         // 2. Prevent the same user from creating a duplicate active booking for the exact same vehicle and interval
@@ -727,100 +677,40 @@ const checkVehicleAvailabilityEndpoint = async (req, res) => {
 
         const vehicle = vehicles[0];
 
-        // 1. Static is_available flag
-        if (!vehicle.is_available) {
-            return res.status(200).json({
-                available: false,
-                code: 'VEHICLE_UNAVAILABLE',
-                message: 'This vehicle is currently unavailable for rental. Please choose another vehicle.'
-            });
-        }
-
-        // 2. Active ongoing maintenance check
-        const [activeMaint] = await db.query(
-            `SELECT id, maintenance_category, start_date, end_date
-             FROM vehicle_maintenance
-             WHERE vehicle_id = ?
-               AND (status = 'in_progress' OR (status = 'scheduled' AND start_date <= CURDATE() AND (end_date IS NULL OR end_date >= CURDATE())))
-             LIMIT 1`,
-            [vehicleId]
-        );
-
-        if (activeMaint.length > 0) {
-            return res.status(200).json({
-                available: false,
-                code: 'VEHICLE_UNDER_MAINTENANCE',
-                message: `This vehicle is temporarily unavailable due to ongoing ${activeMaint[0].maintenance_category}. Please choose another vehicle.`
-            });
-        }
-
-        // 3. Document compliance check
-        const [vehDocs] = await db.query(
-            `SELECT document_type, expiry_date, verification_status
-             FROM vehicle_documents
-             WHERE vehicle_id = ?`,
-            [vehicleId]
-        );
-
-        const rEndDate = rawReturn ? (rawReturn.includes('T') ? rawReturn.split('T')[0] : rawReturn.split(' ')[0]) : null;
-        const docEligibility = checkVehicleDocumentEligibility(vehDocs, vehicle.category_name, rEndDate);
-        if (!docEligibility.eligible) {
-            return res.status(200).json({
-                available: false,
-                code: 'VEHICLE_COMPLIANCE_HOLD',
-                message: 'This vehicle is temporarily unavailable due to routine compliance maintenance. Please choose another vehicle.',
-                adminReason: docEligibility.adminReason
-            });
-        }
-
-        // 4. If rental dates provided, check maintenance schedule overlap and overlapping bookings
+        let pFormatted = null;
+        let rFormatted = null;
         if (rawPickup && rawReturn) {
             const pParsed = parseDateTime(rawPickup);
             const rParsed = parseDateTime(rawReturn);
-
             if (pParsed.valid && rParsed.valid && rParsed.date > pParsed.date) {
-                // Check maintenance conflict
-                const maintenanceConflict = await checkVehicleMaintenanceConflict(
-                    vehicleId,
-                    pParsed.formatted,
-                    rParsed.formatted,
-                    null,
-                    db
-                );
-
-                if (maintenanceConflict.hasConflict) {
-                    return res.status(200).json({
-                        available: false,
-                        code: 'VEHICLE_UNDER_MAINTENANCE',
-                        message: maintenanceConflict.message || 'This vehicle is scheduled for maintenance during the selected dates. Please choose different dates or another vehicle.'
-                    });
-                }
-
-                // Check overlapping bookings
-                const [overlaps] = await db.query(
-                    `SELECT booking_id
-                     FROM bookings
-                     WHERE vehicle_id = ?
-                       AND status IN ('pending', 'confirmed', 'active')
-                       AND pickup_datetime < ?
-                       AND return_datetime > ?
-                     LIMIT 1`,
-                    [vehicleId, rParsed.formatted, pParsed.formatted]
-                );
-
-                if (overlaps.length > 0) {
-                    return res.status(200).json({
-                        available: false,
-                        code: 'BOOKING_CONFLICT',
-                        message: 'Vehicle is already booked for the selected dates/times. Please choose different times or another vehicle.'
-                    });
-                }
+                pFormatted = pParsed.formatted;
+                rFormatted = rParsed.formatted;
             }
+        }
+
+        const availability = await evaluateVehicleAvailability(vehicle, {
+            rentalStartDate: pFormatted,
+            rentalEndDate: rFormatted
+        });
+
+        if (!availability.bookingEligible) {
+            return res.status(200).json({
+                available: false,
+                code: availability.statusCode,
+                message: availability.customerMessage,
+                reason: availability.customerMessage,
+                displayReason: availability.displayReason,
+                availabilityStatus: availability.availabilityStatus,
+                adminReason: availability.displayReason,
+                compliance: availability.compliance
+            });
         }
 
         return res.status(200).json({
             available: true,
-            message: 'Vehicle is available for rental'
+            code: 'AVAILABLE',
+            message: 'Vehicle is available for rental',
+            availabilityStatus: 'available'
         });
     } catch (err) {
         console.error('Error checking vehicle availability:', err.message);

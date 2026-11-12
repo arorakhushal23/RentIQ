@@ -220,6 +220,17 @@
     border: 1px solid #16a34a;
 }
 
+.admin-handover-card h4 {
+    margin: 0 0 2px 0;
+    color: #166534;
+}
+
+.admin-handover-card p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #15803d;
+}
+
 .handover-btn {
     display: flex;
     align-items: center;
@@ -238,6 +249,57 @@
 .admin-complete-card {
     background: #eff6ff;
     border: 1px solid #0284c7;
+}
+
+.admin-complete-card h4 {
+    margin: 0 0 2px 0;
+    color: #1e40af;
+}
+
+.admin-complete-card p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #1d4ed8;
+}
+
+/* Dark Theme Overrides for Action Banners */
+[data-theme='dark'] .customer-action-card {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+[data-theme='dark'] .customer-action-card h4 {
+    color: #fbbf24;
+}
+
+[data-theme='dark'] .customer-action-card p {
+    color: #fde68a;
+}
+
+[data-theme='dark'] .admin-handover-card {
+    background: rgba(22, 163, 74, 0.15);
+    border-color: rgba(22, 163, 74, 0.4);
+}
+
+[data-theme='dark'] .admin-handover-card h4 {
+    color: #4ade80;
+}
+
+[data-theme='dark'] .admin-handover-card p {
+    color: #bbf7d0;
+}
+
+[data-theme='dark'] .admin-complete-card {
+    background: rgba(2, 132, 199, 0.15);
+    border-color: rgba(2, 132, 199, 0.4);
+}
+
+[data-theme='dark'] .admin-complete-card h4 {
+    color: #38bdf8;
+}
+
+[data-theme='dark'] .admin-complete-card p {
+    color: #bae6fd;
 }
 
 .complete-rental-btn {

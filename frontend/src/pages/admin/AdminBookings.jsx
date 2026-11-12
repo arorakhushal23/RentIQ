@@ -419,20 +419,27 @@ function AdminBookings() {
 
                                                 <button
                                                     type="button"
-                                                    className="booking-action-button"
-                                                    style={{ background: '#ecfdf5', color: '#065f46', borderColor: '#10b981' }}
+                                                    className="booking-action-button booking-action-agreement"
                                                     onClick={() => setAgreementModalBookingId(booking.booking_id)}
-                                                    title="View Digital Agreement"
+                                                    title="View or Generate Digital Rental Agreement"
                                                 >
                                                     Agreement
                                                 </button>
 
                                                 <button
                                                     type="button"
-                                                    className="booking-action-button"
-                                                    style={{ background: '#eff6ff', color: '#1e40af', borderColor: '#3b82f6' }}
+                                                    className="booking-action-button booking-action-inspection"
+                                                    disabled={booking.status === 'cancelled'}
                                                     onClick={() => setInspectionModalBookingId(booking.booking_id)}
-                                                    title="View or Record Inspection"
+                                                    title={
+                                                        booking.status === 'cancelled'
+                                                            ? 'Vehicle inspection is not available for cancelled bookings'
+                                                            : booking.status === 'confirmed'
+                                                                ? 'Record or review pickup inspection & vehicle handover'
+                                                                : booking.status === 'active'
+                                                                    ? 'Record or review return inspection'
+                                                                    : 'View vehicle inspection dossier & condition report'
+                                                    }
                                                 >
                                                     Inspection
                                                 </button>
@@ -624,29 +631,79 @@ function AdminBookings() {
                                     <p>No payment record is available.</p>
                                 )}
 
-                                {getStatusActions(
-                                    selectedBooking.status
-                                ).length > 0 && (
+                                <div className="booking-details-action-bar" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '16px' }}>
                                     <button
                                         type="button"
-                                        className="booking-details-update-button"
-                                        disabled={
-                                            updatingBookingId ===
-                                            selectedBooking.booking_id
-                                        }
-                                        onClick={() =>
-                                            updateBookingStatus(
-                                                selectedBooking
-                                            )
-                                        }
+                                        className="booking-action-button booking-action-agreement"
+                                        onClick={() => setAgreementModalBookingId(selectedBooking.booking_id)}
+                                        title="View Digital Rental Agreement"
                                     >
-                                        Update booking status
+                                        Rental Agreement
                                     </button>
-                                )}
+
+                                    <button
+                                        type="button"
+                                        className="booking-action-button booking-action-inspection"
+                                        disabled={selectedBooking.status === 'cancelled'}
+                                        onClick={() => setInspectionModalBookingId(selectedBooking.booking_id)}
+                                        title={selectedBooking.status === 'cancelled' ? 'Inspection not applicable for cancelled bookings' : 'Open Vehicle Inspection'}
+                                    >
+                                        Vehicle Inspection
+                                    </button>
+
+                                    {getStatusActions(
+                                        selectedBooking.status
+                                    ).length > 0 && (
+                                        <button
+                                            type="button"
+                                            className="booking-details-update-button"
+                                            disabled={
+                                                updatingBookingId ===
+                                                selectedBooking.booking_id
+                                            }
+                                            onClick={() =>
+                                                updateBookingStatus(
+                                                    selectedBooking
+                                                )
+                                            }
+                                        >
+                                            Update booking status
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </section>
                 </div>
+            )}
+
+            {/* Digital Rental Agreement Modal */}
+            {agreementModalBookingId && (
+                <AgreementModal
+                    bookingId={agreementModalBookingId}
+                    onClose={() => setAgreementModalBookingId(null)}
+                    onAgreementAccepted={() => {
+                        fetchBookings();
+                        if (selectedBooking && selectedBooking.booking_id === agreementModalBookingId) {
+                            viewBookingDetails(agreementModalBookingId);
+                        }
+                    }}
+                />
+            )}
+
+            {/* Vehicle Inspection Modal */}
+            {inspectionModalBookingId && (
+                <InspectionModal
+                    bookingId={inspectionModalBookingId}
+                    isAdmin={true}
+                    onClose={() => setInspectionModalBookingId(null)}
+                    onInspectionUpdated={() => {
+                        fetchBookings();
+                        if (selectedBooking && selectedBooking.booking_id === inspectionModalBookingId) {
+                            viewBookingDetails(inspectionModalBookingId);
+                        }
+                    }}
+                />
             )}
         </main>
     );

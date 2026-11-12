@@ -18,6 +18,7 @@ const agreementRoutes = require('./routes/agreementRoutes');
 const inspectionRoutes = require('./routes/inspectionRoutes');
 const maintenanceRoutes = require('./routes/maintenanceRoutes');
 const pricingRoutes = require('./routes/pricingRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 const { ensureUploadFiles } = require('./utils/ensureUploadFiles');
 
 // Initialize upload storage and seeded sample documents
@@ -45,6 +46,7 @@ app.use('/api/agreements', agreementRoutes);
 app.use('/api/inspections', inspectionRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/pricing', pricingRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.get('/api/health', async (req, res) => {
     try {

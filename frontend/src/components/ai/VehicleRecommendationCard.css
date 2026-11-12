@@ -1,0 +1,300 @@
+/**
+ * RentIQ AI Vehicle Recommendation Card Styles
+ *
+ * File: frontend/src/components/ai/VehicleRecommendationCard.css
+ */
+
+.ai-recommendation-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 10px;
+    margin-bottom: 6px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    width: 100%;
+    max-width: 320px;
+}
+
+.ai-recommendation-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+    border-color: var(--blue-primary, #1d68bd);
+}
+
+.ai-card-media {
+    position: relative;
+    width: 100%;
+    height: 140px;
+    background: var(--bg-secondary, #f1f5f9);
+    overflow: hidden;
+}
+
+.ai-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.ai-recommendation-card:hover .ai-card-img {
+    transform: scale(1.04);
+}
+
+.ai-card-badges {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    z-index: 2;
+}
+
+.ai-category-tag {
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.ai-status-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.badge-available {
+    background: #10b981;
+    color: #ffffff;
+}
+
+.badge-compliance {
+    background: #f59e0b;
+    color: #ffffff;
+}
+
+.badge-maintenance {
+    background: #eab308;
+    color: #0f172a;
+}
+
+.badge-unavailable {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+.ai-match-score-pill {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: linear-gradient(135deg, #1d68bd 0%, #3b82f6 100%);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ai-card-body {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ai-card-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.ai-card-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary, #0f172a);
+    line-height: 1.25;
+}
+
+.ai-card-model {
+    font-size: 0.75rem;
+    color: var(--text-muted, #64748b);
+    white-space: nowrap;
+}
+
+.ai-match-explanation {
+    margin: 0;
+    font-size: 0.76rem;
+    color: var(--text-secondary, #475569);
+    line-height: 1.35;
+    background: var(--blue-soft, #eff6ff);
+    padding: 6px 8px;
+    border-radius: 6px;
+    border-left: 3px solid var(--blue-primary, #1d68bd);
+}
+
+.ai-spec-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.ai-spec-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-secondary, #f1f5f9);
+    color: var(--text-secondary, #475569);
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border, #e2e8f0);
+}
+
+.ai-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border, #e2e8f0);
+}
+
+.ai-price-block {
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+}
+
+.ai-price-label {
+    font-size: 0.7rem;
+    color: var(--text-muted, #64748b);
+    display: none;
+}
+
+.ai-price-value {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--blue-primary, #1d68bd);
+}
+
+.ai-price-period {
+    font-size: 0.72rem;
+    color: var(--text-muted, #64748b);
+    font-weight: 500;
+}
+
+.ai-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ai-btn-details {
+    padding: 5px 9px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary, #475569);
+    background: var(--bg-secondary, #f1f5f9);
+    border: 1px solid var(--border, #cbd5e1);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.ai-btn-details:hover {
+    background: var(--bg-card-hover, #f8fbff);
+    color: var(--blue-primary, #1d68bd);
+    border-color: var(--blue-primary, #1d68bd);
+}
+
+.ai-btn-book {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: var(--blue-primary, #1d68bd);
+    text-decoration: none;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.ai-btn-book:hover {
+    background: var(--blue-bright, #257ae1);
+    transform: translateY(-1px);
+}
+
+.ai-btn-disabled {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 9px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted, #94a3b8);
+    background: var(--bg-secondary, #f1f5f9);
+    border: 1px solid var(--border, #cbd5e1);
+    cursor: not-allowed;
+}
+
+/* Dark mode adjustments */
+[data-theme='dark'] .ai-recommendation-card {
+    background: var(--bg-card, #1e293b);
+    border-color: var(--border, #334155);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme='dark'] .ai-recommendation-card:hover {
+    border-color: var(--blue-bright, #3b82f6);
+}
+
+[data-theme='dark'] .ai-card-media {
+    background: #0f172a;
+}
+
+[data-theme='dark'] .ai-match-explanation {
+    background: rgba(30, 58, 138, 0.3);
+    border-left-color: #3b82f6;
+    color: #e2e8f0;
+}
+
+[data-theme='dark'] .ai-spec-chip {
+    background: #0f172a;
+    border-color: #334155;
+    color: #cbd5e1;
+}
+
+[data-theme='dark'] .ai-btn-details {
+    background: #0f172a;
+    border-color: #334155;
+    color: #cbd5e1;
+}
+
+[data-theme='dark'] .ai-btn-details:hover {
+    background: #1e293b;
+    color: #60a5fa;
+    border-color: #3b82f6;
+}

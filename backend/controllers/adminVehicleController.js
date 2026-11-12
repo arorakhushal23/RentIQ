@@ -1,5 +1,9 @@
 const db = require('../config/db');
 const { calculateDocumentStatus } = require('../utils/documentStatusHelper');
+const {
+    evaluateVehicleAvailability,
+    batchEvaluateVehicleAvailability
+} = require('../utils/vehicleAvailabilityHelper');
 
 /**
  * Validates optional image URL input according to security policies
@@ -55,6 +59,10 @@ function parsePositiveInt(val) {
  * Formats a raw database row into consistent response types for administrator views
  */
 function formatVehicleAdminRow(row) {
+    const isOp = row.operational_is_available !== undefined
+        ? Boolean(row.operational_is_available)
+        : (row.is_available === true || row.is_available === 1 || row.is_available === '1');
+
     return {
         vehicle_id: row.vehicle_id,
         category_id: row.category_id,
@@ -80,7 +88,22 @@ function formatVehicleAdminRow(row) {
         seating_capacity: Number(row.seating_capacity),
         transmission: row.transmission,
         price_per_day: Number(row.price_per_day),
-        is_available: Boolean(row.is_available),
+        // Operational switch state (for activate/deactivate button)
+        is_available: isOp,
+        operational_is_available: isOp,
+        operational_status: row.operational_status || (isOp ? 'active' : 'inactive'),
+        // Unified Booking Eligibility
+        booking_eligible: Boolean(row.booking_eligible !== undefined ? row.booking_eligible : isOp),
+        availability_status: row.availability_status || (isOp ? 'available' : 'unavailable'),
+        availability_code: row.availability_code || (isOp ? 'AVAILABLE' : 'VEHICLE_UNAVAILABLE'),
+        availability_reason: row.availability_reason || (isOp ? 'Vehicle is operational and fully compliant' : 'Vehicle is manually deactivated'),
+        customer_message: row.customer_message || (isOp ? 'Available for rental' : 'This vehicle is currently unavailable for rental.'),
+        availability_badge: row.availability_badge || {
+            text: isOp ? 'Available' : 'Unavailable',
+            variant: isOp ? 'success' : 'danger',
+            className: isOp ? 'is-available' : 'is-unavailable'
+        },
+        compliance: row.compliance,
         image_url: row.image_url,
         created_at: row.created_at,
         category: row.category,
@@ -102,8 +125,8 @@ const getAllVehicles = async (req, res) => {
 
         if (search && search.trim()) {
             const q = `%${search.trim().toLowerCase()}%`;
-            conditions.push('(LOWER(v.name) LIKE ? OR LOWER(v.brand) LIKE ? OR LOWER(COALESCE(v.registration_number, "")) LIKE ? OR LOWER(COALESCE(v.model, "")) LIKE ?)');
-            params.push(q, q, q, q);
+            conditions.push('(LOWER(v.name) LIKE ? OR LOWER(v.brand) LIKE ? OR LOWER(c.name) LIKE ? OR LOWER(COALESCE(v.registration_number, "")) LIKE ? OR LOWER(COALESCE(v.model, "")) LIKE ?)');
+            params.push(q, q, q, q, q);
         }
 
         if (category && category !== 'all') {
@@ -114,12 +137,6 @@ const getAllVehicles = async (req, res) => {
         if (fuelType && fuelType !== 'all') {
             conditions.push('v.fuel_type = ?');
             params.push(fuelType.toLowerCase());
-        }
-
-        if (status === 'available') {
-            conditions.push('v.is_available = TRUE');
-        } else if (status === 'unavailable') {
-            conditions.push('v.is_available = FALSE');
         }
 
         const whereSql = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -163,7 +180,25 @@ const getAllVehicles = async (req, res) => {
             ORDER BY v.vehicle_id DESC
         `, params);
 
-        const vehicles = rows.map(formatVehicleAdminRow);
+        // Evaluate actual booking eligibility across the entire fleet using unified helper
+        const evaluatedRows = await batchEvaluateVehicleAvailability(rows);
+
+        // Filter by unified availability status if requested
+        let filtered = evaluatedRows;
+        if (status && status !== 'all') {
+            const sLower = status.toLowerCase();
+            if (sLower === 'available') {
+                filtered = evaluatedRows.filter(v => v.availability_status === 'available');
+            } else if (sLower === 'compliance_required') {
+                filtered = evaluatedRows.filter(v => v.availability_status === 'compliance_required');
+            } else if (sLower === 'under_maintenance' || sLower === 'maintenance') {
+                filtered = evaluatedRows.filter(v => v.availability_status === 'under_maintenance');
+            } else if (sLower === 'unavailable') {
+                filtered = evaluatedRows.filter(v => v.availability_status === 'unavailable');
+            }
+        }
+
+        const vehicles = filtered.map(formatVehicleAdminRow);
         return res.status(200).json(vehicles);
     } catch (error) {
         console.error('Error fetching admin vehicles:', error.message);
@@ -214,9 +249,23 @@ const getVehicleByIdAdmin = async (req, res) => {
             };
         });
 
+        // Evaluate availability using central helper
+        const availability = await evaluateVehicleAvailability(vehicle, { documents: docs });
+
         return res.status(200).json({
-            ...formatVehicleAdminRow(vehicle),
-            documents
+            ...formatVehicleAdminRow({
+                ...vehicle,
+                operational_is_available: availability.operationalStatus === 'active',
+                booking_eligible: availability.bookingEligible,
+                availability_status: availability.availabilityStatus,
+                availability_code: availability.statusCode,
+                availability_reason: availability.displayReason,
+                customer_message: availability.customerMessage,
+                availability_badge: availability.badge,
+                compliance: availability.compliance
+            }),
+            documents,
+            availability
         });
     } catch (error) {
         console.error('Error fetching vehicle by id admin:', error);
@@ -230,7 +279,17 @@ const getVehicleByIdAdmin = async (req, res) => {
 const getCategories = async (req, res) => {
     try {
         const [categories] = await db.query(
-            'SELECT category_id, name FROM categories ORDER BY category_id ASC'
+            `SELECT category_id, name FROM categories
+             ORDER BY CASE name
+                 WHEN 'SUV' THEN 1
+                 WHEN 'Sedan' THEN 2
+                 WHEN 'Hatchback' THEN 3
+                 WHEN 'MUV' THEN 4
+                 WHEN 'Luxury' THEN 5
+                 WHEN 'Sports' THEN 6
+                 WHEN 'Other' THEN 7
+                 ELSE 8
+             END, name ASC`
         );
         return res.status(200).json(categories);
     } catch (error) {

@@ -37,6 +37,42 @@
     flex-wrap: wrap;
 }
 
+.ai-find-vehicles-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0 20px;
+    border-radius: 10px;
+    border: 1px solid var(--blue-primary, #1d68bd);
+    background: linear-gradient(135deg, rgba(29, 104, 189, 0.08) 0%, rgba(59, 130, 246, 0.12) 100%);
+    color: var(--blue-primary, #1d68bd);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(29, 104, 189, 0.1);
+    transition: all 0.25s ease;
+}
+
+.ai-find-vehicles-btn:hover {
+    background: var(--blue-primary, #1d68bd);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(29, 104, 189, 0.25);
+}
+
+[data-theme='dark'] .ai-find-vehicles-btn {
+    background: rgba(30, 58, 138, 0.3);
+    border-color: #3b82f6;
+    color: #93c5fd;
+}
+
+[data-theme='dark'] .ai-find-vehicles-btn:hover {
+    background: #2563eb;
+    color: #ffffff;
+}
+
 .mobile-filter-btn {
     display: none;
     align-items: center;
@@ -323,7 +359,43 @@
 }
 
 @media (max-width: 850px) {
-    .mobile-filter-btn {
+    .ai-find-vehicles-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0 20px;
+    border-radius: 10px;
+    border: 1px solid var(--blue-primary, #1d68bd);
+    background: linear-gradient(135deg, rgba(29, 104, 189, 0.08) 0%, rgba(59, 130, 246, 0.12) 100%);
+    color: var(--blue-primary, #1d68bd);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(29, 104, 189, 0.1);
+    transition: all 0.25s ease;
+}
+
+.ai-find-vehicles-btn:hover {
+    background: var(--blue-primary, #1d68bd);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(29, 104, 189, 0.25);
+}
+
+[data-theme='dark'] .ai-find-vehicles-btn {
+    background: rgba(30, 58, 138, 0.3);
+    border-color: #3b82f6;
+    color: #93c5fd;
+}
+
+[data-theme='dark'] .ai-find-vehicles-btn:hover {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.mobile-filter-btn {
         display: inline-flex;
     }
 

@@ -1,5 +1,9 @@
 const db = require('../config/db');
 const { calculateDocumentStatus } = require('../utils/documentStatusHelper');
+const {
+    evaluateVehicleAvailability,
+    batchEvaluateVehicleAvailability
+} = require('../utils/vehicleAvailabilityHelper');
 
 /**
  * Formats a public vehicle record, stripping sensitive admin-only fields
@@ -15,7 +19,19 @@ function formatPublicVehicle(v) {
         seating_capacity: Number(v.seating_capacity),
         transmission: v.transmission,
         price_per_day: Number(v.price_per_day),
-        is_available: Boolean(v.is_available),
+        is_available: Boolean(v.booking_eligible !== undefined ? v.booking_eligible : v.is_available),
+        operational_is_available: Boolean(v.operational_is_available !== undefined ? v.operational_is_available : v.is_available),
+        operational_status: v.operational_status || (v.is_available ? 'active' : 'inactive'),
+        booking_eligible: Boolean(v.booking_eligible !== undefined ? v.booking_eligible : v.is_available),
+        availability_status: v.availability_status || (v.is_available ? 'available' : 'unavailable'),
+        availability_code: v.availability_code || null,
+        availability_reason: v.availability_reason || null,
+        customer_message: v.customer_message || (v.is_available ? 'Available for rental' : 'This vehicle is currently unavailable for rental.'),
+        availability_badge: v.availability_badge || {
+            text: v.is_available ? 'Available' : 'Unavailable',
+            variant: v.is_available ? 'success' : 'danger'
+        },
+        compliance: v.compliance || null,
         image_url: v.image_url,
         manufacturing_year: v.manufacturing_year ? Number(v.manufacturing_year) : null,
         vehicle_color: v.vehicle_color,
@@ -47,11 +63,11 @@ const getVehicles = async (req, res) => {
             conditions.push('v.is_available = TRUE');
         }
 
-        // Search by vehicle name, brand, or registration number
+        // Search by vehicle name, brand, category, or registration number
         if (req.query.search && typeof req.query.search === 'string' && req.query.search.trim()) {
-            conditions.push('(LOWER(v.name) LIKE ? OR LOWER(v.brand) LIKE ? OR LOWER(COALESCE(v.registration_number, "")) LIKE ?)');
+            conditions.push('(LOWER(v.name) LIKE ? OR LOWER(v.brand) LIKE ? OR LOWER(c.name) LIKE ? OR LOWER(COALESCE(v.registration_number, "")) LIKE ?)');
             const searchTerm = `%${req.query.search.trim().toLowerCase()}%`;
-            params.push(searchTerm, searchTerm, searchTerm);
+            params.push(searchTerm, searchTerm, searchTerm, searchTerm);
         }
 
         // Filter by category
@@ -156,9 +172,10 @@ const getVehicles = async (req, res) => {
             `;
 
             const [vehicles] = await db.query(dataQuery, [...params, limit, offset]);
+            const evaluatedVehicles = await batchEvaluateVehicleAvailability(vehicles);
 
             return res.status(200).json({
-                vehicles: vehicles.map(formatPublicVehicle),
+                vehicles: evaluatedVehicles.map(formatPublicVehicle),
                 pagination: {
                     totalItems,
                     totalPages,
@@ -201,7 +218,8 @@ const getVehicles = async (req, res) => {
             ${orderByClause}
         `, params);
 
-        return res.status(200).json(vehicles.map(formatPublicVehicle));
+        const evaluatedVehicles = await batchEvaluateVehicleAvailability(vehicles);
+        return res.status(200).json(evaluatedVehicles.map(formatPublicVehicle));
     } catch (error) {
         console.error('Error fetching vehicles:', error.message);
         return res.status(500).json({
@@ -251,69 +269,32 @@ const getVehicleById = async (req, res) => {
             });
         }
 
-        const vehicle = formatPublicVehicle(vehicles[0]);
+        const rawVehicle = vehicles[0];
+        const evalResult = await evaluateVehicleAvailability(rawVehicle);
 
-        // Compute high-level public compliance status without exposing private document numbers or files
-        const [docs] = await db.query(
-            'SELECT document_type, expiry_date, verification_status FROM vehicle_documents WHERE vehicle_id = ?',
-            [id]
-        );
-
-        let rcValid = false;
-        let insuranceValid = false;
-        let pucValid = false;
-        let commercialFitnessValid = false;
-
-        for (const doc of docs) {
-            const { status } = calculateDocumentStatus(doc.expiry_date, doc.verification_status);
-            const isValidOrSoon = status === 'valid' || status === 'expiring_soon';
-            if (doc.document_type === 'rc' && isValidOrSoon) rcValid = true;
-            if (doc.document_type === 'insurance' && isValidOrSoon) insuranceValid = true;
-            if (doc.document_type === 'puc' && isValidOrSoon) pucValid = true;
-            if (doc.document_type === 'fitness' && isValidOrSoon) commercialFitnessValid = true;
-        }
-
-        const compliance = {
-            rc_verified: rcValid,
-            insurance_active: insuranceValid,
-            puc_certified: pucValid,
-            commercial_fitness: commercialFitnessValid,
-            all_mandatory_compliant: rcValid && insuranceValid && pucValid
-        };
-
-        // Check active ongoing maintenance
-        const [activeMaint] = await db.query(
-            `SELECT id, maintenance_category FROM vehicle_maintenance
-             WHERE vehicle_id = ?
-               AND (status = 'in_progress' OR (status = 'scheduled' AND start_date <= CURDATE() AND (end_date IS NULL OR end_date >= CURDATE())))
-             LIMIT 1`,
-            [id]
-        );
-
-        const isCompliant = compliance.all_mandatory_compliant;
-        const hasOngoingMaintenance = activeMaint.length > 0;
-        const isCurrentlyAvailable = Boolean(vehicle.is_available) && isCompliant && !hasOngoingMaintenance;
-
-        let unavailabilityReason = null;
-        let unavailabilityCode = null;
-
-        if (!vehicle.is_available) {
-            unavailabilityReason = 'This vehicle is currently unavailable for rental. Please choose another vehicle.';
-            unavailabilityCode = 'VEHICLE_UNAVAILABLE';
-        } else if (hasOngoingMaintenance) {
-            unavailabilityReason = `This vehicle is temporarily unavailable due to ongoing ${activeMaint[0].maintenance_category}. Please choose another vehicle.`;
-            unavailabilityCode = 'VEHICLE_UNDER_MAINTENANCE';
-        } else if (!isCompliant) {
-            unavailabilityReason = 'This vehicle is temporarily unavailable due to routine compliance maintenance. Please choose another vehicle.';
-            unavailabilityCode = 'VEHICLE_COMPLIANCE_HOLD';
-        }
+        const vehicle = formatPublicVehicle({
+            ...rawVehicle,
+            booking_eligible: evalResult.bookingEligible,
+            operational_status: evalResult.operationalStatus,
+            operational_is_available: evalResult.operationalIsAvailable,
+            availability_status: evalResult.availabilityStatus,
+            availability_code: evalResult.statusCode,
+            availability_reason: evalResult.displayReason,
+            customer_message: evalResult.customerMessage,
+            availability_badge: evalResult.badge,
+            compliance: evalResult.compliance
+        });
 
         return res.status(200).json({
             ...vehicle,
-            is_available: isCurrentlyAvailable,
-            unavailability_reason: unavailabilityReason,
-            unavailability_code: unavailabilityCode,
-            compliance
+            is_available: evalResult.bookingEligible,
+            booking_eligible: evalResult.bookingEligible,
+            availability_status: evalResult.availabilityStatus,
+            availability_code: evalResult.statusCode,
+            unavailability_reason: evalResult.customerMessage,
+            unavailability_code: evalResult.statusCode,
+            compliance: evalResult.compliance,
+            maintenance: evalResult.maintenance
         });
     } catch (error) {
         console.error('Error fetching vehicle:', error.message);
@@ -323,7 +304,35 @@ const getVehicleById = async (req, res) => {
     }
 };
 
+/**
+ * Public: Get all vehicle categories
+ */
+const getCategories = async (req, res) => {
+    try {
+        const [categories] = await db.query(
+            `SELECT category_id, name FROM categories
+             ORDER BY CASE name
+                 WHEN 'SUV' THEN 1
+                 WHEN 'Sedan' THEN 2
+                 WHEN 'Hatchback' THEN 3
+                 WHEN 'MUV' THEN 4
+                 WHEN 'Luxury' THEN 5
+                 WHEN 'Sports' THEN 6
+                 WHEN 'Other' THEN 7
+                 ELSE 8
+             END, name ASC`
+        );
+        return res.status(200).json(categories);
+    } catch (error) {
+        console.error('Error fetching categories:', error.message);
+        return res.status(500).json({
+            message: 'Failed to fetch categories'
+        });
+    }
+};
+
 module.exports = {
     getVehicles,
-    getVehicleById
+    getVehicleById,
+    getCategories
 };

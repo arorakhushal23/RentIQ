@@ -12,9 +12,26 @@ function VehicleCard({
     seats,
     transmission,
     imageUrl,
+    isAvailable,
+    availabilityStatus,
+    availabilityBadge
 }) {
     const imageSource = getVehicleImageUrl({ name, vehicle_name: name, image_url: imageUrl });
     const isEv = category && category.toLowerCase() === 'ev';
+
+    const statusPillText = availabilityBadge?.text || (
+        availabilityStatus === 'compliance_required' ? 'Compliance Required' :
+        availabilityStatus === 'under_maintenance' ? 'Under Maintenance' :
+        availabilityStatus === 'unavailable' ? 'Unavailable' :
+        isAvailable ? 'Available' : 'Unavailable'
+    );
+
+    const statusPillClass = (
+        availabilityStatus === 'compliance_required' ? 'pill-compliance' :
+        availabilityStatus === 'under_maintenance' ? 'pill-maintenance' :
+        availabilityStatus === 'available' || isAvailable ? 'pill-available' :
+        'pill-unavailable'
+    );
 
     return (
         <article className="vehicle-card">
@@ -29,6 +46,11 @@ function VehicleCard({
                 {category && (
                     <span className="vehicle-badge-pill">
                         {category}
+                    </span>
+                )}
+                {statusPillText && (
+                    <span className={`vehicle-status-pill ${statusPillClass}`}>
+                        {statusPillText}
                     </span>
                 )}
             </div>

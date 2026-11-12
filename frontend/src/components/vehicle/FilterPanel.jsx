@@ -2,9 +2,13 @@ import './FilterPanel.css';
 
 const DEFAULT_CATEGORIES = [
     'All Categories',
-    'Sedan',
     'SUV',
+    'Sedan',
     'Hatchback',
+    'MUV',
+    'Luxury',
+    'Sports',
+    'Other',
     'Bike',
     'Scooter',
     'EV',

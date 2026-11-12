@@ -50,8 +50,8 @@ const createInspection = async (req, res) => {
             return res.status(400).json({ message: 'Inspection type must be "pickup" or "return"' });
         }
 
-        if (isNaN(odo) || odo < 0) {
-            return res.status(400).json({ message: 'Valid odometer reading (km) is required' });
+        if (isNaN(odo) || odo < 0 || odo > 2000000) {
+            return res.status(400).json({ message: 'Valid odometer reading between 0 and 2,000,000 km is required' });
         }
 
         if (isNaN(fuel) || fuel < 0 || fuel > 100) {
@@ -161,19 +161,21 @@ const createInspection = async (req, res) => {
 
         // 5. Customer Notification
         if (inspection_type === 'pickup') {
-            await createNotification(
-                booking.user_id,
-                'inspection_ready',
-                `Pre-rental vehicle inspection for Booking #${bookingId} (${booking.vehicle_name}) is ready. Please review and confirm the vehicle condition.`,
-                bookingId
-            );
+            await createNotification({
+                userId: booking.user_id,
+                type: 'inspection_ready',
+                title: 'Vehicle Inspection Ready',
+                message: `Pre-rental vehicle inspection for Booking #${bookingId} (${booking.vehicle_name}) is ready. Please review and confirm the vehicle condition.`,
+                relatedRecordId: bookingId
+            });
         } else {
-            await createNotification(
-                booking.user_id,
-                'return_inspection_completed',
-                `Return vehicle inspection for Booking #${bookingId} has been completed by the administrator.`,
-                bookingId
-            );
+            await createNotification({
+                userId: booking.user_id,
+                type: 'return_inspection_completed',
+                title: 'Return Inspection Completed',
+                message: `Return vehicle inspection for Booking #${bookingId} has been completed by the administrator.`,
+                relatedRecordId: bookingId
+            });
         }
 
         return res.status(201).json({
@@ -421,12 +423,13 @@ const completeHandover = async (req, res) => {
         // Transition booking status to 'active'
         await db.query('UPDATE bookings SET status = "active" WHERE booking_id = ?', [bookingId]);
 
-        await createNotification(
-            row.user_id,
-            'booking_active',
-            `Vehicle handover for Booking #${bookingId} has been completed! Your rental is now Active. Have a safe journey!`,
-            bookingId
-        );
+        await createNotification({
+            userId: row.user_id,
+            type: 'booking_active',
+            title: 'Vehicle Handover Completed',
+            message: `Vehicle handover for Booking #${bookingId} has been completed! Your rental is now Active. Have a safe journey!`,
+            relatedRecordId: bookingId
+        });
 
         return res.status(200).json({
             message: 'Vehicle handover completed successfully. Booking status updated to Active.',
@@ -483,12 +486,13 @@ const completeRental = async (req, res) => {
             console.warn('Post-rental charges calculation notice:', postErr.message);
         }
 
-        await createNotification(
-            row.user_id,
-            'booking_completed',
-            `Rental for Booking #${bookingId} has been successfully completed and settled. Thank you for choosing RentIQ!`,
-            bookingId
-        );
+        await createNotification({
+            userId: row.user_id,
+            type: 'booking_completed',
+            title: 'Rental Completed & Settled',
+            message: `Rental for Booking #${bookingId} has been successfully completed and settled. Thank you for choosing RentIQ!`,
+            relatedRecordId: bookingId
+        });
 
         return res.status(200).json({
             message: 'Rental completed successfully. Booking status updated to Completed.',
@@ -592,11 +596,26 @@ const downloadInspectionPhoto = async (req, res) => {
             return res.status(403).json({ message: 'Access denied: You cannot view this photograph' });
         }
 
-        if (!fs.existsSync(photo.file_path)) {
+        let targetFilePath = photo.file_path;
+        if (!fs.existsSync(targetFilePath)) {
+            const candidates = [
+                path.resolve(__dirname, '..', photo.file_path),
+                path.resolve(__dirname, '../uploads/inspection_photos', path.basename(photo.file_path)),
+                path.resolve(process.cwd(), photo.file_path)
+            ];
+            for (const cand of candidates) {
+                if (fs.existsSync(cand)) {
+                    targetFilePath = cand;
+                    break;
+                }
+            }
+        }
+
+        if (!fs.existsSync(targetFilePath)) {
             return res.status(404).json({ message: 'Photograph file missing on server' });
         }
 
-        const ext = path.extname(photo.file_path).toLowerCase();
+        const ext = path.extname(targetFilePath).toLowerCase();
         const contentTypes = {
             '.jpg': 'image/jpeg',
             '.jpeg': 'image/jpeg',
@@ -607,7 +626,7 @@ const downloadInspectionPhoto = async (req, res) => {
         res.setHeader('Content-Type', contentTypes[ext] || 'application/octet-stream');
         res.setHeader('Content-Disposition', `inline; filename="inspection_${photoId}${ext}"`);
 
-        const fileStream = fs.createReadStream(photo.file_path);
+        const fileStream = fs.createReadStream(targetFilePath);
         fileStream.pipe(res);
     } catch (err) {
         console.error('Error streaming photo:', err.message);

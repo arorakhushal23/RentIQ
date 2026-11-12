@@ -81,6 +81,7 @@ function AdminVehicles() {
     const [form, setForm] = useState(EMPTY_FORM);
     const [formError, setFormError] = useState('');
     const [saving, setSaving] = useState(false);
+    const [successNotice, setSuccessNotice] = useState('');
     const [changingStatusId, setChangingStatusId] = useState(null);
     const isSubmittingRef = useRef(false);
 
@@ -136,6 +137,7 @@ function AdminVehicles() {
                 String(vehicle.name || '').toLowerCase().includes(query) ||
                 String(vehicle.brand || '').toLowerCase().includes(query) ||
                 String(vehicle.model || '').toLowerCase().includes(query) ||
+                String(vehicle.category || '').toLowerCase().includes(query) ||
                 String(vehicle.registration_number || '').toLowerCase().includes(query);
 
             const matchesCategory =
@@ -154,8 +156,11 @@ function AdminVehicles() {
 
             const matchesAvailability =
                 availabilityFilter === 'all' ||
-                (availabilityFilter === 'available' && available) ||
-                (availabilityFilter === 'unavailable' && !available);
+                vehicle.availability_status === availabilityFilter ||
+                (availabilityFilter === 'available' && (vehicle.booking_eligible || vehicle.availability_status === 'available')) ||
+                (availabilityFilter === 'compliance_required' && vehicle.availability_status === 'compliance_required') ||
+                (availabilityFilter === 'under_maintenance' && vehicle.availability_status === 'under_maintenance') ||
+                (availabilityFilter === 'unavailable' && (vehicle.availability_status === 'unavailable' || (!available && !vehicle.operational_is_available)));
 
             return matchesSearch && matchesCategory && matchesFuel && matchesAvailability;
         });
@@ -166,6 +171,7 @@ function AdminVehicles() {
         setForm({ ...EMPTY_FORM });
         setFormTab('basic');
         setFormError('');
+        setSuccessNotice('');
         setShowForm(true);
     };
 
@@ -203,6 +209,7 @@ function AdminVehicles() {
         });
         setFormTab('basic');
         setFormError('');
+        setSuccessNotice('');
         setShowForm(true);
     };
 
@@ -285,14 +292,23 @@ function AdminVehicles() {
         try {
             if (editingVehicle) {
                 await axiosInstance.put(`/admin/vehicles/${editingVehicle.vehicle_id}`, payload);
+                setSuccessNotice('Vehicle updated successfully!');
             } else {
                 await axiosInstance.post('/admin/vehicles', payload);
+                setSuccessNotice('Vehicle added successfully!');
             }
 
-            closeForm();
+            // Close the form modal and reset
+            setShowForm(false);
+            setEditingVehicle(null);
+            setForm({ ...EMPTY_FORM });
+            setFormError('');
+
+            // Automatically refresh vehicle list so new/updated vehicle appears immediately
             await fetchVehicles();
         } catch (err) {
             console.error('Failed to save vehicle:', err);
+            // On failure: keep form open, preserve entered data in form state, and display meaningful error
             setFormError(
                 err.response?.data?.message ||
                 'Unable to save vehicle. Please verify the registration details and retry.'
@@ -363,6 +379,22 @@ function AdminVehicles() {
                 </div>
             </header>
 
+            {successNotice && (
+                <div className="admin-vehicles-success-alert" role="status">
+                    <div className="admin-vehicles-success-content">
+                        <CheckCircle2 size={18} />
+                        <span>{successNotice}</span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setSuccessNotice('')}
+                        aria-label="Dismiss success message"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
+
             {error && (
                 <div className="admin-vehicles-alert" role="alert">
                     <AlertTriangle size={18} />
@@ -428,6 +460,8 @@ function AdminVehicles() {
                     >
                         <option value="all">All Statuses</option>
                         <option value="available">Available</option>
+                        <option value="compliance_required">Compliance Required</option>
+                        <option value="under_maintenance">Under Maintenance</option>
                         <option value="unavailable">Unavailable</option>
                     </select>
                 </div>
@@ -549,11 +583,18 @@ function AdminVehicles() {
                                         </td>
 
                                         <td>
-                                            <span
-                                                className={`admin-vehicle-status ${available ? 'is-available' : 'is-unavailable'}`}
-                                            >
-                                                {available ? 'Available' : 'Unavailable'}
-                                            </span>
+                                            <div className="admin-status-cell">
+                                                <span
+                                                    className={`admin-vehicle-status status-${vehicle.availability_status || (available ? 'available' : 'unavailable')} is-${vehicle.availability_status === 'compliance_required' ? 'compliance' : vehicle.availability_status === 'under_maintenance' ? 'maintenance' : vehicle.availability_status === 'available' ? 'available' : available ? 'available' : 'unavailable'}`}
+                                                >
+                                                    {vehicle.availability_badge?.text || (vehicle.availability_status === 'compliance_required' ? 'Compliance Required' : vehicle.availability_status === 'under_maintenance' ? 'Under Maintenance' : vehicle.availability_status === 'available' ? 'Available' : available ? 'Available' : 'Unavailable')}
+                                                </span>
+                                                {vehicle.availability_reason && (
+                                                    <span className="admin-status-reason" title={vehicle.availability_reason}>
+                                                        {vehicle.availability_reason}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
 
                                         <td>
@@ -1104,7 +1145,7 @@ function AdminVehicles() {
                                         className="admin-vehicles-primary-btn"
                                         disabled={saving}
                                     >
-                                        {saving ? 'Saving Fleet Data...' : editingVehicle ? 'Update Vehicle' : 'Save Vehicle'}
+                                        {saving ? 'Saving Fleet Data...' : editingVehicle ? 'Update Vehicle' : 'Add Vehicle'}
                                     </button>
                                 </div>
                             </footer>

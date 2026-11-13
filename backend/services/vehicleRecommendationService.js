@@ -85,6 +85,9 @@ async function searchAndRankVehicles(preferences = {}) {
         tripType,
         rentalStartDate,
         rentalEndDate,
+        isCar = false,
+        isAffordable = false,
+        sortBy = 'score',
         limit = 4
     } = preferences;
 
@@ -237,7 +240,26 @@ async function searchAndRankVehicles(preferences = {}) {
             }
         }
 
-        // (g) Trip Type Heuristics
+        // (g) Trip Type & Sporty Heuristics
+        if (isCar) {
+            if (cat === 'Bike' || cat === 'Scooter') {
+                score -= 80;
+                missingReasons.push('Two-wheeler instead of requested car');
+            } else {
+                score += 15;
+            }
+        }
+
+        if (isAffordable) {
+            if (dailyRate <= 5000) {
+                score += 25;
+                matchReasons.push(`Affordable rate under ₹5,000/day`);
+            } else {
+                score -= 30;
+                missingReasons.push(`Premium rate of ₹${dailyRate.toLocaleString('en-IN')}/day`);
+            }
+        }
+
         if (normalizedTripType) {
             if (normalizedTripType.includes('family')) {
                 if (capacity >= 5 && (cat === 'SUV' || cat === 'Sedan' || cat === 'MUV')) {
@@ -248,6 +270,18 @@ async function searchAndRankVehicles(preferences = {}) {
                 if (cat === 'Sports' || cat === 'SUV' || cat === 'Sedan') {
                     score += 15;
                     matchReasons.push('Great choice for exciting weekend drives');
+                }
+                // If user wants sporty AND affordable, prioritize BMW M340i and sporty turbo sedans over 25k Porsche
+                if (isAffordable || (requestedMaxPrice && requestedMaxPrice <= 10000)) {
+                    if (sanitized.name.includes('M340i')) {
+                        score += 35;
+                        matchReasons.push('Affordable twin-turbo performance sports car');
+                    } else if (sanitized.name.includes('Verna')) {
+                        score += 25;
+                        matchReasons.push('Sporty turbo sedan at a budget-friendly rate');
+                    } else if (sanitized.name.includes('Porsche')) {
+                        score -= 35;
+                    }
                 }
             } else if (normalizedTripType.includes('economic') || normalizedTripType.includes('budget') || normalizedTripType.includes('city')) {
                 if (cat === 'Hatchback' || cat === 'EV' || dailyRate <= 2000) {
@@ -301,11 +335,29 @@ async function searchAndRankVehicles(preferences = {}) {
         };
     });
 
-    // 4. Sort vehicles by score descending
-    scoredVehicles.sort((a, b) => b.score - a.score);
+    // 4. Sort vehicles by score descending, or price ascending if requested
+    if (sortBy === 'price_asc' || sortBy === 'cheapest') {
+        scoredVehicles.sort((a, b) => {
+            if (a.isExactMatch !== b.isExactMatch) return b.isExactMatch ? 1 : -1;
+            return a.price_per_day - b.price_per_day;
+        });
+    } else {
+        scoredVehicles.sort((a, b) => b.score - a.score);
+    }
+
+    // Deduplicate by distinct vehicle model name so duplicate records don't crowd results
+    const seenNames = new Set();
+    const uniqueScoredVehicles = [];
+    for (const v of scoredVehicles) {
+        const key = `${v.brand} ${v.name}`.toLowerCase();
+        if (!seenNames.has(key)) {
+            seenNames.add(key);
+            uniqueScoredVehicles.push(v);
+        }
+    }
 
     // 5. Separate exact / strong matches from alternatives
-    const exactMatches = scoredVehicles.filter(v => v.isExactMatch);
+    const exactMatches = uniqueScoredVehicles.filter(v => v.isExactMatch);
     let recommendations = [];
     let alternatives = [];
     let exactMatchesFound = false;
@@ -316,24 +368,24 @@ async function searchAndRankVehicles(preferences = {}) {
         recommendations = exactMatches.slice(0, limit);
     } else {
         // Collect what preferences couldn't be satisfied
-        if (requestedCategory && !scoredVehicles.some(v => v.category.toLowerCase() === requestedCategory.toLowerCase() && v.booking_eligible)) {
+        if (requestedCategory && !uniqueScoredVehicles.some(v => v.category.toLowerCase() === requestedCategory.toLowerCase() && v.booking_eligible)) {
             unmatchedCriteria.push(`No available ${requestedCategory} found`);
         }
-        if (requestedMaxPrice && !scoredVehicles.some(v => v.price_per_day <= requestedMaxPrice && v.booking_eligible)) {
+        if (requestedMaxPrice && !uniqueScoredVehicles.some(v => v.price_per_day <= requestedMaxPrice && v.booking_eligible)) {
             unmatchedCriteria.push(`No vehicle within ₹${requestedMaxPrice.toLocaleString('en-IN')}/day`);
         }
-        if (requestedPassengers && !scoredVehicles.some(v => v.seating_capacity >= requestedPassengers && v.booking_eligible)) {
+        if (requestedPassengers && !uniqueScoredVehicles.some(v => v.seating_capacity >= requestedPassengers && v.booking_eligible)) {
             unmatchedCriteria.push(`No vehicle with ${requestedPassengers}+ seats`);
         }
 
         // Take top scored available vehicles as alternatives
-        alternatives = scoredVehicles
+        alternatives = uniqueScoredVehicles
             .filter(v => v.booking_eligible)
             .slice(0, limit);
 
         // If no available vehicles at all, fall back to any top scored vehicles
         if (alternatives.length === 0) {
-            alternatives = scoredVehicles.slice(0, limit);
+            alternatives = uniqueScoredVehicles.slice(0, limit);
         }
 
         recommendations = alternatives;

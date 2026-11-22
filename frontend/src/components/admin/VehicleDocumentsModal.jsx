@@ -12,7 +12,11 @@ import {
     XCircle,
     ShieldAlert,
     Calendar,
-    FileCheck
+    FileCheck,
+    RotateCcw,
+    Check,
+    History,
+    ShieldCheck
 } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import Loader from '../common/Loader';
@@ -27,7 +31,7 @@ const DOC_TYPES = [
     { value: 'road_tax', label: 'Road Tax Certificate' }
 ];
 
-const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 function VehicleDocumentsModal({ vehicle, onClose, onDocumentsUpdated }) {
@@ -57,6 +61,26 @@ function VehicleDocumentsModal({ vehicle, onClose, onDocumentsUpdated }) {
     const [editStatus, setEditStatus] = useState('valid');
     const [editRemarks, setEditRemarks] = useState('');
     const [editSaving, setEditSaving] = useState(false);
+
+    // Renewal Form State
+    const [renewingDoc, setRenewingDoc] = useState(null);
+    const [renewDocNumber, setRenewDocNumber] = useState('');
+    const [renewIssueDate, setRenewIssueDate] = useState('');
+    const [renewExpiryDate, setRenewExpiryDate] = useState('');
+    const [renewFile, setRenewFile] = useState(null);
+    const [renewRemarks, setRenewRemarks] = useState('');
+    const [renewSaving, setRenewSaving] = useState(false);
+
+    // History & Verification Log State
+    const [historyDoc, setHistoryDoc] = useState(null);
+    const [historyVersions, setHistoryVersions] = useState([]);
+    const [historyLogs, setHistoryLogs] = useState([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
+
+    // Rejection prompt state
+    const [rejectingDocId, setRejectingDocId] = useState(null);
+    const [rejectionReason, setRejectionReason] = useState('');
+    const [rejectLoading, setRejectLoading] = useState(false);
 
     // Delete confirmation
     const [deletingId, setDeletingId] = useState(null);
@@ -89,7 +113,7 @@ function VehicleDocumentsModal({ vehicle, onClose, onDocumentsUpdated }) {
         }
 
         if (!ALLOWED_MIME.includes(file.type)) {
-            setUploadError('Invalid format. Permitted file types: PDF, JPG, JPEG, PNG.');
+            setUploadError('Invalid format. Permitted file types: PDF, JPG, JPEG, PNG, WebP.');
             e.target.value = '';
             setSelectedFile(null);
             return;
@@ -103,6 +127,30 @@ function VehicleDocumentsModal({ vehicle, onClose, onDocumentsUpdated }) {
         }
 
         setSelectedFile(file);
+    };
+
+    const handleRenewFileChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) {
+            setRenewFile(null);
+            return;
+        }
+
+        if (!ALLOWED_MIME.includes(file.type)) {
+            setError('Invalid format for renewal certificate. Allowed: PDF, JPG, PNG, WebP.');
+            e.target.value = '';
+            setRenewFile(null);
+            return;
+        }
+
+        if (file.size > MAX_FILE_SIZE) {
+            setError('Renewal file exceeds 5MB limit.');
+            e.target.value = '';
+            setRenewFile(null);
+            return;
+        }
+
+        setRenewFile(file);
     };
 
     const handleUploadSubmit = async (e) => {
@@ -138,7 +186,6 @@ function VehicleDocumentsModal({ vehicle, onClose, onDocumentsUpdated }) {
             });
 
             setSuccessMessage('Document uploaded and compliance record updated successfully.');
-            // Reset form
             setDocNumber('');
             setIssueDate('');
             setExpiryDate('');
@@ -152,6 +199,111 @@ function VehicleDocumentsModal({ vehicle, onClose, onDocumentsUpdated }) {
             setUploadError(err.response?.data?.message || 'Failed to upload document.');
         } finally {
             setUploading(false);
+        }
+    };
+
+    const handleStartRenew = (doc) => {
+        setRenewingDoc(doc);
+        setRenewDocNumber(doc.document_number);
+        setRenewIssueDate('');
+        setRenewExpiryDate('');
+        setRenewFile(null);
+        setRenewRemarks('');
+        setError('');
+        setSuccessMessage('');
+    };
+
+    const handleRenewSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setSuccessMessage('');
+
+        if (!renewDocNumber.trim() || !renewExpiryDate) {
+            setError('Document number and new expiry date are required.');
+            return;
+        }
+        if (!renewFile) {
+            setError('Please attach the renewed certificate document file.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('document_number', renewDocNumber.trim());
+        if (renewIssueDate) formData.append('issue_date', renewIssueDate);
+        formData.append('expiry_date', renewExpiryDate);
+        if (renewRemarks.trim()) formData.append('admin_remarks', renewRemarks.trim());
+        formData.append('file', renewFile);
+
+        setRenewSaving(true);
+        try {
+            await axiosInstance.post(`/admin/documents/${renewingDoc.id}/renew`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            setSuccessMessage(`Document successfully renewed! Previous version archived to history.`);
+            setRenewingDoc(null);
+            fetchDocuments();
+            if (onDocumentsUpdated) onDocumentsUpdated();
+        } catch (err) {
+            console.error('Renewal error:', err);
+            setError(err.response?.data?.message || 'Failed to renew document.');
+        } finally {
+            setRenewSaving(false);
+        }
+    };
+
+    const handleVerify = async (docId) => {
+        try {
+            setError('');
+            await axiosInstance.patch(`/admin/documents/${docId}/verify`);
+            setSuccessMessage('Document verified and approved.');
+            fetchDocuments();
+            if (onDocumentsUpdated) onDocumentsUpdated();
+        } catch (err) {
+            console.error('Verify error:', err);
+            setError(err.response?.data?.message || 'Failed to verify document.');
+        }
+    };
+
+    const handleRejectSubmit = async (e) => {
+        e.preventDefault();
+        if (!rejectionReason.trim()) return;
+
+        setRejectLoading(true);
+        try {
+            setError('');
+            await axiosInstance.patch(`/admin/documents/${rejectingDocId}/reject`, {
+                admin_remarks: rejectionReason.trim()
+            });
+            setSuccessMessage('Document has been rejected with administrative remarks recorded.');
+            setRejectingDocId(null);
+            setRejectionReason('');
+            fetchDocuments();
+            if (onDocumentsUpdated) onDocumentsUpdated();
+        } catch (err) {
+            console.error('Reject error:', err);
+            setError(err.response?.data?.message || 'Failed to reject document.');
+        } finally {
+            setRejectLoading(false);
+        }
+    };
+
+    const handleViewHistory = async (doc) => {
+        setHistoryDoc(doc);
+        setHistoryLoading(true);
+        setError('');
+        try {
+            const [versionsRes, logsRes] = await Promise.all([
+                axiosInstance.get(`/admin/documents/${doc.id}/versions`),
+                axiosInstance.get(`/admin/documents/${doc.id}/verification-logs`)
+            ]);
+            setHistoryVersions(versionsRes.data || []);
+            setHistoryLogs(logsRes.data || []);
+        } catch (err) {
+            console.error('History fetch error:', err);
+            setError('Failed to retrieve document versions or audit trail.');
+        } finally {
+            setHistoryLoading(false);
         }
     };
 
@@ -225,6 +377,29 @@ function VehicleDocumentsModal({ vehicle, onClose, onDocumentsUpdated }) {
         } catch (err) {
             console.error('Download error:', err);
             setError('Could not download document file from storage.');
+        }
+    };
+
+    const handleDownloadVersion = async (versionId, versionNumber) => {
+        try {
+            const response = await axiosInstance.get(`/admin/documents/versions/${versionId}/download`, {
+                responseType: 'blob'
+            });
+
+            const blob = new Blob([response.data], {
+                type: response.headers['content-type'] || 'application/octet-stream'
+            });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `archived_version_${versionNumber}`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Download version error:', err);
+            setError('Could not download archived version file.');
         }
     };
 
@@ -307,8 +482,8 @@ function VehicleDocumentsModal({ vehicle, onClose, onDocumentsUpdated }) {
                 <div className="doc-modal-tabs">
                     <button
                         type="button"
-                        className={`doc-tab-btn ${activeTab === 'list' ? 'active' : ''}`}
-                        onClick={() => { setActiveTab('list'); setEditingDoc(null); }}
+                        className={`doc-tab-btn ${activeTab === 'list' && !renewingDoc && !historyDoc ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('list'); setEditingDoc(null); setRenewingDoc(null); setHistoryDoc(null); }}
                     >
                         <FileText size={16} />
                         Vehicle Documents ({documents.length})
@@ -316,7 +491,7 @@ function VehicleDocumentsModal({ vehicle, onClose, onDocumentsUpdated }) {
                     <button
                         type="button"
                         className={`doc-tab-btn ${activeTab === 'upload' ? 'active' : ''}`}
-                        onClick={() => { setActiveTab('upload'); setEditingDoc(null); }}
+                        onClick={() => { setActiveTab('upload'); setEditingDoc(null); setRenewingDoc(null); setHistoryDoc(null); }}
                     >
                         <UploadCloud size={16} />
                         Upload New Certificate
@@ -345,6 +520,193 @@ function VehicleDocumentsModal({ vehicle, onClose, onDocumentsUpdated }) {
                         <div className="doc-loader-wrapper">
                             <Loader message="Loading compliance documents..." />
                         </div>
+                    ) : historyDoc ? (
+                        /* History & Versions View */
+                        <div className="doc-history-view">
+                            <div className="doc-form-header">
+                                <div>
+                                    <h3>Version History & Audit Log: {getDocTypeLabel(historyDoc.document_type)}</h3>
+                                    <span className="doc-history-subtitle">Current Active: v{historyDoc.version || 1} ({historyDoc.document_number})</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="doc-cancel-link"
+                                    onClick={() => setHistoryDoc(null)}
+                                >
+                                    Back to Documents
+                                </button>
+                            </div>
+
+                            {historyLoading ? (
+                                <Loader message="Loading version history and audit trail..." />
+                            ) : (
+                                <div className="doc-history-sections">
+                                    <section className="history-section">
+                                        <h4>Archived Previous Versions ({historyVersions.length})</h4>
+                                        {historyVersions.length === 0 ? (
+                                            <p className="no-history-text">No previous versions on file. This document is on its initial version (v1).</p>
+                                        ) : (
+                                            <div className="history-table-wrap">
+                                                <table className="doc-history-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Version</th>
+                                                            <th>Doc Number</th>
+                                                            <th>Expiry Date</th>
+                                                            <th>Archived On</th>
+                                                            <th>Archived By</th>
+                                                            <th>Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {historyVersions.map((ver) => (
+                                                            <tr key={ver.id}>
+                                                                <td><span className="version-pill">v{ver.version_number}</span></td>
+                                                                <td><strong>{ver.document_number}</strong></td>
+                                                                <td>{ver.expiry_date ? ver.expiry_date.split('T')[0] : '—'}</td>
+                                                                <td>{ver.archived_at ? new Date(ver.archived_at).toLocaleDateString() : '—'}</td>
+                                                                <td>{ver.archived_by_name || 'Admin'}</td>
+                                                                <td>
+                                                                    <button
+                                                                        type="button"
+                                                                        className="doc-action-btn view-btn"
+                                                                        onClick={() => handleDownloadVersion(ver.id, ver.version_number)}
+                                                                        title="Download archived certificate"
+                                                                    >
+                                                                        <Download size={13} />
+                                                                        Download
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </section>
+
+                                    <section className="history-section">
+                                        <h4>Verification Audit Trail ({historyLogs.length})</h4>
+                                        {historyLogs.length === 0 ? (
+                                            <p className="no-history-text">No verification log entries recorded yet.</p>
+                                        ) : (
+                                            <div className="audit-log-list">
+                                                {historyLogs.map((log) => (
+                                                    <div key={log.id} className="audit-log-item">
+                                                        <div className="audit-log-header">
+                                                            <div className="audit-status-transition">
+                                                                <span className={`status-badge-mini ${log.previous_status}`}>{log.previous_status}</span>
+                                                                <span className="audit-arrow">→</span>
+                                                                <span className={`status-badge-mini ${log.new_status}`}>{log.new_status}</span>
+                                                            </div>
+                                                            <span className="audit-time">{new Date(log.created_at).toLocaleString()}</span>
+                                                        </div>
+                                                        <div className="audit-log-body">
+                                                            <p><strong>Remarks:</strong> {log.remarks || 'No remarks recorded'}</p>
+                                                            <span className="audit-admin-meta">Verified by: {log.admin_name || `Admin #${log.admin_id}`}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </section>
+                                </div>
+                            )}
+                        </div>
+                    ) : renewingDoc ? (
+                        /* Renew Document Form */
+                        <form className="doc-upload-form" onSubmit={handleRenewSubmit}>
+                            <div className="doc-form-header">
+                                <div>
+                                    <h3>Renew {getDocTypeLabel(renewingDoc.document_type)}</h3>
+                                    <span className="doc-history-subtitle">Renewing document #{renewingDoc.document_number} (Currently v{renewingDoc.version || 1})</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="doc-cancel-link"
+                                    onClick={() => setRenewingDoc(null)}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+
+                            <div className="doc-form-grid">
+                                <div className="doc-field">
+                                    <label>Renewed Document / Policy Number *</label>
+                                    <input
+                                        type="text"
+                                        value={renewDocNumber}
+                                        onChange={(e) => setRenewDocNumber(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="doc-field">
+                                    <label>Issue Date</label>
+                                    <input
+                                        type="date"
+                                        value={renewIssueDate}
+                                        onChange={(e) => setRenewIssueDate(e.target.value)}
+                                    />
+                                </div>
+                                <div className="doc-field">
+                                    <label>New Expiry Date *</label>
+                                    <input
+                                        type="date"
+                                        value={renewExpiryDate}
+                                        onChange={(e) => setRenewExpiryDate(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="doc-field full-width">
+                                <label>Upload New Renewed Certificate * (PDF, JPG, PNG, WebP - Max 5MB)</label>
+                                <div className="doc-file-dropzone">
+                                    <input
+                                        type="file"
+                                        id="renew-file-input"
+                                        onChange={handleRenewFileChange}
+                                        accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                        required
+                                    />
+                                    <label htmlFor="renew-file-input" className="file-dropzone-label">
+                                        <RotateCcw size={28} />
+                                        <span>
+                                            {renewFile
+                                                ? `Selected: ${renewFile.name} (${(renewFile.size / 1024).toFixed(0)} KB)`
+                                                : 'Click or drag new renewal certificate file'}
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="doc-field full-width">
+                                <label>Renewal Notes / Issuing Authority</label>
+                                <textarea
+                                    rows={2}
+                                    value={renewRemarks}
+                                    onChange={(e) => setRenewRemarks(e.target.value)}
+                                    placeholder="e.g. Policy renewed via Oriental Insurance; valid through 2026."
+                                />
+                            </div>
+
+                            <div className="doc-form-actions">
+                                <button
+                                    type="button"
+                                    className="doc-btn-secondary"
+                                    onClick={() => setRenewingDoc(null)}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="doc-btn-primary"
+                                    disabled={renewSaving}
+                                >
+                                    {renewSaving ? 'Archiving Old Version & Saving Renewal...' : 'Confirm Renewal & Archive Previous'}
+                                </button>
+                            </div>
+                        </form>
                     ) : editingDoc ? (
                         /* Edit Document View */
                         <form className="doc-edit-form" onSubmit={handleSaveEdit}>
@@ -482,13 +844,13 @@ function VehicleDocumentsModal({ vehicle, onClose, onDocumentsUpdated }) {
                             </div>
 
                             <div className="doc-field full-width">
-                                <label>Upload Certificate File * (PDF, JPG, JPEG, PNG - Max 5MB)</label>
+                                <label>Upload Certificate File * (PDF, JPG, JPEG, PNG, WebP - Max 5MB)</label>
                                 <div className="doc-file-dropzone">
                                     <input
                                         type="file"
                                         id="doc-file-input"
                                         onChange={handleFileChange}
-                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        accept=".pdf,.jpg,.jpeg,.png,.webp"
                                         required
                                     />
                                     <label htmlFor="doc-file-input" className="file-dropzone-label">
@@ -532,6 +894,39 @@ function VehicleDocumentsModal({ vehicle, onClose, onDocumentsUpdated }) {
                     ) : (
                         /* Document List */
                         <div className="doc-list-view">
+                            {/* Rejection Remarks Modal Prompt */}
+                            {rejectingDocId && (
+                                <div className="doc-reject-overlay">
+                                    <form className="doc-reject-box" onSubmit={handleRejectSubmit}>
+                                        <h4>Reject Document Verification</h4>
+                                        <p>Please enter the specific reason for rejecting this compliance certificate. This will be permanently recorded in the audit log.</p>
+                                        <textarea
+                                            rows={3}
+                                            value={rejectionReason}
+                                            onChange={(e) => setRejectionReason(e.target.value)}
+                                            placeholder="e.g. Scanned certificate is blurred; policy holder name does not match vehicle registration."
+                                            required
+                                        />
+                                        <div className="doc-reject-actions">
+                                            <button
+                                                type="button"
+                                                className="doc-btn-secondary"
+                                                onClick={() => { setRejectingDocId(null); setRejectionReason(''); }}
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                className="btn-reject-confirm"
+                                                disabled={rejectLoading || !rejectionReason.trim()}
+                                            >
+                                                {rejectLoading ? 'Rejecting...' : 'Confirm Rejection'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            )}
+
                             {documents.length === 0 ? (
                                 <div className="doc-empty-state">
                                     <FileText size={48} strokeWidth={1.5} />
@@ -557,9 +952,14 @@ function VehicleDocumentsModal({ vehicle, onClose, onDocumentsUpdated }) {
                                             <article key={doc.id} className={`doc-card doc-card-${doc.calculated_status}`}>
                                                 <div className="doc-card-top">
                                                     <div className="doc-card-title-group">
-                                                        <span className="doc-type-tag">
-                                                            {doc.document_type.toUpperCase()}
-                                                        </span>
+                                                        <div className="doc-tag-row">
+                                                            <span className="doc-type-tag">
+                                                                {doc.document_type.toUpperCase()}
+                                                            </span>
+                                                            <span className="doc-version-tag">
+                                                                v{doc.version || 1}
+                                                            </span>
+                                                        </div>
                                                         <h4>{getDocTypeLabel(doc.document_type)}</h4>
                                                         <span className="doc-number-text">
                                                             No: <strong>{doc.document_number}</strong>
@@ -597,8 +997,48 @@ function VehicleDocumentsModal({ vehicle, onClose, onDocumentsUpdated }) {
                                                         title="Download or inspect certificate"
                                                     >
                                                         <Download size={14} />
-                                                        Download File
+                                                        Download
                                                     </button>
+                                                    <button
+                                                        type="button"
+                                                        className="doc-action-btn renew-btn"
+                                                        onClick={() => handleStartRenew(doc)}
+                                                        title="Renew expired or expiring certificate"
+                                                    >
+                                                        <RotateCcw size={14} />
+                                                        Renew
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="doc-action-btn history-btn"
+                                                        onClick={() => handleViewHistory(doc)}
+                                                        title="View version history and audit log"
+                                                    >
+                                                        <History size={14} />
+                                                        History
+                                                    </button>
+                                                    {doc.calculated_status !== 'valid' && (
+                                                        <button
+                                                            type="button"
+                                                            className="doc-action-btn approve-btn"
+                                                            onClick={() => handleVerify(doc.id)}
+                                                            title="Approve and mark valid"
+                                                        >
+                                                            <Check size={14} />
+                                                            Approve
+                                                        </button>
+                                                    )}
+                                                    {doc.calculated_status !== 'rejected' && (
+                                                        <button
+                                                            type="button"
+                                                            className="doc-action-btn reject-btn"
+                                                            onClick={() => { setRejectingDocId(doc.id); setRejectionReason(''); }}
+                                                            title="Reject document with remarks"
+                                                        >
+                                                            <XCircle size={14} />
+                                                            Reject
+                                                        </button>
+                                                    )}
                                                     <button
                                                         type="button"
                                                         className="doc-action-btn edit-btn"
@@ -651,4 +1091,3 @@ function VehicleDocumentsModal({ vehicle, onClose, onDocumentsUpdated }) {
 }
 
 export default VehicleDocumentsModal;
-

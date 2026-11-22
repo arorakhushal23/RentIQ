@@ -106,16 +106,19 @@ async function evaluateVehicleAvailability(vehicle, options = {}) {
         const [rows] = await runner.query(
             `SELECT document_type, expiry_date, verification_status
              FROM vehicle_documents
-             WHERE vehicle_id = ?`,
+             WHERE vehicle_id = ?
+             ORDER BY id DESC`,
             [vehicleId]
         );
         docs = rows;
     }
 
-    // 3. Document compliance evaluation
+    // 3. Document compliance evaluation (take latest record per document type)
     const presentDocs = {};
     for (const d of docs) {
-        presentDocs[d.document_type] = d;
+        if (!presentDocs[d.document_type]) {
+            presentDocs[d.document_type] = d;
+        }
     }
 
     const missingTypes = [];

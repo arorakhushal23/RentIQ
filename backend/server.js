@@ -20,6 +20,7 @@ const maintenanceRoutes = require('./routes/maintenanceRoutes');
 const pricingRoutes = require('./routes/pricingRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const { ensureUploadFiles } = require('./utils/ensureUploadFiles');
+const { startExpiryScanScheduler } = require('./services/documentExpiryService');
 
 // Initialize upload storage and seeded sample documents
 ensureUploadFiles();
@@ -74,6 +75,7 @@ app.listen(PORT, async () => {
     try {
         await db.query('SELECT 1');
         console.log('Database connected successfully');
+        startExpiryScanScheduler();
     } catch (error) {
         console.error(
             'Database connection failed on startup:',

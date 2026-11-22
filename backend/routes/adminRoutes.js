@@ -20,9 +20,16 @@ const {
 const {
     getVehicleDocuments,
     uploadDocument,
+    renewDocument,
+    verifyDocument,
+    rejectDocument,
     updateDocument,
     deleteDocument,
     downloadDocument,
+    getDocumentVersions,
+    downloadDocumentVersion,
+    getDocumentVerificationLogs,
+    triggerFleetExpiryScan,
     getDocumentAlerts
 } = require('../controllers/vehicleDocumentController');
 const {
@@ -30,7 +37,10 @@ const {
     getLicenseById,
     verifyLicense,
     rejectLicense,
-    downloadAdminLicenseDoc
+    downloadAdminLicenseDoc,
+    getAdminLicenseHistory,
+    downloadAdminLicenseHistoryDoc,
+    getLicenseVerificationLogs
 } = require('../controllers/licenseController');
 const {
     getDeliveryPricing,
@@ -80,11 +90,18 @@ router.patch('/vehicles/:id/status', updateVehicleStatus);
 
 // Vehicle Document management
 router.get('/documents/alerts', getDocumentAlerts);
+router.post('/documents/scan-expiry', triggerFleetExpiryScan);
 router.get('/vehicles/:vehicleId/documents', getVehicleDocuments);
 router.post('/vehicles/:vehicleId/documents', uploadVehicleDocument.single('file'), uploadDocument);
+router.post('/documents/:id/renew', uploadVehicleDocument.single('file'), renewDocument);
+router.patch('/documents/:id/verify', verifyDocument);
+router.patch('/documents/:id/reject', rejectDocument);
 router.put('/documents/:id', updateDocument);
 router.delete('/documents/:id', deleteDocument);
 router.get('/documents/:id/download', downloadDocument);
+router.get('/documents/:id/versions', getDocumentVersions);
+router.get('/documents/versions/:versionId/download', downloadDocumentVersion);
+router.get('/documents/:id/verification-logs', getDocumentVerificationLogs);
 
 // Customer Driving Licence verification
 router.get('/licenses', getAllLicenses);
@@ -92,6 +109,9 @@ router.get('/licenses/:id', getLicenseById);
 router.patch('/licenses/:id/verify', verifyLicense);
 router.patch('/licenses/:id/reject', rejectLicense);
 router.get('/licenses/:id/document/:side', downloadAdminLicenseDoc);
+router.get('/licenses/:id/history', getAdminLicenseHistory);
+router.get('/licenses/history/:historyId/document/:side', downloadAdminLicenseHistoryDoc);
+router.get('/licenses/:id/verification-logs', getLicenseVerificationLogs);
 
 // Booking management
 router.get('/bookings', getAllBookings);

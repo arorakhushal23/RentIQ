@@ -5,7 +5,9 @@ const { uploadCustomerLicense } = require('../utils/fileUpload');
 const {
     getMyLicense,
     submitLicense,
-    downloadMyLicenseDoc
+    downloadMyLicenseDoc,
+    getMyLicenseHistory,
+    downloadMyLicenseHistoryDoc
 } = require('../controllers/licenseController');
 
 router.use(authMiddleware);
@@ -20,6 +22,7 @@ router.post(
     submitLicense
 );
 router.get('/my-license/document/:side', downloadMyLicenseDoc);
+router.get('/my-license/history', getMyLicenseHistory);
+router.get('/my-license/history/:historyId/document/:side', downloadMyLicenseHistoryDoc);
 
 module.exports = router;
-

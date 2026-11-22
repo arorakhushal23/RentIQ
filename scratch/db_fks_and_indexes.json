@@ -1,0 +1,899 @@
+{
+  "fks": [
+    {
+      "TABLE_NAME": "booking_additional_charges",
+      "COLUMN_NAME": "booking_id",
+      "CONSTRAINT_NAME": "booking_additional_charges_ibfk_1",
+      "REFERENCED_TABLE_NAME": "bookings",
+      "REFERENCED_COLUMN_NAME": "booking_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "booking_price_breakdown",
+      "COLUMN_NAME": "booking_id",
+      "CONSTRAINT_NAME": "booking_price_breakdown_ibfk_1",
+      "REFERENCED_TABLE_NAME": "bookings",
+      "REFERENCED_COLUMN_NAME": "booking_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "bookings",
+      "COLUMN_NAME": "user_id",
+      "CONSTRAINT_NAME": "bookings_ibfk_1",
+      "REFERENCED_TABLE_NAME": "users",
+      "REFERENCED_COLUMN_NAME": "user_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "bookings",
+      "COLUMN_NAME": "vehicle_id",
+      "CONSTRAINT_NAME": "bookings_ibfk_2",
+      "REFERENCED_TABLE_NAME": "vehicles",
+      "REFERENCED_COLUMN_NAME": "vehicle_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "RESTRICT"
+    },
+    {
+      "TABLE_NAME": "customer_license_history",
+      "COLUMN_NAME": "user_id",
+      "CONSTRAINT_NAME": "customer_license_history_ibfk_1",
+      "REFERENCED_TABLE_NAME": "users",
+      "REFERENCED_COLUMN_NAME": "user_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "customer_license_history",
+      "COLUMN_NAME": "verified_by",
+      "CONSTRAINT_NAME": "customer_license_history_ibfk_2",
+      "REFERENCED_TABLE_NAME": "users",
+      "REFERENCED_COLUMN_NAME": "user_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "SET NULL"
+    },
+    {
+      "TABLE_NAME": "customer_licenses",
+      "COLUMN_NAME": "user_id",
+      "CONSTRAINT_NAME": "customer_licenses_ibfk_1",
+      "REFERENCED_TABLE_NAME": "users",
+      "REFERENCED_COLUMN_NAME": "user_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "customer_licenses",
+      "COLUMN_NAME": "verified_by",
+      "CONSTRAINT_NAME": "customer_licenses_ibfk_2",
+      "REFERENCED_TABLE_NAME": "users",
+      "REFERENCED_COLUMN_NAME": "user_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "SET NULL"
+    },
+    {
+      "TABLE_NAME": "document_verification_logs",
+      "COLUMN_NAME": "admin_id",
+      "CONSTRAINT_NAME": "document_verification_logs_ibfk_1",
+      "REFERENCED_TABLE_NAME": "users",
+      "REFERENCED_COLUMN_NAME": "user_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "inspection_photos",
+      "COLUMN_NAME": "inspection_id",
+      "CONSTRAINT_NAME": "inspection_photos_ibfk_1",
+      "REFERENCED_TABLE_NAME": "vehicle_inspections",
+      "REFERENCED_COLUMN_NAME": "id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "maintenance_reminders",
+      "COLUMN_NAME": "vehicle_id",
+      "CONSTRAINT_NAME": "maintenance_reminders_ibfk_1",
+      "REFERENCED_TABLE_NAME": "vehicles",
+      "REFERENCED_COLUMN_NAME": "vehicle_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "notifications",
+      "COLUMN_NAME": "user_id",
+      "CONSTRAINT_NAME": "notifications_ibfk_1",
+      "REFERENCED_TABLE_NAME": "users",
+      "REFERENCED_COLUMN_NAME": "user_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "password_reset_tokens",
+      "COLUMN_NAME": "user_id",
+      "CONSTRAINT_NAME": "password_reset_tokens_ibfk_1",
+      "REFERENCED_TABLE_NAME": "users",
+      "REFERENCED_COLUMN_NAME": "user_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "payments",
+      "COLUMN_NAME": "booking_id",
+      "CONSTRAINT_NAME": "payments_ibfk_1",
+      "REFERENCED_TABLE_NAME": "bookings",
+      "REFERENCED_COLUMN_NAME": "booking_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "rental_agreements",
+      "COLUMN_NAME": "booking_id",
+      "CONSTRAINT_NAME": "rental_agreements_ibfk_1",
+      "REFERENCED_TABLE_NAME": "bookings",
+      "REFERENCED_COLUMN_NAME": "booking_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "rental_agreements",
+      "COLUMN_NAME": "user_id",
+      "CONSTRAINT_NAME": "rental_agreements_ibfk_2",
+      "REFERENCED_TABLE_NAME": "users",
+      "REFERENCED_COLUMN_NAME": "user_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "reviews",
+      "COLUMN_NAME": "user_id",
+      "CONSTRAINT_NAME": "reviews_ibfk_1",
+      "REFERENCED_TABLE_NAME": "users",
+      "REFERENCED_COLUMN_NAME": "user_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "reviews",
+      "COLUMN_NAME": "vehicle_id",
+      "CONSTRAINT_NAME": "reviews_ibfk_2",
+      "REFERENCED_TABLE_NAME": "vehicles",
+      "REFERENCED_COLUMN_NAME": "vehicle_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "vehicle_document_versions",
+      "COLUMN_NAME": "vehicle_id",
+      "CONSTRAINT_NAME": "vehicle_document_versions_ibfk_1",
+      "REFERENCED_TABLE_NAME": "vehicles",
+      "REFERENCED_COLUMN_NAME": "vehicle_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "vehicle_document_versions",
+      "COLUMN_NAME": "archived_by",
+      "CONSTRAINT_NAME": "vehicle_document_versions_ibfk_2",
+      "REFERENCED_TABLE_NAME": "users",
+      "REFERENCED_COLUMN_NAME": "user_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "SET NULL"
+    },
+    {
+      "TABLE_NAME": "vehicle_documents",
+      "COLUMN_NAME": "vehicle_id",
+      "CONSTRAINT_NAME": "vehicle_documents_ibfk_1",
+      "REFERENCED_TABLE_NAME": "vehicles",
+      "REFERENCED_COLUMN_NAME": "vehicle_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "vehicle_inspections",
+      "COLUMN_NAME": "booking_id",
+      "CONSTRAINT_NAME": "vehicle_inspections_ibfk_1",
+      "REFERENCED_TABLE_NAME": "bookings",
+      "REFERENCED_COLUMN_NAME": "booking_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "vehicle_inspections",
+      "COLUMN_NAME": "vehicle_id",
+      "CONSTRAINT_NAME": "vehicle_inspections_ibfk_2",
+      "REFERENCED_TABLE_NAME": "vehicles",
+      "REFERENCED_COLUMN_NAME": "vehicle_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "vehicle_inspections",
+      "COLUMN_NAME": "inspected_by",
+      "CONSTRAINT_NAME": "vehicle_inspections_ibfk_3",
+      "REFERENCED_TABLE_NAME": "users",
+      "REFERENCED_COLUMN_NAME": "user_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "RESTRICT"
+    },
+    {
+      "TABLE_NAME": "vehicle_maintenance",
+      "COLUMN_NAME": "vehicle_id",
+      "CONSTRAINT_NAME": "vehicle_maintenance_ibfk_1",
+      "REFERENCED_TABLE_NAME": "vehicles",
+      "REFERENCED_COLUMN_NAME": "vehicle_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "vehicle_maintenance",
+      "COLUMN_NAME": "created_by",
+      "CONSTRAINT_NAME": "vehicle_maintenance_ibfk_2",
+      "REFERENCED_TABLE_NAME": "users",
+      "REFERENCED_COLUMN_NAME": "user_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "SET NULL"
+    },
+    {
+      "TABLE_NAME": "vehicles",
+      "COLUMN_NAME": "category_id",
+      "CONSTRAINT_NAME": "vehicles_ibfk_1",
+      "REFERENCED_TABLE_NAME": "categories",
+      "REFERENCED_COLUMN_NAME": "category_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "RESTRICT"
+    },
+    {
+      "TABLE_NAME": "wishlist",
+      "COLUMN_NAME": "user_id",
+      "CONSTRAINT_NAME": "wishlist_ibfk_1",
+      "REFERENCED_TABLE_NAME": "users",
+      "REFERENCED_COLUMN_NAME": "user_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    },
+    {
+      "TABLE_NAME": "wishlist",
+      "COLUMN_NAME": "vehicle_id",
+      "CONSTRAINT_NAME": "wishlist_ibfk_2",
+      "REFERENCED_TABLE_NAME": "vehicles",
+      "REFERENCED_COLUMN_NAME": "vehicle_id",
+      "UPDATE_RULE": "NO ACTION",
+      "DELETE_RULE": "CASCADE"
+    }
+  ],
+  "indexes": [
+    {
+      "TABLE_NAME": "additional_charge_rules",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "booking_additional_charges",
+      "INDEX_NAME": "booking_id",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "booking_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "booking_additional_charges",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "booking_price_breakdown",
+      "INDEX_NAME": "booking_id",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "booking_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "booking_price_breakdown",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "bookings",
+      "INDEX_NAME": "idx_bookings_user",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "user_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "bookings",
+      "INDEX_NAME": "idx_bookings_vehicle_datetime",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "vehicle_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "bookings",
+      "INDEX_NAME": "idx_bookings_vehicle_datetime",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "pickup_datetime",
+      "SEQ_IN_INDEX": 2,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "bookings",
+      "INDEX_NAME": "idx_bookings_vehicle_datetime",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "return_datetime",
+      "SEQ_IN_INDEX": 3,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "bookings",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "booking_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "categories",
+      "INDEX_NAME": "name",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "name",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "categories",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "category_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "contact_messages",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "message_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "customer_license_history",
+      "INDEX_NAME": "idx_lic_hist_lic",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "license_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "customer_license_history",
+      "INDEX_NAME": "idx_lic_hist_user",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "user_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "customer_license_history",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "customer_license_history",
+      "INDEX_NAME": "verified_by",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "verified_by",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "customer_licenses",
+      "INDEX_NAME": "idx_cust_lic_status",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "verification_status",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "customer_licenses",
+      "INDEX_NAME": "idx_cust_lic_user",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "user_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "customer_licenses",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "customer_licenses",
+      "INDEX_NAME": "user_id",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "user_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "customer_licenses",
+      "INDEX_NAME": "verified_by",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "verified_by",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "delivery_pricing_rules",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "document_verification_logs",
+      "INDEX_NAME": "idx_doc_verif_admin",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "admin_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "document_verification_logs",
+      "INDEX_NAME": "idx_doc_verif_created",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "created_at",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "document_verification_logs",
+      "INDEX_NAME": "idx_doc_verif_doc",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "document_type",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "document_verification_logs",
+      "INDEX_NAME": "idx_doc_verif_doc",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "document_id",
+      "SEQ_IN_INDEX": 2,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "document_verification_logs",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "inspection_photos",
+      "INDEX_NAME": "inspection_id",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "inspection_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "inspection_photos",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "maintenance_reminders",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "maintenance_reminders",
+      "INDEX_NAME": "vehicle_id",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "vehicle_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "notifications",
+      "INDEX_NAME": "idx_notif_user_read",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "user_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "notifications",
+      "INDEX_NAME": "idx_notif_user_read",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "is_read",
+      "SEQ_IN_INDEX": 2,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "notifications",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "notification_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "password_reset_tokens",
+      "INDEX_NAME": "idx_reset_token_hash",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "token_hash",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "password_reset_tokens",
+      "INDEX_NAME": "idx_reset_user_expires",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "user_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "password_reset_tokens",
+      "INDEX_NAME": "idx_reset_user_expires",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "expires_at",
+      "SEQ_IN_INDEX": 2,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "password_reset_tokens",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "payments",
+      "INDEX_NAME": "booking_id",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "booking_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "payments",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "payment_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "pricing_rules",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "rental_agreements",
+      "INDEX_NAME": "agreement_number",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "agreement_number",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "rental_agreements",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "rental_agreements",
+      "INDEX_NAME": "unique_booking_agreement",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "booking_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "rental_agreements",
+      "INDEX_NAME": "unique_booking_agreement",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "agreement_version",
+      "SEQ_IN_INDEX": 2,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "rental_agreements",
+      "INDEX_NAME": "user_id",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "user_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "reviews",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "review_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "reviews",
+      "INDEX_NAME": "user_id",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "user_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "reviews",
+      "INDEX_NAME": "user_id",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "vehicle_id",
+      "SEQ_IN_INDEX": 2,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "reviews",
+      "INDEX_NAME": "vehicle_id",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "vehicle_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "seasonal_pricing",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "service_hubs",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "users",
+      "INDEX_NAME": "email",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "email",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "users",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "user_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_document_versions",
+      "INDEX_NAME": "archived_by",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "archived_by",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_document_versions",
+      "INDEX_NAME": "idx_veh_doc_ver_doc",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "document_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_document_versions",
+      "INDEX_NAME": "idx_veh_doc_ver_type",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "document_type",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_document_versions",
+      "INDEX_NAME": "idx_veh_doc_ver_veh",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "vehicle_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_document_versions",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_documents",
+      "INDEX_NAME": "idx_veh_doc_expiry",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "expiry_date",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_documents",
+      "INDEX_NAME": "idx_veh_doc_type",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "document_type",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_documents",
+      "INDEX_NAME": "idx_veh_doc_vehicle",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "vehicle_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_documents",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_inspections",
+      "INDEX_NAME": "inspected_by",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "inspected_by",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_inspections",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_inspections",
+      "INDEX_NAME": "unique_booking_inspection_type",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "booking_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_inspections",
+      "INDEX_NAME": "unique_booking_inspection_type",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "inspection_type",
+      "SEQ_IN_INDEX": 2,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_inspections",
+      "INDEX_NAME": "vehicle_id",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "vehicle_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_maintenance",
+      "INDEX_NAME": "created_by",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "created_by",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_maintenance",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicle_maintenance",
+      "INDEX_NAME": "vehicle_id",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "vehicle_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicles",
+      "INDEX_NAME": "idx_vehicles_available",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "is_available",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicles",
+      "INDEX_NAME": "idx_vehicles_category",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "category_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicles",
+      "INDEX_NAME": "idx_vehicles_registration_number",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "registration_number",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "vehicles",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "vehicle_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "wishlist",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "user_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "wishlist",
+      "INDEX_NAME": "PRIMARY",
+      "NON_UNIQUE": 0,
+      "COLUMN_NAME": "vehicle_id",
+      "SEQ_IN_INDEX": 2,
+      "INDEX_TYPE": "BTREE"
+    },
+    {
+      "TABLE_NAME": "wishlist",
+      "INDEX_NAME": "vehicle_id",
+      "NON_UNIQUE": 1,
+      "COLUMN_NAME": "vehicle_id",
+      "SEQ_IN_INDEX": 1,
+      "INDEX_TYPE": "BTREE"
+    }
+  ]
+}

@@ -60,6 +60,7 @@ function Profile() {
 
     // Driving Licence State
     const [licenseInfo, setLicenseInfo] = useState(null);
+    const [licenseHistory, setLicenseHistory] = useState([]);
     const [licenseLoading, setLicenseLoading] = useState(true);
     const [licenseSubmitting, setLicenseSubmitting] = useState(false);
     const [licenseError, setLicenseError] = useState('');
@@ -140,9 +141,13 @@ function Profile() {
 
         const fetchLicenseInfo = async () => {
             try {
-                const res = await axiosInstance.get('/licenses/my-license');
+                const [res, historyRes] = await Promise.all([
+                    axiosInstance.get('/licenses/my-license'),
+                    axiosInstance.get('/licenses/my-license/history').catch(() => ({ data: [] }))
+                ]);
                 if (isMounted) {
                     setLicenseInfo(res.data);
+                    setLicenseHistory(historyRes.data || []);
                     if (res.data?.license) {
                         const lic = res.data.license;
                         setLicNumber(lic.license_number || '');
@@ -451,6 +456,34 @@ function Profile() {
                 message = err.response.data.message;
             }
             setLicenseError(message);
+        }
+    };
+
+    const handleDownloadMyHistoryDoc = async (historyId, side) => {
+        try {
+            setLicenseError('');
+            const res = await axiosInstance.get(`/licenses/my-license/history/${historyId}/document/${side}`, {
+                responseType: 'blob'
+            });
+            const contentType = res.headers['content-type'] || 'application/octet-stream';
+            let ext = '';
+            if (contentType.includes('pdf')) ext = '.pdf';
+            else if (contentType.includes('png')) ext = '.png';
+            else if (contentType.includes('jpeg') || contentType.includes('jpg')) ext = '.jpg';
+            else if (contentType.includes('webp')) ext = '.webp';
+
+            const blob = new Blob([res.data], { type: contentType });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `my_archived_license_${side}_${historyId}${ext}`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+        } catch (err) {
+            console.error('Download history doc error:', err);
+            setLicenseError('Could not download previous licence document.');
         }
     };
 
@@ -931,6 +964,36 @@ function Profile() {
                                                 )}
                                             </div>
                                         </div>
+
+                                        {/* Archived Previous Submissions */}
+                                        {licenseHistory.length > 0 && (
+                                            <div className="lic-history-card" style={{ marginTop: '20px', padding: '16px 20px', border: '1px solid var(--border)', borderRadius: '12px', background: 'var(--bg-secondary)' }}>
+                                                <h5 style={{ margin: '0 0 10px', fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Previous Submissions & Renewals ({licenseHistory.length})</h5>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    {licenseHistory.map((h) => (
+                                                        <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                                                            <div>
+                                                                <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 6px', background: 'var(--bg-secondary)', borderRadius: '4px', marginRight: '8px' }}>v{h.version_number}</span>
+                                                                <strong style={{ fontSize: '13px' }}>{h.license_number}</strong>
+                                                                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginLeft: '10px' }}>Archived: {new Date(h.archived_at).toLocaleDateString()}</span>
+                                                            </div>
+                                                            <div style={{ display: 'flex', gap: '6px' }}>
+                                                                {h.has_front && (
+                                                                    <button type="button" className="doc-dl-btn" style={{ fontSize: '11px', padding: '4px 8px' }} onClick={() => handleDownloadMyHistoryDoc(h.id, 'front')}>
+                                                                        Front
+                                                                    </button>
+                                                                )}
+                                                                {h.has_back && (
+                                                                    <button type="button" className="doc-dl-btn" style={{ fontSize: '11px', padding: '4px 8px' }} onClick={() => handleDownloadMyHistoryDoc(h.id, 'back')}>
+                                                                        Back
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
                                     /* Submission / Resubmission Form */

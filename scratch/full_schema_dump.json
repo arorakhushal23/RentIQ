@@ -1,0 +1,2448 @@
+{
+  "additional_charge_rules": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "charge_type",
+      "type": "enum('late_return','excess_km','fuel_refill','cleaning','addon')",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "charge_name",
+      "type": "varchar(150)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "rate",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    },
+    {
+      "field": "unit",
+      "type": "varchar(50)",
+      "null": "NO",
+      "key": "",
+      "default": "fixed",
+      "extra": ""
+    },
+    {
+      "field": "grace_period_mins",
+      "type": "int",
+      "null": "NO",
+      "key": "",
+      "default": "0",
+      "extra": ""
+    },
+    {
+      "field": "included_units_per_day",
+      "type": "decimal(8,2)",
+      "null": "NO",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    },
+    {
+      "field": "is_active",
+      "type": "tinyint(1)",
+      "null": "NO",
+      "key": "",
+      "default": "1",
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    },
+    {
+      "field": "updated_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    }
+  ],
+  "booking_additional_charges": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "booking_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "charge_type",
+      "type": "varchar(50)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "charge_name",
+      "type": "varchar(150)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "units",
+      "type": "decimal(8,2)",
+      "null": "NO",
+      "key": "",
+      "default": "1.00",
+      "extra": ""
+    },
+    {
+      "field": "unit_rate",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    },
+    {
+      "field": "total_charge",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    },
+    {
+      "field": "notes",
+      "type": "text",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    }
+  ],
+  "booking_price_breakdown": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "booking_id",
+      "type": "int",
+      "null": "NO",
+      "key": "UNI",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "base_price",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "weekend_adjustment",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    },
+    {
+      "field": "seasonal_adjustment",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    },
+    {
+      "field": "duration_discount",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    },
+    {
+      "field": "delivery_charge",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    },
+    {
+      "field": "addons_total",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    },
+    {
+      "field": "additional_charges_total",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    },
+    {
+      "field": "tax_amount",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    },
+    {
+      "field": "final_total",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "breakdown_json",
+      "type": "json",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    }
+  ],
+  "bookings": [
+    {
+      "field": "booking_id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "user_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "vehicle_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "pickup_datetime",
+      "type": "datetime",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "return_datetime",
+      "type": "datetime",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "start_date",
+      "type": "date",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "end_date",
+      "type": "date",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "total_price",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "status",
+      "type": "enum('pending','confirmed','active','cancelled','completed')",
+      "null": "NO",
+      "key": "",
+      "default": "pending",
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    },
+    {
+      "field": "pickup_address",
+      "type": "varchar(500)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "pickup_latitude",
+      "type": "decimal(10,7)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "pickup_longitude",
+      "type": "decimal(10,7)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "drop_address",
+      "type": "varchar(500)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "drop_latitude",
+      "type": "decimal(10,7)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "drop_longitude",
+      "type": "decimal(10,7)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "route_distance_km",
+      "type": "decimal(8,2)",
+      "null": "YES",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    },
+    {
+      "field": "estimated_travel_time",
+      "type": "varchar(100)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "delivery_charge",
+      "type": "decimal(10,2)",
+      "null": "YES",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    }
+  ],
+  "categories": [
+    {
+      "field": "category_id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "name",
+      "type": "varchar(50)",
+      "null": "NO",
+      "key": "UNI",
+      "default": null,
+      "extra": ""
+    }
+  ],
+  "contact_messages": [
+    {
+      "field": "message_id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "name",
+      "type": "varchar(100)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "email",
+      "type": "varchar(150)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "subject",
+      "type": "varchar(200)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "message",
+      "type": "text",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    }
+  ],
+  "customer_license_history": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "license_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "user_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "version_number",
+      "type": "int",
+      "null": "NO",
+      "key": "",
+      "default": "1",
+      "extra": ""
+    },
+    {
+      "field": "license_number",
+      "type": "varchar(100)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "holder_name",
+      "type": "varchar(150)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "date_of_birth",
+      "type": "date",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "issue_date",
+      "type": "date",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "expiry_date",
+      "type": "date",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "vehicle_class",
+      "type": "varchar(50)",
+      "null": "NO",
+      "key": "",
+      "default": "LMV",
+      "extra": ""
+    },
+    {
+      "field": "front_document_path",
+      "type": "varchar(255)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "back_document_path",
+      "type": "varchar(255)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "verification_status",
+      "type": "varchar(50)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "rejection_reason",
+      "type": "text",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "verified_by",
+      "type": "int",
+      "null": "YES",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "verified_at",
+      "type": "datetime",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "archived_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    }
+  ],
+  "customer_licenses": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "user_id",
+      "type": "int",
+      "null": "NO",
+      "key": "UNI",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "license_number",
+      "type": "varchar(100)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "holder_name",
+      "type": "varchar(150)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "date_of_birth",
+      "type": "date",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "issue_date",
+      "type": "date",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "expiry_date",
+      "type": "date",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "vehicle_class",
+      "type": "varchar(50)",
+      "null": "NO",
+      "key": "",
+      "default": "LMV",
+      "extra": ""
+    },
+    {
+      "field": "front_document_path",
+      "type": "varchar(255)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "back_document_path",
+      "type": "varchar(255)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "verification_status",
+      "type": "enum('not_submitted','pending','verified','rejected','expired')",
+      "null": "NO",
+      "key": "MUL",
+      "default": "pending",
+      "extra": ""
+    },
+    {
+      "field": "version",
+      "type": "int",
+      "null": "NO",
+      "key": "",
+      "default": "1",
+      "extra": ""
+    },
+    {
+      "field": "rejection_reason",
+      "type": "text",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "verified_by",
+      "type": "int",
+      "null": "YES",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "verified_at",
+      "type": "datetime",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    },
+    {
+      "field": "updated_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    }
+  ],
+  "delivery_pricing_rules": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "base_delivery_charge",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": "150.00",
+      "extra": ""
+    },
+    {
+      "field": "per_km_charge",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": "15.00",
+      "extra": ""
+    },
+    {
+      "field": "free_delivery_distance_km",
+      "type": "decimal(6,2)",
+      "null": "NO",
+      "key": "",
+      "default": "5.00",
+      "extra": ""
+    },
+    {
+      "field": "max_delivery_distance_km",
+      "type": "decimal(6,2)",
+      "null": "NO",
+      "key": "",
+      "default": "150.00",
+      "extra": ""
+    },
+    {
+      "field": "is_active",
+      "type": "tinyint(1)",
+      "null": "NO",
+      "key": "",
+      "default": "1",
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    },
+    {
+      "field": "updated_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    }
+  ],
+  "document_verification_logs": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "document_type",
+      "type": "enum('vehicle_document','customer_license')",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "document_id",
+      "type": "int",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "reference_id",
+      "type": "varchar(100)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "previous_status",
+      "type": "varchar(50)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "new_status",
+      "type": "varchar(50)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "admin_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "remarks",
+      "type": "text",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "MUL",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    }
+  ],
+  "inspection_photos": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "inspection_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "photo_category",
+      "type": "enum('front','rear','left','right','interior','dashboard','damage','tyres','other')",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "file_path",
+      "type": "varchar(500)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "description",
+      "type": "varchar(255)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "uploaded_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    }
+  ],
+  "maintenance_reminders": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "vehicle_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "reminder_type",
+      "type": "enum('date_due','odometer_due','overdue')",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "title",
+      "type": "varchar(200)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "description",
+      "type": "text",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "due_date",
+      "type": "date",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "due_odometer",
+      "type": "int",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "status",
+      "type": "enum('pending','completed','rescheduled','dismissed')",
+      "null": "NO",
+      "key": "",
+      "default": "pending",
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    },
+    {
+      "field": "updated_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    }
+  ],
+  "notifications": [
+    {
+      "field": "notification_id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "user_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "type",
+      "type": "varchar(50)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "title",
+      "type": "varchar(150)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "message",
+      "type": "text",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "related_record_id",
+      "type": "int",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "is_read",
+      "type": "tinyint(1)",
+      "null": "NO",
+      "key": "",
+      "default": "0",
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    }
+  ],
+  "password_reset_tokens": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "user_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "token_hash",
+      "type": "varchar(64)",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "expires_at",
+      "type": "datetime",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "used_at",
+      "type": "datetime",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    }
+  ],
+  "payments": [
+    {
+      "field": "payment_id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "booking_id",
+      "type": "int",
+      "null": "NO",
+      "key": "UNI",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "amount",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "payment_method",
+      "type": "enum('card','upi','cash')",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "payment_status",
+      "type": "enum('pending','success','failed','refunded')",
+      "null": "NO",
+      "key": "",
+      "default": "pending",
+      "extra": ""
+    },
+    {
+      "field": "paid_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    }
+  ],
+  "pricing_rules": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "rule_name",
+      "type": "varchar(150)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "rule_type",
+      "type": "enum('weekend','duration_discount','demand','custom')",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "days_of_week",
+      "type": "varchar(50)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "min_duration_days",
+      "type": "int",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "max_duration_days",
+      "type": "int",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "adjustment_type",
+      "type": "enum('percentage','fixed')",
+      "null": "NO",
+      "key": "",
+      "default": "percentage",
+      "extra": ""
+    },
+    {
+      "field": "adjustment_value",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    },
+    {
+      "field": "min_price_cap",
+      "type": "decimal(10,2)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "max_price_cap",
+      "type": "decimal(10,2)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "priority",
+      "type": "int",
+      "null": "NO",
+      "key": "",
+      "default": "10",
+      "extra": ""
+    },
+    {
+      "field": "is_active",
+      "type": "tinyint(1)",
+      "null": "NO",
+      "key": "",
+      "default": "1",
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    },
+    {
+      "field": "updated_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    }
+  ],
+  "rental_agreements": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "booking_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "user_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "agreement_number",
+      "type": "varchar(100)",
+      "null": "NO",
+      "key": "UNI",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "agreement_version",
+      "type": "int",
+      "null": "NO",
+      "key": "",
+      "default": "1",
+      "extra": ""
+    },
+    {
+      "field": "agreement_data",
+      "type": "json",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "pdf_file_path",
+      "type": "varchar(500)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "agreement_status",
+      "type": "enum('generated','awaiting_acceptance','accepted','cancelled')",
+      "null": "NO",
+      "key": "",
+      "default": "awaiting_acceptance",
+      "extra": ""
+    },
+    {
+      "field": "terms_accepted",
+      "type": "tinyint(1)",
+      "null": "NO",
+      "key": "",
+      "default": "0",
+      "extra": ""
+    },
+    {
+      "field": "accepted_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    },
+    {
+      "field": "updated_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    }
+  ],
+  "reviews": [
+    {
+      "field": "review_id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "user_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "vehicle_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "rating",
+      "type": "tinyint",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "comment",
+      "type": "text",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    }
+  ],
+  "seasonal_pricing": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "season_name",
+      "type": "varchar(150)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "start_date",
+      "type": "date",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "end_date",
+      "type": "date",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "adjustment_type",
+      "type": "enum('percentage','fixed')",
+      "null": "NO",
+      "key": "",
+      "default": "percentage",
+      "extra": ""
+    },
+    {
+      "field": "adjustment_value",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    },
+    {
+      "field": "is_active",
+      "type": "tinyint(1)",
+      "null": "NO",
+      "key": "",
+      "default": "1",
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    },
+    {
+      "field": "updated_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    }
+  ],
+  "service_hubs": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "hub_name",
+      "type": "varchar(150)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "address",
+      "type": "varchar(255)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "latitude",
+      "type": "decimal(10,7)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "longitude",
+      "type": "decimal(10,7)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "city",
+      "type": "varchar(100)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "is_active",
+      "type": "tinyint(1)",
+      "null": "NO",
+      "key": "",
+      "default": "1",
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    }
+  ],
+  "users": [
+    {
+      "field": "user_id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "name",
+      "type": "varchar(100)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "email",
+      "type": "varchar(150)",
+      "null": "NO",
+      "key": "UNI",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "password_hash",
+      "type": "varchar(255)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "role",
+      "type": "enum('customer','admin')",
+      "null": "NO",
+      "key": "",
+      "default": "customer",
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    }
+  ],
+  "vehicle_document_versions": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "document_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "vehicle_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "document_type",
+      "type": "enum('rc','insurance','puc','fitness','permit','road_tax')",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "version_number",
+      "type": "int",
+      "null": "NO",
+      "key": "",
+      "default": "1",
+      "extra": ""
+    },
+    {
+      "field": "document_number",
+      "type": "varchar(100)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "issue_date",
+      "type": "date",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "expiry_date",
+      "type": "date",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "file_path",
+      "type": "varchar(255)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "verification_status",
+      "type": "varchar(50)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "admin_remarks",
+      "type": "text",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "archived_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    },
+    {
+      "field": "archived_by",
+      "type": "int",
+      "null": "YES",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    }
+  ],
+  "vehicle_documents": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "vehicle_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "document_type",
+      "type": "enum('rc','insurance','puc','fitness','permit','road_tax')",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "document_number",
+      "type": "varchar(100)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "issue_date",
+      "type": "date",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "expiry_date",
+      "type": "date",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "file_path",
+      "type": "varchar(255)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "verification_status",
+      "type": "enum('valid','expiring_soon','expired','pending','rejected')",
+      "null": "NO",
+      "key": "",
+      "default": "valid",
+      "extra": ""
+    },
+    {
+      "field": "version",
+      "type": "int",
+      "null": "NO",
+      "key": "",
+      "default": "1",
+      "extra": ""
+    },
+    {
+      "field": "admin_remarks",
+      "type": "text",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "uploaded_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    },
+    {
+      "field": "updated_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    }
+  ],
+  "vehicle_inspections": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "booking_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "vehicle_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "inspection_type",
+      "type": "enum('pickup','return')",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "odometer_reading",
+      "type": "int",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "fuel_level",
+      "type": "int",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "battery_percentage",
+      "type": "int",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "exterior_condition",
+      "type": "enum('excellent','good','fair','poor','damaged')",
+      "null": "NO",
+      "key": "",
+      "default": "good",
+      "extra": ""
+    },
+    {
+      "field": "interior_condition",
+      "type": "enum('excellent','good','fair','poor','damaged')",
+      "null": "NO",
+      "key": "",
+      "default": "good",
+      "extra": ""
+    },
+    {
+      "field": "tyre_condition",
+      "type": "enum('excellent','good','fair','poor','worn')",
+      "null": "NO",
+      "key": "",
+      "default": "good",
+      "extra": ""
+    },
+    {
+      "field": "headlights_condition",
+      "type": "enum('working','damaged','not_working')",
+      "null": "NO",
+      "key": "",
+      "default": "working",
+      "extra": ""
+    },
+    {
+      "field": "taillights_condition",
+      "type": "enum('working','damaged','not_working')",
+      "null": "NO",
+      "key": "",
+      "default": "working",
+      "extra": ""
+    },
+    {
+      "field": "mirrors_condition",
+      "type": "enum('intact','scratched','damaged')",
+      "null": "NO",
+      "key": "",
+      "default": "intact",
+      "extra": ""
+    },
+    {
+      "field": "windows_condition",
+      "type": "enum('intact','scratched','cracked')",
+      "null": "NO",
+      "key": "",
+      "default": "intact",
+      "extra": ""
+    },
+    {
+      "field": "brakes_condition",
+      "type": "enum('optimal','satisfactory','needs_attention')",
+      "null": "NO",
+      "key": "",
+      "default": "optimal",
+      "extra": ""
+    },
+    {
+      "field": "existing_scratches",
+      "type": "text",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "existing_dents",
+      "type": "text",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "damage_description",
+      "type": "text",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "inspection_notes",
+      "type": "text",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "customer_accepted",
+      "type": "tinyint(1)",
+      "null": "NO",
+      "key": "",
+      "default": "0",
+      "extra": ""
+    },
+    {
+      "field": "customer_accepted_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "inspected_by",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    },
+    {
+      "field": "updated_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    }
+  ],
+  "vehicle_maintenance": [
+    {
+      "field": "id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "vehicle_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "maintenance_category",
+      "type": "enum('regular_service','engine_repair','oil_change','tyre_replacement','brake_servicing','battery_replacement','electrical_repairs','accident_repairs','other')",
+      "null": "NO",
+      "key": "",
+      "default": "regular_service",
+      "extra": ""
+    },
+    {
+      "field": "service_date",
+      "type": "date",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "start_date",
+      "type": "date",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "end_date",
+      "type": "date",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "odometer_reading",
+      "type": "int",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "service_center",
+      "type": "varchar(200)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "description",
+      "type": "text",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "parts_replaced",
+      "type": "text",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "cost",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": "0.00",
+      "extra": ""
+    },
+    {
+      "field": "next_service_date",
+      "type": "date",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "next_service_odometer",
+      "type": "int",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "invoice_file_path",
+      "type": "varchar(500)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "notes",
+      "type": "text",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "status",
+      "type": "enum('scheduled','in_progress','completed','cancelled')",
+      "null": "NO",
+      "key": "",
+      "default": "in_progress",
+      "extra": ""
+    },
+    {
+      "field": "created_by",
+      "type": "int",
+      "null": "YES",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    },
+    {
+      "field": "updated_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    }
+  ],
+  "vehicles": [
+    {
+      "field": "vehicle_id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": "auto_increment"
+    },
+    {
+      "field": "category_id",
+      "type": "int",
+      "null": "NO",
+      "key": "MUL",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "name",
+      "type": "varchar(100)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "brand",
+      "type": "varchar(50)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "model",
+      "type": "varchar(100)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "manufacturing_year",
+      "type": "int",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "vehicle_color",
+      "type": "varchar(50)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "registration_number",
+      "type": "varchar(50)",
+      "null": "YES",
+      "key": "UNI",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "registration_state",
+      "type": "varchar(100)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "registration_date",
+      "type": "date",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "registration_validity",
+      "type": "date",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "fuel_type",
+      "type": "enum('petrol','diesel','electric','hybrid','cng')",
+      "null": "YES",
+      "key": "",
+      "default": "petrol",
+      "extra": ""
+    },
+    {
+      "field": "mileage",
+      "type": "varchar(50)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "engine_capacity",
+      "type": "varchar(100)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "description",
+      "type": "text",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "engine_number",
+      "type": "varchar(100)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "chassis_number",
+      "type": "varchar(100)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "vehicle_identification_number",
+      "type": "varchar(100)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "doors",
+      "type": "int",
+      "null": "YES",
+      "key": "",
+      "default": "4",
+      "extra": ""
+    },
+    {
+      "field": "boot_space",
+      "type": "varchar(50)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "max_passengers",
+      "type": "int",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "seating_capacity",
+      "type": "int",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "transmission",
+      "type": "enum('automatic','manual')",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "price_per_day",
+      "type": "decimal(10,2)",
+      "null": "NO",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "is_available",
+      "type": "tinyint(1)",
+      "null": "YES",
+      "key": "MUL",
+      "default": "1",
+      "extra": ""
+    },
+    {
+      "field": "image_url",
+      "type": "varchar(255)",
+      "null": "YES",
+      "key": "",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "created_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    }
+  ],
+  "wishlist": [
+    {
+      "field": "user_id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "vehicle_id",
+      "type": "int",
+      "null": "NO",
+      "key": "PRI",
+      "default": null,
+      "extra": ""
+    },
+    {
+      "field": "added_at",
+      "type": "timestamp",
+      "null": "YES",
+      "key": "",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED"
+    }
+  ]
+}

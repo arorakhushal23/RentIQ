@@ -16,7 +16,9 @@ import {
     Calendar,
     User,
     Check,
-    Download
+    Download,
+    History,
+    ShieldCheck
 } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import Loader from '../../components/common/Loader';
@@ -34,7 +36,13 @@ function AdminLicenses() {
 
     // Review Modal State
     const [selectedLicense, setSelectedLicense] = useState(null);
+    const [modalTab, setModalTab] = useState('dossier'); // 'dossier', 'history', 'audit'
     const [docViewerSide, setDocViewerSide] = useState('front'); // 'front' or 'back'
+
+    // History and Audit data state
+    const [historyList, setHistoryList] = useState([]);
+    const [auditLogs, setAuditLogs] = useState([]);
+    const [modalDataLoading, setModalDataLoading] = useState(false);
 
     // Action State
     const [actionLoading, setActionLoading] = useState(false);
@@ -58,6 +66,31 @@ function AdminLicenses() {
     useEffect(() => {
         fetchLicenses();
     }, [fetchLicenses]);
+
+    const loadModalTabContent = async (tab, licId) => {
+        setModalTab(tab);
+        if (tab === 'history') {
+            setModalDataLoading(true);
+            try {
+                const res = await axiosInstance.get(`/admin/licenses/${licId}/history`);
+                setHistoryList(res.data || []);
+            } catch (err) {
+                console.error('Failed to load license history:', err);
+            } finally {
+                setModalDataLoading(false);
+            }
+        } else if (tab === 'audit') {
+            setModalDataLoading(true);
+            try {
+                const res = await axiosInstance.get(`/admin/licenses/${licId}/verification-logs`);
+                setAuditLogs(res.data || []);
+            } catch (err) {
+                console.error('Failed to load license audit logs:', err);
+            } finally {
+                setModalDataLoading(false);
+            }
+        }
+    };
 
     const filteredLicenses = licenses.filter((lic) => {
         const matchesStatus =
@@ -148,21 +181,34 @@ function AdminLicenses() {
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
+                window.URL.revokeObjectURL(url);
             }
-            setTimeout(() => window.URL.revokeObjectURL(url), 10000);
         } catch (err) {
-            console.error('Download error:', err);
-            let message = 'Could not download document file from storage.';
-            if (err.response?.data instanceof Blob) {
-                try {
-                    const text = await err.response.data.text();
-                    const parsed = JSON.parse(text);
-                    if (parsed.message) message = parsed.message;
-                } catch (_) {}
-            } else if (err.response?.data?.message) {
-                message = err.response.data.message;
-            }
-            setError(message);
+            console.error('Download licence document error:', err);
+            setError('Could not download driving licence document file.');
+        }
+    };
+
+    const handleDownloadHistoryDoc = async (historyId, side) => {
+        try {
+            setError('');
+            const response = await axiosInstance.get(`/admin/licenses/history/${historyId}/document/${side}`, {
+                responseType: 'blob'
+            });
+
+            const contentType = response.headers['content-type'] || 'application/octet-stream';
+            const blob = new Blob([response.data], { type: contentType });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `archived_license_${side}_${historyId}`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Download history doc error:', err);
+            setError('Could not download archived driving licence document.');
         }
     };
 
@@ -170,35 +216,35 @@ function AdminLicenses() {
         switch (status) {
             case 'verified':
                 return (
-                    <span className="lic-status-badge badge-verified">
+                    <span className="lic-status-badge status-verified">
                         <CheckCircle2 size={13} strokeWidth={2.5} />
                         Verified
                     </span>
                 );
             case 'pending':
                 return (
-                    <span className="lic-status-badge badge-pending">
+                    <span className="lic-status-badge status-pending">
                         <Clock size={13} strokeWidth={2.5} />
                         Pending Review
                     </span>
                 );
             case 'rejected':
                 return (
-                    <span className="lic-status-badge badge-rejected">
+                    <span className="lic-status-badge status-rejected">
                         <XCircle size={13} strokeWidth={2.5} />
                         Rejected
                     </span>
                 );
             case 'expired':
                 return (
-                    <span className="lic-status-badge badge-expired">
+                    <span className="lic-status-badge status-expired">
                         <AlertTriangle size={13} strokeWidth={2.5} />
                         Expired
                     </span>
                 );
             default:
                 return (
-                    <span className="lic-status-badge badge-not-submitted">
+                    <span className="lic-status-badge status-not-submitted">
                         Not Submitted
                     </span>
                 );
@@ -206,15 +252,16 @@ function AdminLicenses() {
     };
 
     return (
-        <main className="admin-licenses-page">
-            <header className="admin-licenses-header">
+        <main className="admin-lic-page">
+            <header className="admin-lic-header">
                 <div>
-                    <span className="admin-eyebrow">
-                        <Shield size={14} /> CUSTOMER IDENTITY & COMPLIANCE
+                    <span className="admin-lic-eyebrow">
+                        <Shield size={16} /> REGULATORY COMPLIANCE MANAGEMENT
                     </span>
-                    <h1>Driving Licence Verification Center</h1>
+                    <h1>Customer Driving Licences</h1>
                     <p>
-                        Review customer submitted driving licences, inspect front and back documents, enforce vehicle class eligibility, and manage verification approvals.
+                        Verify government-issued customer driving licences, enforce vehicle category entitlements (LMV vs MCWG),
+                        and maintain full version history and verification audit trails.
                     </p>
                 </div>
             </header>
@@ -235,26 +282,26 @@ function AdminLicenses() {
                 </div>
             )}
 
-            {/* Toolbar */}
-            <section className="admin-licenses-toolbar">
+            {/* Controls Bar */}
+            <section className="admin-lic-controls">
                 <div className="admin-lic-search">
-                    <label htmlFor="lic-search">Search Customers & Licences</label>
-                    <div className="search-input-box">
-                        <Search size={16} className="search-icon" />
-                        <input
-                            id="lic-search"
-                            type="search"
-                            placeholder="Search by customer name, email, or licence number..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
+                    <Search size={16} className="search-icon" />
+                    <input
+                        type="text"
+                        placeholder="Search by customer name, email, or licence number..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                    {search && (
+                        <button type="button" className="clear-search" onClick={() => setSearch('')}>
+                            <X size={14} />
+                        </button>
+                    )}
                 </div>
 
                 <div className="admin-lic-filter">
-                    <label htmlFor="status-filter">Verification Status</label>
+                    <Filter size={16} className="filter-icon" />
                     <select
-                        id="status-filter"
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                     >
@@ -319,9 +366,14 @@ function AdminLicenses() {
                                         </td>
 
                                         <td>
-                                            <span className="masked-lic-pill" title="Middle characters masked for security">
-                                                {lic.masked_license_number}
-                                            </span>
+                                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                                <span className="masked-lic-pill" title="Middle characters masked for security">
+                                                    {lic.masked_license_number}
+                                                </span>
+                                                <span className="version-pill" title={`Version ${lic.version || 1}`}>
+                                                    v{lic.version || 1}
+                                                </span>
+                                            </div>
                                         </td>
 
                                         <td>
@@ -361,6 +413,7 @@ function AdminLicenses() {
                                                 className="review-doc-btn"
                                                 onClick={() => {
                                                     setSelectedLicense(lic);
+                                                    setModalTab('dossier');
                                                     setDocViewerSide('front');
                                                     setShowRejectPrompt(false);
                                                 }}
@@ -400,6 +453,9 @@ function AdminLicenses() {
                                     <IdCard size={14} /> LICENCE VERIFICATION DOSSIER
                                 </span>
                                 <h2>Review Driving Licence: {selectedLicense.customer_name}</h2>
+                                <span className="doc-version-tag" style={{ marginLeft: '4px', verticalAlign: 'middle' }}>
+                                    Active: v{selectedLicense.version || 1}
+                                </span>
                             </div>
                             <button
                                 type="button"
@@ -411,117 +467,237 @@ function AdminLicenses() {
                             </button>
                         </header>
 
+                        {/* Modal Navigation Tabs */}
+                        <div className="lic-side-tabs" style={{ padding: '8px 24px', borderBottom: '1px solid var(--color-border, #cbd5e1)', background: 'var(--color-bg-secondary, #f8fafc)' }}>
+                            <button
+                                type="button"
+                                className={`lic-side-btn ${modalTab === 'dossier' ? 'active' : ''}`}
+                                onClick={() => loadModalTabContent('dossier', selectedLicense.id)}
+                            >
+                                Dossier & Inspection
+                            </button>
+                            <button
+                                type="button"
+                                className={`lic-side-btn ${modalTab === 'history' ? 'active' : ''}`}
+                                onClick={() => loadModalTabContent('history', selectedLicense.id)}
+                            >
+                                Version History
+                            </button>
+                            <button
+                                type="button"
+                                className={`lic-side-btn ${modalTab === 'audit' ? 'active' : ''}`}
+                                onClick={() => loadModalTabContent('audit', selectedLicense.id)}
+                            >
+                                Verification Audit Trail
+                            </button>
+                        </div>
+
                         <div className="lic-modal-body">
-                            {/* Customer Details Grid */}
-                            <div className="lic-details-panel">
-                                <h3>Licence Information</h3>
-                                <div className="lic-details-grid">
-                                    <div className="lic-info-item">
-                                        <span>Holder Name</span>
-                                        <strong>{selectedLicense.holder_name}</strong>
+                            {modalTab === 'dossier' ? (
+                                <>
+                                    {/* Customer Details Grid */}
+                                    <div className="lic-details-panel">
+                                        <h3>Licence Information</h3>
+                                        <div className="lic-details-grid">
+                                            <div className="lic-info-item">
+                                                <span>Holder Name</span>
+                                                <strong>{selectedLicense.holder_name}</strong>
+                                            </div>
+                                            <div className="lic-info-item">
+                                                <span>Customer Email</span>
+                                                <strong>{selectedLicense.customer_email}</strong>
+                                            </div>
+                                            <div className="lic-info-item">
+                                                <span>Full Licence Number</span>
+                                                <strong className="unmasked-lic">{selectedLicense.full_license_number || selectedLicense.license_number}</strong>
+                                            </div>
+                                            <div className="lic-info-item">
+                                                <span>Authorized Vehicle Class</span>
+                                                <strong>{selectedLicense.vehicle_class || 'LMV'}</strong>
+                                            </div>
+                                            <div className="lic-info-item">
+                                                <span>Date of Birth</span>
+                                                <strong>{selectedLicense.date_of_birth ? selectedLicense.date_of_birth.split('T')[0] : 'Not specified'}</strong>
+                                            </div>
+                                            <div className="lic-info-item">
+                                                <span>Issue Date</span>
+                                                <strong>{selectedLicense.issue_date ? selectedLicense.issue_date.split('T')[0] : '—'}</strong>
+                                            </div>
+                                            <div className="lic-info-item">
+                                                <span>Expiry Date</span>
+                                                <strong>{selectedLicense.expiry_date ? selectedLicense.expiry_date.split('T')[0] : '—'}</strong>
+                                            </div>
+                                            <div className="lic-info-item">
+                                                <span>Current Status</span>
+                                                <div>{getStatusPill(selectedLicense.verification_status)}</div>
+                                            </div>
+                                        </div>
+
+                                        {selectedLicense.rejection_reason && (
+                                            <div className="lic-rejection-box">
+                                                <span>Rejection Remarks:</span>
+                                                <p>{selectedLicense.rejection_reason}</p>
+                                            </div>
+                                        )}
+
+                                        {selectedLicense.verified_by_name && (
+                                            <div className="lic-audit-trail">
+                                                <CheckCircle2 size={14} />
+                                                <span>Verified by {selectedLicense.verified_by_name} on {selectedLicense.verified_at}</span>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="lic-info-item">
-                                        <span>Customer Email</span>
-                                        <strong>{selectedLicense.customer_email}</strong>
+
+                                    {/* Document Viewer Preview */}
+                                    <div className="lic-viewer-panel">
+                                        <div className="lic-viewer-header">
+                                            <h3>Attached Document Inspection</h3>
+                                            <div className="lic-side-tabs">
+                                                <button
+                                                    type="button"
+                                                    className={`lic-side-btn ${docViewerSide === 'front' ? 'active' : ''}`}
+                                                    onClick={() => setDocViewerSide('front')}
+                                                    disabled={!selectedLicense.has_front}
+                                                >
+                                                    Front Side
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={`lic-side-btn ${docViewerSide === 'back' ? 'active' : ''}`}
+                                                    onClick={() => setDocViewerSide('back')}
+                                                    disabled={!selectedLicense.has_back}
+                                                >
+                                                    Back Side
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="lic-preview-container">
+                                            <div className="lic-preview-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                <button
+                                                    type="button"
+                                                    className="lic-preview-download-btn"
+                                                    onClick={() => handleDownloadDoc(selectedLicense.id, docViewerSide, 'download')}
+                                                >
+                                                    <Download size={14} />
+                                                    Download {docViewerSide === 'front' ? 'Front Document' : 'Back Document'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="lic-preview-download-btn"
+                                                    style={{
+                                                        background: 'var(--color-surface, #ffffff)',
+                                                        color: 'var(--color-text, #1e293b)',
+                                                        border: '1px solid var(--color-border, #cbd5e1)'
+                                                    }}
+                                                    onClick={() => handleDownloadDoc(selectedLicense.id, docViewerSide, 'view')}
+                                                    title="Open document directly in browser tab"
+                                                >
+                                                    <Eye size={14} />
+                                                    View in Browser
+                                                </button>
+                                            </div>
+
+                                            <div className="lic-doc-box">
+                                                <p className="lic-doc-instruction">
+                                                    Click the button above to securely stream and inspect the official {docViewerSide} certificate file from RentIQ storage.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="lic-info-item">
-                                        <span>Full Licence Number</span>
-                                        <strong className="unmasked-lic">{selectedLicense.full_license_number || selectedLicense.license_number}</strong>
-                                    </div>
-                                    <div className="lic-info-item">
-                                        <span>Authorized Vehicle Class</span>
-                                        <strong>{selectedLicense.vehicle_class || 'LMV'}</strong>
-                                    </div>
-                                    <div className="lic-info-item">
-                                        <span>Date of Birth</span>
-                                        <strong>{selectedLicense.date_of_birth ? selectedLicense.date_of_birth.split('T')[0] : 'Not specified'}</strong>
-                                    </div>
-                                    <div className="lic-info-item">
-                                        <span>Issue Date</span>
-                                        <strong>{selectedLicense.issue_date ? selectedLicense.issue_date.split('T')[0] : '—'}</strong>
-                                    </div>
-                                    <div className="lic-info-item">
-                                        <span>Expiry Date</span>
-                                        <strong>{selectedLicense.expiry_date ? selectedLicense.expiry_date.split('T')[0] : '—'}</strong>
-                                    </div>
-                                    <div className="lic-info-item">
-                                        <span>Current Status</span>
-                                        <div>{getStatusPill(selectedLicense.verification_status)}</div>
-                                    </div>
+                                </>
+                            ) : modalTab === 'history' ? (
+                                <div className="lic-history-container" style={{ width: '100%', padding: '10px' }}>
+                                    <h3>Archived Submissions & Previous Versions ({historyList.length})</h3>
+                                    {modalDataLoading ? (
+                                        <Loader message="Loading previous versions..." />
+                                    ) : historyList.length === 0 ? (
+                                        <p style={{ color: 'var(--text-secondary)', padding: '20px 0' }}>No previous versions on record. This licence is on its initial version (v1).</p>
+                                    ) : (
+                                        <div className="history-table-wrap" style={{ marginTop: '12px' }}>
+                                            <table className="doc-history-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Version</th>
+                                                        <th>Licence No</th>
+                                                        <th>Holder</th>
+                                                        <th>Class</th>
+                                                        <th>Expiry Date</th>
+                                                        <th>Archived Date</th>
+                                                        <th>Status</th>
+                                                        <th>Documents</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {historyList.map((ver) => (
+                                                        <tr key={ver.id}>
+                                                            <td><span className="version-pill">v{ver.version_number}</span></td>
+                                                            <td><strong>{ver.license_number}</strong></td>
+                                                            <td>{ver.holder_name}</td>
+                                                            <td>{ver.vehicle_class}</td>
+                                                            <td>{ver.expiry_date ? ver.expiry_date.split('T')[0] : '—'}</td>
+                                                            <td>{ver.archived_at ? new Date(ver.archived_at).toLocaleDateString() : '—'}</td>
+                                                            <td>{getStatusPill(ver.verification_status)}</td>
+                                                            <td>
+                                                                <div style={{ display: 'flex', gap: '6px' }}>
+                                                                    {ver.front_document_path && (
+                                                                        <button
+                                                                            type="button"
+                                                                            className="doc-action-btn view-btn"
+                                                                            style={{ padding: '4px 8px', fontSize: '11px' }}
+                                                                            onClick={() => handleDownloadHistoryDoc(ver.id, 'front')}
+                                                                        >
+                                                                            Front
+                                                                        </button>
+                                                                    )}
+                                                                    {ver.back_document_path && (
+                                                                        <button
+                                                                            type="button"
+                                                                            className="doc-action-btn view-btn"
+                                                                            style={{ padding: '4px 8px', fontSize: '11px' }}
+                                                                            onClick={() => handleDownloadHistoryDoc(ver.id, 'back')}
+                                                                        >
+                                                                            Back
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
                                 </div>
-
-                                {selectedLicense.rejection_reason && (
-                                    <div className="lic-rejection-box">
-                                        <span>Rejection Remarks:</span>
-                                        <p>{selectedLicense.rejection_reason}</p>
-                                    </div>
-                                )}
-
-                                {selectedLicense.verified_by_name && (
-                                    <div className="lic-audit-trail">
-                                        <CheckCircle2 size={14} />
-                                        <span>Verified by {selectedLicense.verified_by_name} on {selectedLicense.verified_at}</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Document Viewer Preview */}
-                            <div className="lic-viewer-panel">
-                                <div className="lic-viewer-header">
-                                    <h3>Attached Document Inspection</h3>
-                                    <div className="lic-side-tabs">
-                                        <button
-                                            type="button"
-                                            className={`lic-side-btn ${docViewerSide === 'front' ? 'active' : ''}`}
-                                            onClick={() => setDocViewerSide('front')}
-                                            disabled={!selectedLicense.has_front}
-                                        >
-                                            Front Side
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className={`lic-side-btn ${docViewerSide === 'back' ? 'active' : ''}`}
-                                            onClick={() => setDocViewerSide('back')}
-                                            disabled={!selectedLicense.has_back}
-                                        >
-                                            Back Side
-                                        </button>
-                                    </div>
+                            ) : (
+                                <div className="lic-audit-container" style={{ width: '100%', padding: '10px' }}>
+                                    <h3>Verification Audit Trail ({auditLogs.length})</h3>
+                                    {modalDataLoading ? (
+                                        <Loader message="Loading verification logs..." />
+                                    ) : auditLogs.length === 0 ? (
+                                        <p style={{ color: 'var(--text-secondary)', padding: '20px 0' }}>No verification log records recorded yet.</p>
+                                    ) : (
+                                        <div className="audit-log-list" style={{ marginTop: '12px' }}>
+                                            {auditLogs.map((log) => (
+                                                <div key={log.id} className="audit-log-item">
+                                                    <div className="audit-log-header">
+                                                        <div className="audit-status-transition">
+                                                            <span className={`status-badge-mini ${log.previous_status}`}>{log.previous_status}</span>
+                                                            <span className="audit-arrow">→</span>
+                                                            <span className={`status-badge-mini ${log.new_status}`}>{log.new_status}</span>
+                                                        </div>
+                                                        <span className="audit-time">{new Date(log.created_at).toLocaleString()}</span>
+                                                    </div>
+                                                    <div className="audit-log-body">
+                                                        <p><strong>Remarks:</strong> {log.remarks || 'No remarks recorded'}</p>
+                                                        <span className="audit-admin-meta">Verified by: {log.admin_name || `Admin #${log.admin_id}`} ({log.admin_email || ''})</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-
-                                <div className="lic-preview-container">
-                                    <div className="lic-preview-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                        <button
-                                            type="button"
-                                            className="lic-preview-download-btn"
-                                            onClick={() => handleDownloadDoc(selectedLicense.id, docViewerSide, 'download')}
-                                        >
-                                            <Download size={14} />
-                                            Download {docViewerSide === 'front' ? 'Front Document' : 'Back Document'}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="lic-preview-download-btn"
-                                            style={{
-                                                background: 'var(--color-surface, #ffffff)',
-                                                color: 'var(--color-text, #1e293b)',
-                                                border: '1px solid var(--color-border, #cbd5e1)'
-                                            }}
-                                            onClick={() => handleDownloadDoc(selectedLicense.id, docViewerSide, 'view')}
-                                            title="Open document directly in browser tab"
-                                        >
-                                            <Eye size={14} />
-                                            View in Browser
-                                        </button>
-                                    </div>
-
-                                    <div className="lic-doc-box">
-                                        <p className="lic-doc-instruction">
-                                            Click the button above to securely stream and inspect the official {docViewerSide} certificate file from RentIQ storage.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* Rejection Prompt Form */}
@@ -601,4 +777,3 @@ function AdminLicenses() {
 }
 
 export default AdminLicenses;
-

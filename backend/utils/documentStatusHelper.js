@@ -92,7 +92,9 @@ function checkVehicleDocumentEligibility(documents, vehicleCategory = '', rental
 
     const presentDocs = {};
     for (const doc of documents) {
-        presentDocs[doc.document_type] = doc;
+        if (!presentDocs[doc.document_type] || (doc.id && presentDocs[doc.document_type].id && doc.id > presentDocs[doc.document_type].id)) {
+            presentDocs[doc.document_type] = doc;
+        }
     }
 
     const missingDocs = [];

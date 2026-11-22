@@ -32,6 +32,45 @@ function evaluateLicenseStatus(dbStatus, expiryDate) {
 }
 
 /**
+ * Resolves physical file path on server for driving licence documents
+ * Safely tests multiple standard storage candidate locations.
+ */
+function resolveLicenseFilePath(storedPath) {
+    if (!storedPath || typeof storedPath !== 'string') return null;
+
+    const baseDir = path.resolve(__dirname, '..');
+    const uploadLicensesDir = path.resolve(baseDir, 'uploads', 'customer_licenses');
+    const uploadsDir = path.resolve(baseDir, 'uploads');
+
+    // 1. Direct in backend/uploads/customer_licenses/<safeBase>
+    const safeBase = path.basename(storedPath);
+    const candidate1 = path.resolve(uploadLicensesDir, safeBase);
+    if (fs.existsSync(candidate1) && fs.statSync(candidate1).isFile()) {
+        return candidate1;
+    }
+
+    // 2. Relative to backend root directory (e.g. "uploads/customer_licenses/...")
+    const cleanRelative = storedPath.replace(/^[/\\]+/, '').replace(/\//g, path.sep);
+    const candidate2 = path.resolve(baseDir, cleanRelative);
+    if (candidate2.startsWith(baseDir) && fs.existsSync(candidate2) && fs.statSync(candidate2).isFile()) {
+        return candidate2;
+    }
+
+    // 3. Direct in backend/uploads/<safeBase>
+    const candidate3 = path.resolve(uploadsDir, safeBase);
+    if (fs.existsSync(candidate3) && fs.statSync(candidate3).isFile()) {
+        return candidate3;
+    }
+
+    // 4. Absolute path
+    if (path.isAbsolute(storedPath) && fs.existsSync(storedPath) && fs.statSync(storedPath).isFile()) {
+        return storedPath;
+    }
+
+    return null;
+}
+
+/**
  * GET /api/licenses/my-license
  * Customer retrieves their own licence status and submission
  */
@@ -52,6 +91,7 @@ const getMyLicense = async (req, res) => {
                 front_document_path,
                 back_document_path,
                 verification_status,
+                version,
                 rejection_reason,
                 verified_at,
                 created_at,
@@ -86,6 +126,7 @@ const getMyLicense = async (req, res) => {
                 has_front: Boolean(raw.front_document_path),
                 has_back: Boolean(raw.back_document_path),
                 verification_status: currentStatus,
+                version: raw.version || 1,
                 rejection_reason: raw.rejection_reason,
                 verified_at: raw.verified_at,
                 created_at: raw.created_at,
@@ -100,7 +141,8 @@ const getMyLicense = async (req, res) => {
 
 /**
  * POST /api/licenses/submit
- * Customer submits or resubmits licence
+ * Customer submits or resubmits licence.
+ * If previous record exists, archives it into customer_license_history!
  */
 const submitLicense = async (req, res) => {
     try {
@@ -177,9 +219,40 @@ const submitLicense = async (req, res) => {
         }
 
         const validVehicleClass = vehicle_class && vehicle_class.trim() ? vehicle_class.trim().toUpperCase() : 'LMV';
+        let licenseId;
+        let newVersion = 1;
 
         if (existing.length > 0) {
-            // Update existing record, reset verification to pending
+            const prev = existing[0];
+            const currentVer = prev.version || 1;
+            newVersion = currentVer + 1;
+            licenseId = prev.id;
+
+            // 1. Archive the previous record into customer_license_history
+            await db.query(
+                `INSERT INTO customer_license_history
+                 (license_id, user_id, version_number, license_number, holder_name, date_of_birth, issue_date, expiry_date, vehicle_class, front_document_path, back_document_path, verification_status, rejection_reason, verified_by, verified_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    prev.id,
+                    userId,
+                    currentVer,
+                    prev.license_number,
+                    prev.holder_name,
+                    prev.date_of_birth,
+                    prev.issue_date,
+                    prev.expiry_date,
+                    prev.vehicle_class,
+                    prev.front_document_path,
+                    prev.back_document_path,
+                    prev.verification_status,
+                    prev.rejection_reason,
+                    prev.verified_by,
+                    prev.verified_at
+                ]
+            );
+
+            // 2. Update existing record, reset verification to pending and increment version
             await db.query(
                 `UPDATE customer_licenses
                  SET license_number = ?,
@@ -191,6 +264,7 @@ const submitLicense = async (req, res) => {
                      front_document_path = ?,
                      back_document_path = ?,
                      verification_status = 'pending',
+                     version = ?,
                      rejection_reason = NULL,
                      verified_by = NULL,
                      verified_at = NULL,
@@ -205,15 +279,30 @@ const submitLicense = async (req, res) => {
                     validVehicleClass,
                     frontPath,
                     backPath,
+                    newVersion,
                     userId
                 ]
             );
-        } else {
-            // Insert new record
+
+            // 3. Log submission audit record
             await db.query(
+                `INSERT INTO document_verification_logs
+                 (document_type, document_id, reference_id, previous_status, new_status, admin_id, remarks)
+                 VALUES ('customer_license', ?, ?, ?, 'pending', ?, ?)`,
+                [
+                    licenseId,
+                    license_number.trim(),
+                    prev.verification_status,
+                    prev.verified_by || userId,
+                    `Customer resubmitted/renewed driving licence (v${newVersion})`
+                ]
+            );
+        } else {
+            // First time submission
+            const [result] = await db.query(
                 `INSERT INTO customer_licenses
-                 (user_id, license_number, holder_name, date_of_birth, issue_date, expiry_date, vehicle_class, front_document_path, back_document_path, verification_status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+                 (user_id, license_number, holder_name, date_of_birth, issue_date, expiry_date, vehicle_class, front_document_path, back_document_path, verification_status, version)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 1)`,
                 [
                     userId,
                     license_number.trim(),
@@ -224,6 +313,20 @@ const submitLicense = async (req, res) => {
                     validVehicleClass,
                     frontPath,
                     backPath
+                ]
+            );
+            licenseId = result.insertId;
+
+            // Log initial submission
+            await db.query(
+                `INSERT INTO document_verification_logs
+                 (document_type, document_id, reference_id, previous_status, new_status, admin_id, remarks)
+                 VALUES ('customer_license', ?, ?, 'not_submitted', 'pending', ?, ?)`,
+                [
+                    licenseId,
+                    license_number.trim(),
+                    userId,
+                    'Initial customer driving licence submission (v1)'
                 ]
             );
         }
@@ -238,52 +341,14 @@ const submitLicense = async (req, res) => {
 
         return res.status(200).json({
             message: 'Driving licence submitted successfully. Awaiting administrator review.',
-            status: 'pending'
+            status: 'pending',
+            version: newVersion
         });
     } catch (error) {
         console.error('Error submitting customer license:', error);
         return res.status(500).json({ message: 'Failed to submit driving licence' });
     }
 };
-
-/**
- * Resolves physical file path on server for driving licence documents
- * Safely tests multiple standard storage candidate locations.
- */
-function resolveLicenseFilePath(storedPath) {
-    if (!storedPath || typeof storedPath !== 'string') return null;
-
-    const baseDir = path.resolve(__dirname, '..');
-    const uploadLicensesDir = path.resolve(baseDir, 'uploads', 'customer_licenses');
-    const uploadsDir = path.resolve(baseDir, 'uploads');
-
-    // 1. Direct in backend/uploads/customer_licenses/<safeBase>
-    const safeBase = path.basename(storedPath);
-    const candidate1 = path.resolve(uploadLicensesDir, safeBase);
-    if (fs.existsSync(candidate1) && fs.statSync(candidate1).isFile()) {
-        return candidate1;
-    }
-
-    // 2. Relative to backend root directory (e.g. "uploads/customer_licenses/...")
-    const cleanRelative = storedPath.replace(/^[/\\]+/, '').replace(/\//g, path.sep);
-    const candidate2 = path.resolve(baseDir, cleanRelative);
-    if (candidate2.startsWith(baseDir) && fs.existsSync(candidate2) && fs.statSync(candidate2).isFile()) {
-        return candidate2;
-    }
-
-    // 3. Direct in backend/uploads/<safeBase>
-    const candidate3 = path.resolve(uploadsDir, safeBase);
-    if (fs.existsSync(candidate3) && fs.statSync(candidate3).isFile()) {
-        return candidate3;
-    }
-
-    // 4. Absolute path
-    if (path.isAbsolute(storedPath) && fs.existsSync(storedPath) && fs.statSync(storedPath).isFile()) {
-        return storedPath;
-    }
-
-    return null;
-}
 
 /**
  * GET /api/licenses/my-license/document/:side
@@ -342,6 +407,117 @@ const downloadMyLicenseDoc = async (req, res) => {
 };
 
 /**
+ * GET /api/licenses/my-license/history
+ * Customer retrieves their previous licence version history
+ */
+const getMyLicenseHistory = async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+
+        const [rows] = await db.query(
+            `SELECT
+                id,
+                license_id,
+                user_id,
+                version_number,
+                license_number,
+                holder_name,
+                date_of_birth,
+                issue_date,
+                expiry_date,
+                vehicle_class,
+                front_document_path,
+                back_document_path,
+                verification_status,
+                rejection_reason,
+                verified_at,
+                archived_at
+             FROM customer_license_history
+             WHERE user_id = ?
+             ORDER BY version_number DESC`,
+            [userId]
+        );
+
+        const history = rows.map(item => ({
+            id: item.id,
+            version_number: item.version_number,
+            license_number: item.license_number,
+            holder_name: item.holder_name,
+            issue_date: item.issue_date,
+            expiry_date: item.expiry_date,
+            vehicle_class: item.vehicle_class,
+            has_front: Boolean(item.front_document_path),
+            has_back: Boolean(item.back_document_path),
+            verification_status: item.verification_status,
+            rejection_reason: item.rejection_reason,
+            verified_at: item.verified_at,
+            archived_at: item.archived_at
+        }));
+
+        return res.status(200).json(history);
+    } catch (error) {
+        console.error('Error fetching customer license history:', error);
+        return res.status(500).json({ message: 'Failed to retrieve licence history' });
+    }
+};
+
+/**
+ * GET /api/licenses/my-license/history/:historyId/document/:side
+ * Customer streams a document from their own historical licence submission
+ */
+const downloadMyLicenseHistoryDoc = async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const historyId = Number(req.params.historyId);
+        const side = req.params.side;
+
+        if (!Number.isInteger(historyId) || historyId <= 0) {
+            return res.status(400).json({ message: 'Invalid history ID' });
+        }
+        if (side !== 'front' && side !== 'back') {
+            return res.status(400).json({ message: 'Invalid side requested. Must be "front" or "back".' });
+        }
+
+        const [rows] = await db.query(
+            'SELECT user_id, front_document_path, back_document_path FROM customer_license_history WHERE id = ?',
+            [historyId]
+        );
+
+        if (rows.length === 0 || rows[0].user_id !== userId) {
+            return res.status(404).json({ message: 'Historical licence document not found' });
+        }
+
+        const filename = side === 'front' ? rows[0].front_document_path : rows[0].back_document_path;
+        if (!filename) {
+            return res.status(404).json({ message: `No ${side} document on record for this version` });
+        }
+
+        const filePath = resolveLicenseFilePath(filename);
+        if (!filePath) {
+            return res.status(404).json({ message: 'Historical document file not found on storage' });
+        }
+
+        const ext = path.extname(filePath).toLowerCase();
+        const mimeMap = {
+            '.pdf': 'application/pdf',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.webp': 'image/webp'
+        };
+
+        const contentType = mimeMap[ext] || 'application/octet-stream';
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Type');
+        res.setHeader('Content-Disposition', `inline; filename="archived_${side}_${path.basename(filePath)}"`);
+        fs.createReadStream(filePath).pipe(res);
+    } catch (error) {
+        console.error('Error downloading customer license history doc:', error);
+        return res.status(500).json({ message: 'Failed to retrieve historical licence document' });
+    }
+};
+
+/**
  * GET /api/admin/licenses
  * Admin lists all customer licence submissions
  */
@@ -379,6 +555,7 @@ const getAllLicenses = async (req, res) => {
                 l.front_document_path,
                 l.back_document_path,
                 l.verification_status,
+                l.version,
                 l.rejection_reason,
                 l.verified_by,
                 admin_u.name AS verified_by_name,
@@ -411,6 +588,7 @@ const getAllLicenses = async (req, res) => {
                 has_back: Boolean(lic.back_document_path),
                 verification_status: computedStatus,
                 raw_status: lic.verification_status,
+                version: lic.version || 1,
                 rejection_reason: lic.rejection_reason,
                 verified_by_name: lic.verified_by_name,
                 verified_at: lic.verified_at,
@@ -452,6 +630,7 @@ const getLicenseById = async (req, res) => {
                 l.front_document_path,
                 l.back_document_path,
                 l.verification_status,
+                l.version,
                 l.rejection_reason,
                 l.verified_by,
                 admin_u.name AS verified_by_name,
@@ -474,6 +653,7 @@ const getLicenseById = async (req, res) => {
 
         return res.status(200).json({
             ...lic,
+            version: lic.version || 1,
             verification_status: computedStatus,
             masked_license_number: maskLicenseNumber(lic.license_number)
         });
@@ -485,15 +665,16 @@ const getLicenseById = async (req, res) => {
 
 /**
  * PATCH /api/admin/licenses/:id/verify
- * Admin approves a driving licence
+ * Admin approves a driving licence and records in document_verification_logs
  */
 const verifyLicense = async (req, res) => {
     try {
         const id = Number(req.params.id);
         const adminId = req.user.user_id;
+        const { remarks } = req.body || {};
 
         const [rows] = await db.query(
-            'SELECT id, user_id, expiry_date FROM customer_licenses WHERE id = ?',
+            'SELECT id, user_id, license_number, verification_status, expiry_date FROM customer_licenses WHERE id = ?',
             [id]
         );
         if (rows.length === 0) {
@@ -512,6 +693,8 @@ const verifyLicense = async (req, res) => {
             });
         }
 
+        const approvalRemarks = remarks ? remarks.trim() : 'Driving licence verified and approved.';
+
         await db.query(
             `UPDATE customer_licenses
              SET verification_status = 'verified',
@@ -521,6 +704,20 @@ const verifyLicense = async (req, res) => {
                  updated_at = NOW()
              WHERE id = ?`,
             [adminId, id]
+        );
+
+        // Record immutable verification log
+        await db.query(
+            `INSERT INTO document_verification_logs
+             (document_type, document_id, reference_id, previous_status, new_status, admin_id, remarks)
+             VALUES ('customer_license', ?, ?, ?, 'verified', ?, ?)`,
+            [
+                id,
+                lic.license_number,
+                lic.verification_status,
+                adminId,
+                approvalRemarks
+            ]
         );
 
         // Notify customer
@@ -544,7 +741,7 @@ const verifyLicense = async (req, res) => {
 
 /**
  * PATCH /api/admin/licenses/:id/reject
- * Admin rejects a driving licence with reason
+ * Admin rejects a driving licence with mandatory reason and records in document_verification_logs
  */
 const rejectLicense = async (req, res) => {
     try {
@@ -557,7 +754,7 @@ const rejectLicense = async (req, res) => {
         }
 
         const [rows] = await db.query(
-            'SELECT id, user_id FROM customer_licenses WHERE id = ?',
+            'SELECT id, user_id, license_number, verification_status FROM customer_licenses WHERE id = ?',
             [id]
         );
         if (rows.length === 0) {
@@ -576,6 +773,20 @@ const rejectLicense = async (req, res) => {
                  updated_at = NOW()
              WHERE id = ?`,
             [reason, adminId, id]
+        );
+
+        // Record immutable verification log
+        await db.query(
+            `INSERT INTO document_verification_logs
+             (document_type, document_id, reference_id, previous_status, new_status, admin_id, remarks)
+             VALUES ('customer_license', ?, ?, ?, 'rejected', ?, ?)`,
+            [
+                id,
+                lic.license_number,
+                lic.verification_status,
+                adminId,
+                reason
+            ]
         );
 
         // Notify customer
@@ -658,16 +869,129 @@ const downloadAdminLicenseDoc = async (req, res) => {
     }
 };
 
+/**
+ * GET /api/admin/licenses/:id/history
+ * Admin views historical versions of customer driving licence
+ */
+const getAdminLicenseHistory = async (req, res) => {
+    try {
+        const licenseId = Number(req.params.id);
+        if (!Number.isInteger(licenseId) || licenseId <= 0) {
+            return res.status(400).json({ message: 'Invalid licence ID' });
+        }
+
+        const [rows] = await db.query(
+            `SELECT h.*, u.name AS verified_by_name
+             FROM customer_license_history h
+             LEFT JOIN users u ON h.verified_by = u.user_id
+             WHERE h.license_id = ?
+             ORDER BY h.version_number DESC`,
+            [licenseId]
+        );
+
+        return res.status(200).json(rows);
+    } catch (error) {
+        console.error('Error fetching admin license history:', error);
+        return res.status(500).json({ message: 'Failed to retrieve licence history' });
+    }
+};
+
+/**
+ * GET /api/admin/licenses/history/:historyId/document/:side
+ * Admin streams a historical driving licence document
+ */
+const downloadAdminLicenseHistoryDoc = async (req, res) => {
+    try {
+        const historyId = Number(req.params.historyId);
+        const side = req.params.side;
+
+        if (!Number.isInteger(historyId) || historyId <= 0) {
+            return res.status(400).json({ message: 'Invalid history ID' });
+        }
+        if (side !== 'front' && side !== 'back') {
+            return res.status(400).json({ message: 'Invalid document side. Must be "front" or "back".' });
+        }
+
+        const [rows] = await db.query(
+            'SELECT front_document_path, back_document_path FROM customer_license_history WHERE id = ?',
+            [historyId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Historical licence record not found.' });
+        }
+
+        const filename = side === 'front' ? rows[0].front_document_path : rows[0].back_document_path;
+        if (!filename) {
+            return res.status(404).json({ message: `No ${side} document on record for this version` });
+        }
+
+        const filePath = resolveLicenseFilePath(filename);
+        if (!filePath) {
+            return res.status(404).json({ message: 'Historical document file not found on storage' });
+        }
+
+        const ext = path.extname(filePath).toLowerCase();
+        const mimeMap = {
+            '.pdf': 'application/pdf',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.webp': 'image/webp'
+        };
+
+        const contentType = mimeMap[ext] || 'application/octet-stream';
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Type');
+        res.setHeader('Content-Disposition', `inline; filename="history_${side}_${path.basename(filePath)}"`);
+        fs.createReadStream(filePath).pipe(res);
+    } catch (error) {
+        console.error('Error streaming historical admin license doc:', error);
+        return res.status(500).json({ message: 'Failed to stream historical document' });
+    }
+};
+
+/**
+ * GET /api/admin/licenses/:id/verification-logs
+ * Admin reviews verification audit trail for a driving licence
+ */
+const getLicenseVerificationLogs = async (req, res) => {
+    try {
+        const licenseId = Number(req.params.id);
+        if (!Number.isInteger(licenseId) || licenseId <= 0) {
+            return res.status(400).json({ message: 'Invalid licence ID' });
+        }
+
+        const [logs] = await db.query(
+            `SELECT l.*, u.name AS admin_name, u.email AS admin_email
+             FROM document_verification_logs l
+             JOIN users u ON l.admin_id = u.user_id
+             WHERE l.document_type = 'customer_license' AND l.document_id = ?
+             ORDER BY l.created_at DESC`,
+            [licenseId]
+        );
+
+        return res.status(200).json(logs);
+    } catch (error) {
+        console.error('Error fetching license verification logs:', error);
+        return res.status(500).json({ message: 'Failed to retrieve licence verification logs' });
+    }
+};
+
 module.exports = {
     getMyLicense,
     submitLicense,
     downloadMyLicenseDoc,
+    getMyLicenseHistory,
+    downloadMyLicenseHistoryDoc,
     getAllLicenses,
     getLicenseById,
     verifyLicense,
     rejectLicense,
     downloadAdminLicenseDoc,
+    getAdminLicenseHistory,
+    downloadAdminLicenseHistoryDoc,
+    getLicenseVerificationLogs,
     maskLicenseNumber,
     evaluateLicenseStatus
 };
-
